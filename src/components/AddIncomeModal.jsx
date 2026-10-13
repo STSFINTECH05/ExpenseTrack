@@ -138,7 +138,7 @@ export default function AddIncomeModal({ isOpen, onClose, defaultType, onSuccess
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
       <div
-        className="relative w-full max-w-xl rounded-2xl bg-[#0f172a] border border-slate-700/80 shadow-2xl p-6 sm:p-7 text-slate-100 overflow-hidden"
+        className="relative w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto rounded-2xl bg-[#0f172a] border border-slate-700/80 shadow-2xl p-5 sm:p-7 text-slate-100"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Glow Accent */}

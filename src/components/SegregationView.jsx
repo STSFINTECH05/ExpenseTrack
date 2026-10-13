@@ -350,8 +350,8 @@ export default function SegregationView() {
               </button>
             </div>
 
-            <div className="overflow-x-auto flex-1">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto w-full flex-1">
+              <table className="w-full text-left text-xs min-w-[520px]">
                 <thead>
                   <tr className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                     <th className="py-2.5 px-2 font-semibold">{t('name', 'Name')}</th>
@@ -428,8 +428,8 @@ export default function SegregationView() {
               </button>
             </div>
 
-            <div className="overflow-x-auto flex-1">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto w-full flex-1">
+              <table className="w-full text-left text-xs min-w-[520px]">
                 <thead>
                   <tr className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                     <th className="py-2.5 px-2 font-semibold">{t('name', 'Name')}</th>
@@ -522,8 +522,8 @@ export default function SegregationView() {
               </button>
             </div>
 
-            <div className="overflow-x-auto flex-1">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto w-full flex-1">
+              <table className="w-full text-left text-xs min-w-[520px]">
                 <thead>
                   <tr className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                     <th className="py-2.5 px-2 font-semibold">{t('name', 'Name')}</th>
@@ -605,8 +605,8 @@ export default function SegregationView() {
               </button>
             </div>
 
-            <div className="overflow-x-auto flex-1">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto w-full flex-1">
+              <table className="w-full text-left text-xs min-w-[520px]">
                 <thead>
                   <tr className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                     <th className="py-2.5 px-2 font-semibold">{t('name', 'Name')}</th>

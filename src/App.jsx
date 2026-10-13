@@ -33,6 +33,7 @@ import Header from './components/Header';
 import LandingPage from './components/LandingPage';
 import Auth from './components/Auth';
 import Settings from './components/Settings';
+import IncomeStreamsView from './components/IncomeStreamsView';
 import { useLanguage } from './context/LanguageContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -64,11 +65,11 @@ const formatDate = (dateString) => {
 };
 
 export default function App() {
-  // Primary Route State: 'landing' (/) | 'auth' (/login) | 'dashboard' (/dashboard) | '/settings'
+  // Primary Route State: 'landing' (/) | 'auth' (/login) | 'dashboard' (/dashboard) | '/settings' | '/income-streams'
   const getInitialRoute = () => {
     const path = window.location.pathname;
     if (path === '/login' || path === '/auth' || path === '/signin' || path === '/signup') return 'auth';
-    if (path === '/dashboard' || path === '/settings') return 'dashboard';
+    if (path === '/dashboard' || path === '/settings' || path === '/income-streams') return 'dashboard';
     return 'landing';
   };
 
@@ -133,10 +134,13 @@ export default function App() {
       } else if (path === '/signup') {
         setCurrentRoute('auth');
         setAuthMode('signup');
-      } else if (path === '/dashboard' || path === '/settings') {
+      } else if (path === '/dashboard' || path === '/settings' || path === '/income-streams') {
         setCurrentRoute('dashboard');
         if (path === '/settings') {
           setActiveTab('settings');
+          setMainNavTab('Expense');
+        } else if (path === '/income-streams') {
+          setActiveTab('income-streams');
           setMainNavTab('Expense');
         }
       } else {
@@ -196,9 +200,12 @@ export default function App() {
     }
   }, []);
 
-  // Navigation State: 'dashboard' is active by default (or 'settings' if navigating to /settings)
+  // Navigation State: 'dashboard' is active by default (or 'settings' if navigating to /settings, 'income-streams' if /income-streams)
   const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window !== 'undefined' && window.location.pathname === '/settings') return 'settings';
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/settings') return 'settings';
+      if (window.location.pathname === '/income-streams') return 'income-streams';
+    }
     return 'dashboard';
   });
   const [mainNavTab, setMainNavTab] = useState('Expense');
@@ -435,7 +442,7 @@ export default function App() {
         {/* Desktop Sidebar (Toggled with isSidebarOpen) */}
         {isSidebarOpen && (
           <div
-            className="hidden lg:block h-full flex-shrink-0"
+            className="hidden md:block h-full flex-shrink-0"
             style={{ height: 'calc(100vh - 64px)' }}
           >
             <Sidebar
@@ -451,12 +458,12 @@ export default function App() {
 
         {/* Mobile Sidebar Overlay */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden fixed inset-0 z-50 flex">
+          <div className="md:hidden fixed inset-0 z-50 flex animate-fadeIn">
             <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
               onClick={() => setIsMobileMenuOpen(false)}
             />
-            <div className="relative z-10 w-64 bg-[#0d1322] h-full shadow-2xl overflow-y-auto">
+            <div className="relative z-10 w-64 max-w-[80vw] bg-[#0d1322] h-full shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-in-out">
               <Sidebar
                 activeTab={activeTab}
                 setActiveTab={(tab) => {
@@ -472,7 +479,7 @@ export default function App() {
 
         {/* Primary Main View Container */}
         <main
-          className={`flex-1 overflow-y-auto h-full p-4 sm:p-6 lg:p-8 ${isSidebarOpen ? 'max-w-7xl' : 'w-full max-w-full'} mx-auto w-full bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-colors duration-200`}
+          className={`flex-1 overflow-y-auto h-full w-full min-w-0 overflow-x-hidden p-4 md:p-6 ${isSidebarOpen ? 'max-w-7xl' : 'w-full max-w-full'} mx-auto bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-colors duration-200`}
           style={{
             flex: 1,
             overflowY: 'auto',
@@ -506,6 +513,11 @@ export default function App() {
 
               {/* TAB 4: BILL & REMINDER */}
               {(activeTab === 'bills_reminders' || activeTab === 'bill-reminder' || activeTab === 'bills-reminders') && <BillsAndRemindersView />}
+
+              {/* TAB: INCOME STREAMS */}
+              {(activeTab === 'income-streams' || activeTab === 'income_streams') && (
+                <IncomeStreamsView />
+              )}
 
               {/* TAB 5: WALLETS */}
               {activeTab === 'wallets' && (

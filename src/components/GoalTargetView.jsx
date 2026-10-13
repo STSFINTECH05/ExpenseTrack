@@ -691,7 +691,7 @@ export default function GoalTargetView() {
       {/* ========================================================= */}
       {isSetupModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md overflow-hidden relative">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto relative">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-5 border-b border-slate-200">
               <h3 className="text-base font-bold text-slate-900">Setup Target Wallet</h3>
@@ -783,7 +783,7 @@ export default function GoalTargetView() {
       {/* ========================================================= */}
       {isAddCashModalOpen && selectedWallet && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden animate-scaleIn">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto animate-scaleIn">
             {/* A. Modal Header */}
             <div className="flex items-start justify-between p-5 border-b border-slate-100">
               <div className="flex items-start space-x-3.5">

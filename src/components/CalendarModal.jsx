@@ -308,7 +308,7 @@ export default function CalendarModal({ isOpen, onClose }) {
     >
       {/* 2. Centered Modal Card */}
       <div
-        className="relative w-full max-w-sm sm:max-w-md bg-[#0c1424] border border-slate-800 rounded-3xl p-6 shadow-2xl animate-fadeIn text-slate-100 flex flex-col"
+        className="relative w-full max-w-sm sm:max-w-md mx-4 max-h-[90vh] overflow-y-auto bg-[#0c1424] border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl animate-fadeIn text-slate-100 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header with Exit (✕) Button */}

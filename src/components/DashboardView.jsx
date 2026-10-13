@@ -725,7 +725,7 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
               Quick Launch Modules
             </p>
 
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
               {quickModules.map((mod) => {
                 const Icon = mod.icon;
                 return (

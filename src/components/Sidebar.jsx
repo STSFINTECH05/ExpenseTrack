@@ -7,6 +7,7 @@ import {
   Bell,
   Headset,
   Settings as SettingsIcon,
+  TrendingUp,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -47,6 +48,11 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
       label: t('bills_reminders', 'Bill & Reminder'),
       icon: Bell,
     },
+    {
+      id: 'income-streams',
+      label: t('income_streams', 'Income Streams'),
+      icon: TrendingUp,
+    },
   ];
 
   return (
@@ -60,6 +66,7 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
           const Icon = item.icon;
           const isActive =
             activeTab === item.id ||
+            (item.id === 'income-streams' && (activeTab === 'income-streams' || activeTab === 'income_streams')) ||
             (item.id === 'goal_target' && (activeTab === 'goal-target' || activeTab === 'goal_target')) ||
             (item.id === 'bills_reminders' && (activeTab === 'bill-reminder' || activeTab === 'bills-reminders')) ||
             (item.id === 'split_collect' && (activeTab === 'split-collect' || activeTab === 'split_collect'));
