@@ -104,18 +104,16 @@ export default function LiveWorthView({ currentUser }) {
   const startTimestampRef = useRef(Date.now());
   const baseWorthRef = useRef(baseWorth);
 
-  // Effective annual growth amount in INR
-  const effectiveAnnualGrowth = useMemo(() => {
-    if (rateMode === 'percent') {
-      return (baseWorth * (yieldPercent / 100));
-    }
-    return annualRate;
-  }, [rateMode, yieldPercent, baseWorth, annualRate]);
+  // Dynamic growth calculations linked to baseWorth (15% annual yield benchmark)
+  const growth = baseWorth * 0.15;
+  const perSecondIncrement = (baseWorth * 0.15) / (365 * 24 * 3600);
+  const perHourIncrement = perSecondIncrement * 3600;
+  const perDayIncrement = perSecondIncrement * 86400;
 
-  // Per-second, hourly, daily velocities
-  const perSecondVelocity = effectiveAnnualGrowth / SECONDS_PER_YEAR;
-  const perHourVelocity = perSecondVelocity * 3600;
-  const perDayVelocity = perSecondVelocity * 86400;
+  // Velocity aliases for full compatibility
+  const perSecondVelocity = perSecondIncrement;
+  const perHourVelocity = perHourIncrement;
+  const perDayVelocity = perDayIncrement;
 
   // Live display worth value (high precision)
   const [currentWorth, setCurrentWorth] = useState(baseWorth);
@@ -124,19 +122,22 @@ export default function LiveWorthView({ currentUser }) {
   useEffect(() => {
     baseWorthRef.current = baseWorth;
     startTimestampRef.current = Date.now();
+    setCurrentWorth(baseWorth);
   }, [baseWorth]);
 
-  // Real-time dynamic counter ticking loop (every 50ms for ultra-smooth high-precision velocity)
+  // Real-time dynamic counter ticking loop (bound directly to [perSecondIncrement])
   useEffect(() => {
+    baseWorthRef.current = baseWorth;
+    startTimestampRef.current = Date.now();
     const interval = setInterval(() => {
       const elapsedMs = Date.now() - startTimestampRef.current;
       const elapsedSec = elapsedMs / 1000;
-      const computed = baseWorthRef.current + (elapsedSec * perSecondVelocity);
+      const computed = baseWorthRef.current + (elapsedSec * perSecondIncrement);
       setCurrentWorth(computed);
     }, 50);
 
     return () => clearInterval(interval);
-  }, [perSecondVelocity]);
+  }, [perSecondIncrement]);
 
   // Handle setting new base worth from top-right input form
   const handleSetWorth = (e) => {
@@ -327,7 +328,7 @@ export default function LiveWorthView({ currentUser }) {
 
             {/* Continuous velocity tag */}
             <div className="relative z-10 mt-2 text-[10px] text-slate-500 dark:text-slate-400 font-semibold font-mono">
-              +₹{perSecondVelocity.toFixed(4)} / sec velocity
+              +₹{perSecondIncrement.toFixed(4)} / sec velocity
             </div>
           </div>
         </div>
@@ -348,7 +349,7 @@ export default function LiveWorthView({ currentUser }) {
             </div>
           </div>
           <p className="text-xl sm:text-2xl font-black font-mono text-[#0d5236] dark:text-emerald-400">
-            +₹{perSecondVelocity.toFixed(4)}
+            +₹{perSecondIncrement.toFixed(4)}
           </p>
           <div className="mt-2 flex items-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -367,7 +368,7 @@ export default function LiveWorthView({ currentUser }) {
             </div>
           </div>
           <p className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-slate-100">
-            +₹{perHourVelocity.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
+            +₹{(Math.floor(perHourIncrement * 100) / 100).toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
           </p>
           <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
             Accumulated every 60 minutes
@@ -385,7 +386,7 @@ export default function LiveWorthView({ currentUser }) {
             </div>
           </div>
           <p className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-slate-100">
-            +₹{perDayVelocity.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
+            +₹{(Math.floor(perDayIncrement * 100) / 100).toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
           </p>
           <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
             24-hour continuous yield rate
