@@ -199,7 +199,7 @@ export default function LiveWorthView({ currentUser }) {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
         <div>
           <div className="flex items-center space-x-2.5">
-            <h2 className="text-xl sm:text-2xl font-black tracking-wider uppercase bg-gradient-to-r from-[#0d5236] via-emerald-700 to-teal-600 bg-clip-text text-transparent">
+            <h2 className="text-xl sm:text-2xl font-black tracking-wider uppercase bg-gradient-to-r from-[#0d5236] via-emerald-700 to-red-600 bg-clip-text text-transparent">
               LIVE WORTH
             </h2>
             <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-emerald-100/90 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
@@ -274,7 +274,7 @@ export default function LiveWorthView({ currentUser }) {
         {/* Circular Card Outer Glow & Border */}
         <div className="relative group">
           {/* Animated Ambient Glow Ring */}
-          <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-emerald-500/25 via-teal-400/20 to-emerald-600/30 blur-xl opacity-75 group-hover:opacity-100 transition duration-700 animate-pulse" />
+          <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-emerald-500/25 via-red-500/15 to-emerald-600/30 blur-xl opacity-75 group-hover:opacity-100 transition duration-700 animate-pulse" />
 
           {/* Main Circular Container */}
           <div className="relative w-72 h-72 sm:w-88 sm:h-88 md:w-[420px] md:h-[420px] rounded-full bg-white dark:bg-[#0d1322] border-4 border-emerald-500/35 dark:border-emerald-500/30 shadow-2xl flex flex-col items-center justify-center p-6 text-center select-none overflow-hidden transition-transform duration-300">
@@ -363,7 +363,7 @@ export default function LiveWorthView({ currentUser }) {
             <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Worth / Hour
             </span>
-            <div className="p-2 rounded-xl bg-teal-50 dark:bg-teal-950/70 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-400">
+            <div className="p-2 rounded-xl bg-red-50 dark:bg-red-950/70 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
               <Clock className="w-4 h-4" />
             </div>
           </div>

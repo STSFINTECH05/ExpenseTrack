@@ -363,7 +363,7 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
     );
   }, [goalsList]);
 
-  // Quick Action Modules definition
+  // Quick Action Modules definition (Red & Green Visual Identity)
   const quickModules = [
     {
       id: 'segregation',
@@ -379,27 +379,27 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
       title: 'Goal Target',
       subtitle: 'Savings & Ceilings',
       icon: Target,
-      accentBg: 'bg-cyan-500/15',
-      accentColor: 'text-cyan-600 dark:text-cyan-400',
-      borderHover: 'hover:border-cyan-500/50',
+      accentBg: 'bg-emerald-500/15',
+      accentColor: 'text-emerald-600 dark:text-emerald-400',
+      borderHover: 'hover:border-emerald-500/50',
     },
     {
       id: 'bill-reminder',
       title: 'Bill & Reminder',
       subtitle: 'Recurring Dues',
       icon: Bell,
-      accentBg: 'bg-rose-500/15',
-      accentColor: 'text-rose-600 dark:text-rose-400',
-      borderHover: 'hover:border-rose-500/50',
+      accentBg: 'bg-red-500/15',
+      accentColor: 'text-red-600 dark:text-red-400',
+      borderHover: 'hover:border-red-500/50',
     },
     {
       id: 'split-collect',
       title: 'Split & Collect',
       subtitle: 'Shared Balances',
       icon: Users,
-      accentBg: 'bg-teal-500/15',
-      accentColor: 'text-teal-600 dark:text-teal-400',
-      borderHover: 'hover:border-teal-500/50',
+      accentBg: 'bg-red-500/15',
+      accentColor: 'text-red-600 dark:text-red-400',
+      borderHover: 'hover:border-red-500/50',
     },
   ];
 
@@ -447,7 +447,7 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
                 <FileText className="w-3.5 h-3.5" />
                 <span>PDF</span>
               </span>
-              <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold border border-teal-500/20 text-[11px]">
+              <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20 text-[11px]">
                 <FileSpreadsheet className="w-3.5 h-3.5" />
                 <span>CSV</span>
               </span>
@@ -598,13 +598,13 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
         {/* CARD 2: I Will Enter Manually (Enhanced with Live Widgets & 4-Button Grid)*/}
         {/* ========================================================================= */}
         <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700/80 transition-all duration-200 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl pointer-events-none" />
 
           <div className="space-y-5">
             {/* Card Header */}
             <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800/80">
               <div className="flex items-center space-x-3.5">
-                <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-800/60 flex-shrink-0">
+                <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/60 flex-shrink-0">
                   <Layers className="w-6 h-6" />
                 </div>
                 <div>
@@ -657,7 +657,7 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
                 title="Click to view Split & Collect"
               >
                 <div className="flex items-center space-x-2">
-                  <div className="p-1 rounded bg-teal-500/10 text-teal-600 dark:text-teal-400">
+                  <div className="p-1 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                     <Users className="w-3.5 h-3.5" />
                   </div>
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -686,7 +686,7 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => e.key === 'Enter' && handleNavigate('goal-target')}
-                className="p-3.5 rounded-xl bg-slate-50/90 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/90 hover:border-cyan-500/40 hover:bg-slate-100/70 dark:hover:bg-slate-850 transition-all duration-200 cursor-pointer space-y-2 shadow-sm group"
+                className="p-3.5 rounded-xl bg-slate-50/90 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/90 hover:border-emerald-500/40 hover:bg-slate-100/70 dark:hover:bg-slate-850 transition-all duration-200 cursor-pointer space-y-2 shadow-sm group"
                 title="Click to view Goal Target"
               >
                 <div className="flex items-center justify-between text-xs">
@@ -704,7 +704,7 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
                 {/* Progress bar */}
                 <div className="w-full bg-slate-200 dark:bg-slate-800/80 rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 h-2 rounded-full transition-all duration-500 group-hover:brightness-110"
+                    className="bg-gradient-to-r from-emerald-500 to-green-600 h-2 rounded-full transition-all duration-500 group-hover:brightness-110"
                     style={{ width: `${Math.min(100, Math.max(0, highestProgressGoal.percentage))}%` }}
                   />
                 </div>

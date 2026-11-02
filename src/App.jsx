@@ -601,7 +601,7 @@ export default function App() {
                   <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1">
                     {formatINR(stats.totalCount > 0 ? stats.totalAmount / stats.totalCount : 0)}
                   </h3>
-                  <p className="text-xs text-cyan-600 dark:text-cyan-400 mt-3 font-semibold">Real-time mean</p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3 font-semibold">Real-time mean</p>
                 </div>
               </section>
 

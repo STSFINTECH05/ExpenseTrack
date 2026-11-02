@@ -165,19 +165,32 @@ export default function Header({
             className="flex items-center space-x-3 text-left focus:outline-none group cursor-pointer select-none"
             title="Toggle Sidebar"
           >
-            {/* Company Logo Icon */}
-            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl overflow-hidden shadow-xs border border-emerald-600/30 flex-shrink-0 group-hover:scale-105 group-hover:border-emerald-500 transition-all bg-white flex items-center justify-center p-0.5">
-              <img
-                src={stsLogo}
-                alt="STS FINTECH Logo"
-                className="h-full w-full object-cover rounded-lg"
-              />
+            {/* Company Logo Icon with distinct Red and Green Logo Mark */}
+            <div className="relative p-0.5 rounded-xl bg-gradient-to-tr from-red-500 via-rose-500 to-emerald-500 shadow-xs group-hover:scale-105 group-hover:shadow-[0_0_12px_rgba(16,185,129,0.35)] transition-all flex-shrink-0">
+              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-[10px] overflow-hidden bg-white flex items-center justify-center p-0.5">
+                <img
+                  src={stsLogo}
+                  alt="STS FINTECH Logo"
+                  className="h-full w-full object-cover rounded-md"
+                />
+              </div>
+              {/* Distinct dual red & green strategic pip/indicator */}
+              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-white" />
+              </span>
             </div>
 
-            {/* Company Name ONLY */}
-            <span className="text-sm sm:text-base font-black tracking-tight text-slate-900 group-hover:text-emerald-700 transition-colors whitespace-nowrap">
-              STS FINTECH
-            </span>
+            {/* Company Name with Red & Green Strategic Identity */}
+            <div className="flex items-center space-x-1.5">
+              <span className="text-sm sm:text-base font-black tracking-tight text-slate-900 group-hover:text-emerald-700 transition-colors whitespace-nowrap">
+                STS <span className="text-emerald-700 font-black">FIN</span><span className="text-red-600 font-black">TECH</span>
+              </span>
+              <span className="inline-flex items-center space-x-0.5 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[9px] font-extrabold text-emerald-800">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 ml-0.5" />
+              </span>
+            </div>
           </button>
         </div>
 
@@ -195,7 +208,7 @@ export default function Header({
               onClick={() => setActiveMainTab && setActiveMainTab('Expense')}
               className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Expense'
-                  ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                  ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500/50'
                   : 'text-slate-700 hover:text-slate-950 hover:bg-yellow-200/60'
               }`}
             >
@@ -208,7 +221,7 @@ export default function Header({
               onClick={() => setActiveMainTab && setActiveMainTab('Wallet')}
               className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Wallet'
-                  ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                  ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500/50'
                   : 'text-slate-700 hover:text-slate-950 hover:bg-yellow-200/60'
               }`}
             >
@@ -221,7 +234,7 @@ export default function Header({
               onClick={() => setActiveMainTab && setActiveMainTab('Social')}
               className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Social'
-                  ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                  ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500/50'
                   : 'text-slate-700 hover:text-slate-950 hover:bg-yellow-200/60'
               }`}
             >
@@ -259,7 +272,7 @@ export default function Header({
               aria-label="View notifications"
             >
               <Bell className="w-4 h-4 text-slate-700" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 shadow-xs shadow-emerald-500" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 shadow-xs shadow-red-500 animate-pulse" />
             </button>
 
             {/* Notification Popover */}
@@ -267,8 +280,8 @@ export default function Header({
               <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-[#0d1322] border border-slate-800 shadow-2xl py-3 px-4 z-50 animate-fadeIn">
                 <div className="flex items-center justify-between pb-2 border-b border-slate-800">
                   <span className="text-xs font-bold text-white">Notifications</span>
-                  <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-950/80 border border-emerald-500/30 px-1.5 py-0.5 rounded">
-                    Live
+                  <span className="text-[10px] text-red-400 font-semibold bg-red-950/80 border border-red-500/30 px-1.5 py-0.5 rounded">
+                    Alert
                   </span>
                 </div>
                 <div className="mt-2.5 space-y-2">
@@ -325,7 +338,7 @@ export default function Header({
                   className="w-8 h-8 rounded-full object-cover border border-emerald-600/50 shadow-sm flex-shrink-0"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 p-[1.5px] shadow-sm flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-red-500 p-[1.5px] shadow-sm flex-shrink-0">
                   <div className="w-full h-full rounded-full bg-white flex items-center justify-center font-bold text-[11px] text-emerald-700">
                     {userInitials}
                   </div>
@@ -356,7 +369,7 @@ export default function Header({
                         className="w-12 h-12 rounded-full object-cover border-2 border-emerald-500/60 shadow-md flex-shrink-0"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1.5px] shadow-md flex-shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-emerald-500 via-emerald-400 to-red-500 p-[1.5px] shadow-md flex-shrink-0">
                         <div className="w-full h-full rounded-full bg-[#090d16] flex items-center justify-center font-bold text-sm text-emerald-400">
                           {userInitials}
                         </div>

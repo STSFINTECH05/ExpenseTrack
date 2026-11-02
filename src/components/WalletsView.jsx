@@ -402,16 +402,16 @@ export default function WalletsView({ currentUser }) {
         <button
           type="button"
           onClick={handleOpenAddModal}
-          className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-950/20 active:scale-95 transition cursor-pointer"
+          className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-950/20 active:scale-95 transition cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add Bank Account</span>
         </button>
       </div>
 
-      {/* Metric Summary Bar */}
+      {/* Metric Summary Bar (Red and Green Theme) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center space-x-3.5">
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center space-x-3.5 hover:border-emerald-500/30 transition">
           <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
             <Building2 className="w-5 h-5" />
           </div>
@@ -425,9 +425,9 @@ export default function WalletsView({ currentUser }) {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center space-x-3.5">
-          <div className="p-2.5 rounded-xl bg-teal-500/10 text-teal-500 border border-teal-500/20">
-            <Star className="w-5 h-5 fill-teal-500/20" />
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center space-x-3.5 hover:border-emerald-500/30 transition">
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+            <Star className="w-5 h-5 fill-emerald-500/20" />
           </div>
           <div className="min-w-0">
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -439,8 +439,8 @@ export default function WalletsView({ currentUser }) {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center space-x-3.5">
-          <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center space-x-3.5 hover:border-red-500/30 transition">
+          <div className="p-2.5 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
@@ -576,7 +576,7 @@ export default function WalletsView({ currentUser }) {
                           onClick={(e) => handleOpenEditModal(acc, e)}
                           className="w-full text-left px-3.5 py-2 text-slate-300 hover:text-white hover:bg-slate-800 flex items-center space-x-2 transition"
                         >
-                          <Pencil className="w-3.5 h-3.5 text-cyan-400" />
+                          <Pencil className="w-3.5 h-3.5 text-emerald-400" />
                           <span>Edit Account</span>
                         </button>
                         <button
@@ -887,7 +887,7 @@ export default function WalletsView({ currentUser }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md transition active:scale-95 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs shadow-md transition active:scale-95 cursor-pointer"
                 >
                   {editingId ? 'Save Changes' : 'Save Bank Account'}
                 </button>

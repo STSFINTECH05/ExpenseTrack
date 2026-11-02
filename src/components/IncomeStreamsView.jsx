@@ -102,9 +102,9 @@ const INCOME_STREAMS = [
       'Choose the Direct Plan Growth option with expense ratios under 0.20% for maximum compounding.',
     ],
     highlights: ['Top 50 Bluechips', 'Zero Manager Bias', 'Ultra-low Expense Ratio'],
-    accentBg: 'bg-cyan-50 dark:bg-cyan-950/40',
-    accentBorder: 'border-cyan-200 dark:border-cyan-800/60',
-    accentText: 'text-cyan-700 dark:text-cyan-400',
+    accentBg: 'bg-emerald-50 dark:bg-emerald-950/40',
+    accentBorder: 'border-emerald-200 dark:border-emerald-800/60',
+    accentText: 'text-emerald-700 dark:text-emerald-400',
   },
   {
     id: 'dividends',
@@ -182,9 +182,9 @@ const INCOME_STREAMS = [
       'Receive statutory 90% NDCF rental cash distributions deposited straight to your bank account.',
     ],
     highlights: ['Quarterly Dividend Payouts', 'Grade-A Multinational Tenants', 'Fractional Property Entry'],
-    accentBg: 'bg-indigo-50 dark:bg-indigo-950/40',
-    accentBorder: 'border-indigo-200 dark:border-indigo-800/60',
-    accentText: 'text-indigo-700 dark:text-indigo-400',
+    accentBg: 'bg-red-50 dark:bg-red-950/40',
+    accentBorder: 'border-red-200 dark:border-red-800/60',
+    accentText: 'text-red-700 dark:text-red-400',
   },
   {
     id: 'swp',
@@ -201,9 +201,9 @@ const INCOME_STREAMS = [
       'Specify a fixed monthly credit date and amount; only capital gains components incur tax.',
     ],
     highlights: ['Tax-Efficient Salary Alternative', 'Customizable Monthly Cash Flow', 'Principal Keeps Compounding'],
-    accentBg: 'bg-teal-50 dark:bg-teal-950/40',
-    accentBorder: 'border-teal-200 dark:border-teal-800/60',
-    accentText: 'text-teal-700 dark:text-teal-400',
+    accentBg: 'bg-emerald-50 dark:bg-emerald-950/40',
+    accentBorder: 'border-emerald-200 dark:border-emerald-800/60',
+    accentText: 'text-emerald-700 dark:text-emerald-400',
   },
 ];
 
@@ -334,7 +334,7 @@ export default function IncomeStreamsView() {
                           ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/80'
                           : isAmber
                           ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/80'
-                          : 'bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800/80'
+                          : 'bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800/80'
                       }`}
                     >
                       {item.risk}
@@ -419,7 +419,7 @@ export default function IncomeStreamsView() {
             <span className="text-[11px] font-mono px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/80 font-bold">
               50% Safe Core
             </span>
-            <span className="text-[11px] font-mono px-3 py-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800/80 font-bold">
+            <span className="text-[11px] font-mono px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/80 font-bold">
               30% Market Growth
             </span>
             <span className="text-[11px] font-mono px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/80 font-bold">

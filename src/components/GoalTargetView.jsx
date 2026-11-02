@@ -325,7 +325,7 @@ export default function GoalTargetView() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
           <div className="flex items-center space-x-2.5">
-            <h2 className="text-xl sm:text-2xl font-black tracking-wider uppercase bg-gradient-to-r from-[#0d5236] via-emerald-700 to-teal-600 bg-clip-text text-transparent">
+            <h2 className="text-xl sm:text-2xl font-black tracking-wider uppercase bg-gradient-to-r from-[#0d5236] via-emerald-700 to-red-600 bg-clip-text text-transparent">
               SET YOUR TARGET FOR YOUR FUTURE
             </h2>
             <button
@@ -419,7 +419,7 @@ export default function GoalTargetView() {
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Total Isolated Funds
             </span>
-            <div className="p-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-400">
+            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
               <IndianRupee className="w-4 h-4" />
             </div>
           </div>
@@ -433,7 +433,7 @@ export default function GoalTargetView() {
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Goal Completion Target
             </span>
-            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400">
+            <div className="p-2 rounded-xl bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-400">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
@@ -582,11 +582,11 @@ export default function GoalTargetView() {
                         {wallet.name}
                       </h4>
                       {isTargetMet ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200 uppercase tracking-wider">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase tracking-wider shadow-2xs">
                           TARGET MET
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase tracking-wider">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-300 uppercase tracking-wider shadow-2xs">
                           GROWING
                         </span>
                       )}
@@ -682,7 +682,7 @@ export default function GoalTargetView() {
                     </div>
                     <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-emerald-500 to-green-600 rounded-full transition-all duration-500"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>

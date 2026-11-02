@@ -600,7 +600,7 @@ export default function CalculatorModal({ isOpen, onClose }) {
           <button
             type="button"
             onClick={handleEvaluate}
-            className="py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-lg transition active:scale-95 cursor-pointer shadow-lg shadow-emerald-500/20"
+            className="py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-black text-lg transition active:scale-95 cursor-pointer shadow-lg shadow-emerald-500/20"
           >
             =
           </button>

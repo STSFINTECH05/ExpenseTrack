@@ -8,6 +8,12 @@ export default {
   theme: {
     extend: {
       colors: {
+        brand: {
+          green: '#10b981',
+          greenDark: '#059669',
+          red: '#ef4444',
+          redDark: '#dc2626',
+        },
         fintech: {
           bg: '#0a0e17',
           card: '#111827',
@@ -15,8 +21,10 @@ export default {
           border: '#1f293d',
           accent: '#10b981',
           accentGlow: '#059669',
-          cyan: '#06b6d4',
-          purple: '#8b5cf6',
+          crimson: '#ef4444',
+          crimsonGlow: '#dc2626',
+          cyan: '#10b981',
+          purple: '#ef4444',
           muted: '#94a3b8',
         },
       },

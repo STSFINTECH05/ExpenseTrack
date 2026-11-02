@@ -104,14 +104,14 @@ export default function BillsAndRemindersView() {
     <div className="space-y-6 animate-fadeIn">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="p-3 rounded-xl bg-cyan-50 border border-cyan-300 text-cyan-900 text-xs flex items-center justify-between shadow-sm animate-fadeIn">
+        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs flex items-center justify-between shadow-sm animate-fadeIn">
           <div className="flex items-center space-x-2">
-            <CheckCircle2 className="w-4 h-4 text-cyan-600 flex-shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
             <span className="font-medium">{toastMessage}</span>
           </div>
           <button
             onClick={() => setToastMessage(null)}
-            className="text-cyan-600 hover:text-cyan-800 font-bold ml-2 text-xs"
+            className="text-emerald-600 hover:text-emerald-800 font-bold ml-2 text-xs"
           >
             ✕
           </button>
@@ -123,8 +123,8 @@ export default function BillsAndRemindersView() {
         {/* Header & Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-start sm:items-center space-x-3.5">
-            {/* Bell icon in a rounded container */}
-            <div className="p-3.5 rounded-xl bg-cyan-100 dark:bg-cyan-950/40 border border-cyan-300 dark:border-cyan-800 text-cyan-700 dark:text-cyan-400 flex-shrink-0">
+            {/* Bell icon in a rounded container with crimson red alert theme */}
+            <div className="p-3.5 rounded-xl bg-red-100 dark:bg-red-950/40 border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 flex-shrink-0">
               <Bell className="w-6 h-6" />
             </div>
 
@@ -133,12 +133,12 @@ export default function BillsAndRemindersView() {
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                   Bills & Reminders
                 </h2>
-                {/* Badge: AUTOMATION ACTIVE */}
-                <span className="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800 tracking-wider">
+                {/* Badge: AUTOMATION ACTIVE in vibrant Emerald */}
+                <span className="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 tracking-wider">
                   AUTOMATION ACTIVE
                 </span>
                 {refreshing && (
-                  <RefreshCw className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 animate-spin ml-1" />
+                  <RefreshCw className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-spin ml-1" />
                 )}
               </div>
 
@@ -149,10 +149,10 @@ export default function BillsAndRemindersView() {
             </div>
           </div>
 
-          {/* Action Button: + Add Bill (single + only) */}
+          {/* Action Button: + Add Bill (Solid vibrant green) */}
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs sm:text-sm transition shadow-md shadow-cyan-600/20 self-start sm:self-auto active:scale-95 cursor-pointer"
+            className="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm transition shadow-md shadow-emerald-600/20 self-start sm:self-auto active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Add Bill</span>
@@ -168,7 +168,7 @@ export default function BillsAndRemindersView() {
               <span>No urgent bill reminders due today. All active bills are synchronized.</span>
             </div>
             {/* Right side link/tag: "All clear" */}
-            <span className="text-xs text-cyan-600 dark:text-cyan-400 font-bold whitespace-nowrap pl-2">
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap pl-2">
               All clear
             </span>
           </div>
@@ -176,7 +176,7 @@ export default function BillsAndRemindersView() {
           {/* Bills List / Grid */}
           {loading ? (
             <div className="py-8 text-center text-xs text-slate-400 dark:text-slate-500">
-              <RefreshCw className="w-5 h-5 animate-spin mx-auto text-cyan-600 dark:text-cyan-400 mb-2" />
+              <RefreshCw className="w-5 h-5 animate-spin mx-auto text-emerald-600 dark:text-emerald-400 mb-2" />
               <span>Checking scheduled bills & automation status...</span>
             </div>
           ) : bills.length > 0 ? (
@@ -193,7 +193,7 @@ export default function BillsAndRemindersView() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="font-mono font-bold text-cyan-700 dark:text-cyan-400 text-sm">
+                    <span className="font-mono font-bold text-red-600 dark:text-red-400 text-sm">
                       {formatINR(bill.amount)}
                     </span>
                     <p className="text-[10px] text-slate-500 dark:text-slate-400">{bill.category}</p>

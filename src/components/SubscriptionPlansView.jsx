@@ -159,8 +159,8 @@ export default function SubscriptionPlansView({ currentUser }) {
       price: '₹2,999',
       period: '/year',
       icon: Sparkles,
-      accentBorder: 'border-slate-200 dark:border-slate-800 hover:border-teal-500/60 dark:hover:border-teal-500/50',
-      iconBg: 'bg-teal-50 dark:bg-teal-950/80 text-teal-600 dark:text-teal-400',
+      accentBorder: 'border-slate-200 dark:border-slate-800 hover:border-red-500/60 dark:hover:border-red-500/50',
+      iconBg: 'bg-red-50 dark:bg-red-950/80 text-red-600 dark:text-red-400',
       buttonVariant: 'secondary',
       popular: false,
       features: [
@@ -267,7 +267,7 @@ export default function SubscriptionPlansView({ currentUser }) {
 
                   <div className="flex items-center space-x-1.5">
                     {plan.popular && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-sm shadow-emerald-500/20">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-emerald-500 to-green-600 text-slate-950 shadow-sm shadow-emerald-500/20">
                         Popular
                       </span>
                     )}
@@ -332,7 +332,7 @@ export default function SubscriptionPlansView({ currentUser }) {
                     onClick={() => handleOpenPlanModal(plan)}
                     className={`w-full py-3 px-5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center space-x-2 active:scale-98 cursor-pointer shadow-md ${
                       plan.popular
-                        ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-950/20 hover:shadow-lg'
+                        ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white shadow-emerald-950/20 hover:shadow-lg'
                         : 'bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white border border-slate-700/60'
                     }`}
                   >
@@ -471,11 +471,11 @@ export default function SubscriptionPlansView({ currentUser }) {
                     className="w-full p-4 rounded-xl text-left bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/60 dark:hover:border-emerald-500/50 hover:bg-emerald-50/20 dark:hover:bg-slate-850 hover:shadow-md transition-all duration-200 cursor-pointer flex items-center justify-between group"
                   >
                     <div className="flex items-center space-x-3.5">
-                      <div className="p-2.5 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 group-hover:scale-105 transition-transform">
+                      <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 group-hover:scale-105 transition-transform">
                         <QrCode className="w-5 h-5" />
                       </div>
                       <div>
-                        <span className="text-sm font-bold text-slate-900 dark:text-white block group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                        <span className="text-sm font-bold text-slate-900 dark:text-white block group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                           UPI
                         </span>
                         <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
@@ -483,7 +483,7 @@ export default function SubscriptionPlansView({ currentUser }) {
                         </span>
                       </div>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-teal-500 group-hover:translate-x-1 transition-all" />
+                    <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
                   </button>
                 </div>
 

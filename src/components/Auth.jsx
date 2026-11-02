@@ -123,7 +123,7 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
       {/* Subtle Light Ambient Background Tints */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-10 left-10 w-96 h-96 bg-emerald-500/8 rounded-full blur-[140px]" />
-        <div className="absolute bottom-10 right-10 w-[30rem] h-[30rem] bg-teal-500/6 rounded-full blur-[160px]" />
+        <div className="absolute bottom-10 right-10 w-[30rem] h-[30rem] bg-red-500/8 rounded-full blur-[160px]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f080_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f080_1px,transparent_1px)] bg-[size:36px_36px] opacity-70" />
       </div>
 
@@ -188,7 +188,7 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
                   onClick={() => handleTabChange('signin')}
                   className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                     mode === 'signin'
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm'
+                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -199,7 +199,7 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
                   onClick={() => handleTabChange('signup')}
                   className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                     mode === 'signup'
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm'
+                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -418,7 +418,7 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
                   {/* Submit Button: "Create Free Account" (Dark Emerald Green Fill / Gradient) */}
                   <button
                     type="submit"
-                    className="w-full py-3 px-4 rounded-xl text-white font-bold text-xs sm:text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center space-x-2 mt-2 cursor-pointer"
+                    className="w-full py-3 px-4 rounded-xl text-white font-bold text-xs sm:text-sm bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center space-x-2 mt-2 cursor-pointer"
                   >
                     <span>Create Free Account</span>
                     <ArrowRight className="w-4 h-4" />

@@ -281,7 +281,7 @@ export default function ContactUsView({ currentUser }) {
                 <button
                   type="submit"
                   disabled={status === 'loading'}
-                  className="w-full sm:w-auto min-w-[200px] py-3.5 px-8 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-950/20 hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 active:scale-98 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                  className="w-full sm:w-auto min-w-[200px] py-3.5 px-8 rounded-xl font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 shadow-md shadow-emerald-950/20 hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 active:scale-98 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {status === 'loading' ? (
                     <>
@@ -337,7 +337,7 @@ export default function ContactUsView({ currentUser }) {
               </div>
 
               <div className="flex items-start space-x-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                <Clock className="w-4 h-4 text-teal-500 mt-0.5 flex-shrink-0" />
+                <Clock className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                 <div>
                   <span className="font-bold text-slate-800 dark:text-slate-200 block">
                     Response Speed SLA
@@ -349,7 +349,7 @@ export default function ContactUsView({ currentUser }) {
               </div>
 
               <div className="flex items-start space-x-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                <Building2 className="w-4 h-4 text-cyan-500 mt-0.5 flex-shrink-0" />
+                <Building2 className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
                 <div>
                   <span className="font-bold text-slate-800 dark:text-slate-200 block">
                     Corporate Engineering HQ
@@ -363,7 +363,7 @@ export default function ContactUsView({ currentUser }) {
           </div>
 
           {/* Card 2: Live Operational Status */}
-          <div className="rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border border-emerald-500/20 p-5 shadow-sm space-y-2">
+          <div className="rounded-2xl bg-gradient-to-br from-emerald-500/10 via-red-500/5 to-transparent border border-emerald-500/20 p-5 shadow-sm space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center space-x-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />

@@ -539,7 +539,7 @@ export default function Settings({ currentUser, setCurrentUser }) {
             <button
               type="button"
               onClick={() => setIsEditingProfile(true)}
-              className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow-sm shadow-emerald-600/20 active:scale-95 cursor-pointer"
+              className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-sm shadow-emerald-600/20 active:scale-95 cursor-pointer"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>{t('edit_profile', 'Edit Profile')}</span>
@@ -575,7 +575,7 @@ export default function Settings({ currentUser, setCurrentUser }) {
                   className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500 shadow-md"
                 />
               ) : (
-                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 p-[2px] shadow-md flex-shrink-0">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-500 via-emerald-600 to-red-500 p-[2px] shadow-md flex-shrink-0">
                   <div className="w-full h-full rounded-full bg-[#090d16] flex items-center justify-center font-black text-lg text-emerald-400">
                     {userInitials}
                   </div>
@@ -592,7 +592,7 @@ export default function Settings({ currentUser, setCurrentUser }) {
                 <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
                   {profileFormData.name}
                 </h4>
-                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
                   Account Owner
                 </span>
               </div>
@@ -620,7 +620,7 @@ export default function Settings({ currentUser, setCurrentUser }) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow-sm shadow-emerald-600/20 active:scale-95 cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-sm shadow-emerald-600/20 active:scale-95 cursor-pointer"
               title="Upload or change profile photo"
             >
               <Camera className="w-3.5 h-3.5" />
@@ -784,44 +784,44 @@ export default function Settings({ currentUser, setCurrentUser }) {
                   {profileFormData.name}
                 </p>
               </div>
-              <span className="inline-block mt-2 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60">
+              <span className="inline-block mt-2 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700 shadow-2xs">
                 Account Owner
               </span>
             </div>
 
             {/* 2. Age */}
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#080d18] border border-slate-200 dark:border-slate-800/80">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#080d18] border border-slate-200 dark:border-slate-800/80 hover:border-red-500/30 transition">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 flex items-center space-x-1.5">
-                <Calendar className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                <Calendar className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
                 <span>{t('age', 'Age')}</span>
               </p>
               <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
                 {profileFormData.age} <span className="text-xs font-normal text-slate-500 dark:text-slate-400">years</span>
               </p>
-              <span className="inline-block mt-2 text-[10px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-200/70 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-300 dark:border-slate-700">
+              <span className="inline-block mt-2 text-[10px] font-bold text-red-800 dark:text-red-300 bg-red-100/90 dark:bg-red-950/80 px-2.5 py-0.5 rounded-full border border-red-300 dark:border-red-700 shadow-2xs">
                 Verified Identity
               </span>
             </div>
 
             {/* 3. Email */}
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#080d18] border border-slate-200 dark:border-slate-800/80">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#080d18] border border-slate-200 dark:border-slate-800/80 hover:border-emerald-500/30 transition">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 flex items-center space-x-1.5">
-                <Mail className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                <Mail className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>{t('email', 'Gmail / Email')}</span>
               </p>
               <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate" title={profileFormData.email}>
                 {profileFormData.email}
               </p>
-              <span className="inline-block mt-2 text-[10px] font-semibold text-teal-700 dark:text-teal-300 bg-teal-100/70 dark:bg-teal-950/60 px-2 py-0.5 rounded border border-teal-200 dark:border-teal-800/60">
+              <span className="inline-block mt-2 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700 shadow-2xs">
                 Primary Auth
               </span>
             </div>
 
             {/* 4. Password */}
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#080d18] border border-slate-200 dark:border-slate-800/80">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#080d18] border border-slate-200 dark:border-slate-800/80 hover:border-rose-500/30 transition">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
-                  <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <Lock className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                   <span>{t('password', 'Password')}</span>
                 </p>
                 <button
@@ -836,7 +836,7 @@ export default function Settings({ currentUser, setCurrentUser }) {
               <p className="text-sm font-mono font-bold text-slate-900 dark:text-slate-100 truncate">
                 {showPassword ? profileFormData.password : '••••••••••••'}
               </p>
-              <span className="inline-block mt-2 text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-100/70 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">
+              <span className="inline-block mt-2 text-[10px] font-bold text-rose-800 dark:text-rose-300 bg-rose-100/90 dark:bg-rose-950/80 px-2.5 py-0.5 rounded-full border border-rose-300 dark:border-rose-700 shadow-2xs">
                 256-Bit Encrypted
               </span>
             </div>
@@ -992,7 +992,7 @@ export default function Settings({ currentUser, setCurrentUser }) {
       <section className="bg-white dark:bg-[#0c1322] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm transition">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-slate-200 dark:border-slate-800 gap-3 mb-6">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <Globe className="w-5 h-5" />
             </div>
             <div>
@@ -1005,7 +1005,7 @@ export default function Settings({ currentUser, setCurrentUser }) {
             </div>
           </div>
 
-          <div className="text-xs font-semibold px-3 py-1 rounded-full bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 flex items-center space-x-1.5">
+          <div className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center space-x-1.5">
             <span>Current:</span>
             <span className="font-bold text-slate-900 dark:text-slate-100">
               {activeLangObj.native} ({activeLangObj.label})
@@ -1015,16 +1015,16 @@ export default function Settings({ currentUser, setCurrentUser }) {
 
         {/* Success Alert */}
         {languageSuccessMsg && (
-          <div className="mb-5 p-3.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-300 dark:border-cyan-800 text-cyan-800 dark:text-cyan-300 text-xs flex items-center space-x-2.5 animate-fadeIn">
-            <CheckCircle2 className="w-4 h-4 text-cyan-600 dark:text-cyan-400 flex-shrink-0" />
+          <div className="mb-5 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs flex items-center space-x-2.5 animate-fadeIn">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
             <span>{languageSuccessMsg}</span>
           </div>
         )}
 
         {/* Native Greeting Display Card */}
-        <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-cyan-50/70 dark:from-cyan-950/30 via-emerald-50/50 dark:via-emerald-950/20 to-slate-50 dark:to-slate-900 border border-cyan-200/60 dark:border-cyan-800/50 flex items-center justify-between">
+        <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-emerald-50/70 dark:from-emerald-950/30 via-red-50/40 dark:via-red-950/20 to-slate-50 dark:to-slate-900 border border-emerald-200/60 dark:border-emerald-800/50 flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
               {t('localized_greeting', 'Localized Greeting')}
             </p>
             <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">

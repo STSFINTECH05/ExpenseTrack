@@ -273,7 +273,7 @@ export default function SegregationView() {
         </div>
 
         {/* Monthly Savings */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-teal-500/40 hover:shadow-md transition">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-md transition">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">{t('monthly_savings', 'Monthly Savings')}</p>
@@ -281,7 +281,7 @@ export default function SegregationView() {
                 {formatINR(totals.monthlySavings)}
               </h3>
             </div>
-            <div className="p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-800/60">
+            <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
               <PiggyBank className="w-5 h-5" />
             </div>
           </div>
@@ -296,20 +296,20 @@ export default function SegregationView() {
         </div>
 
         {/* Net Worth */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-cyan-500/40 hover:shadow-md transition">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-md transition">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">{t('net_worth', 'Net Worth')}</p>
-              <h3 className="text-2xl font-black text-cyan-600 dark:text-cyan-400 mt-1 tracking-tight">
+              <h3 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1 tracking-tight">
                 {formatINR(totals.netWorth)}
               </h3>
             </div>
-            <div className="p-2.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800/60">
+            <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
               <Briefcase className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-[11px] text-slate-500 dark:text-slate-400">
-            <span className="text-cyan-600 dark:text-cyan-400 font-semibold mr-1">Verified</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold mr-1">Verified</span>
             <span>corporate asset standing</span>
           </div>
         </div>

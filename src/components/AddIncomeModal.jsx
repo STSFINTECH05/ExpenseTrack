@@ -332,7 +332,7 @@ export default function AddIncomeModal({ isOpen, onClose, defaultType, onSuccess
               disabled={loading}
               className={`px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-lg flex items-center space-x-2 ${
                 isIncome
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-emerald-500/20'
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-emerald-500/20'
                   : 'bg-gradient-to-r from-rose-500 to-red-500 hover:from-rose-400 hover:to-red-400 text-white shadow-rose-500/20'
               } disabled:opacity-50`}
             >

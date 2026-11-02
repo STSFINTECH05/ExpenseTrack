@@ -101,7 +101,7 @@ const INITIAL_COURSES = [
     id: 'real_estate_reits',
     category: 'Real Estate',
     badge: 'Property & Assets',
-    badgeColor: 'bg-cyan-50 text-cyan-800 border-cyan-200',
+    badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
     title: 'Real Estate & REIT Investment Framework',
     description:
       'Learn commercial vs. residential real estate investing, legal due diligence, rental yields, and investing through REITs with lower capital.',
@@ -279,7 +279,7 @@ export default function WealthAcademyView({ onReturnToExpense }) {
                     <div className="space-y-1 pt-1">
                       <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
+                          className="h-full bg-gradient-to-r from-emerald-500 to-green-600 rounded-full transition-all duration-500"
                           style={{ width: `${course.progress}%` }}
                         />
                       </div>
@@ -399,7 +399,7 @@ export default function WealthAcademyView({ onReturnToExpense }) {
               </div>
               <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-emerald-500 to-green-600 rounded-full transition-all duration-500"
                   style={{ width: `${overallPercentage}%` }}
                 />
               </div>
@@ -479,7 +479,7 @@ export default function WealthAcademyView({ onReturnToExpense }) {
           {/* Top Discussion Topics */}
           <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3.5">
             <div className="flex items-center space-x-2.5">
-              <div className="p-2 rounded-xl bg-blue-50 text-blue-700">
+              <div className="p-2 rounded-xl bg-red-50 text-red-700">
                 <MessageSquare className="w-4 h-4" />
               </div>
               <div>
