@@ -34,6 +34,7 @@ import LandingPage from './components/LandingPage';
 import Auth from './components/Auth';
 import Settings from './components/Settings';
 import IncomeStreamsView from './components/IncomeStreamsView';
+import LiveWorthView from './components/LiveWorthView';
 import { useLanguage } from './context/LanguageContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -69,7 +70,7 @@ export default function App() {
   const getInitialRoute = () => {
     const path = window.location.pathname;
     if (path === '/login' || path === '/auth' || path === '/signin' || path === '/signup') return 'auth';
-    if (path === '/dashboard' || path === '/settings' || path === '/income-streams') return 'dashboard';
+    if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth') return 'dashboard';
     return 'landing';
   };
 
@@ -134,13 +135,16 @@ export default function App() {
       } else if (path === '/signup') {
         setCurrentRoute('auth');
         setAuthMode('signup');
-      } else if (path === '/dashboard' || path === '/settings' || path === '/income-streams') {
+      } else if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth') {
         setCurrentRoute('dashboard');
         if (path === '/settings') {
           setActiveTab('settings');
           setMainNavTab('Expense');
         } else if (path === '/income-streams') {
           setActiveTab('income-streams');
+          setMainNavTab('Expense');
+        } else if (path === '/live-worth') {
+          setActiveTab('live_worth');
           setMainNavTab('Expense');
         }
       } else {
@@ -205,6 +209,7 @@ export default function App() {
     if (typeof window !== 'undefined') {
       if (window.location.pathname === '/settings') return 'settings';
       if (window.location.pathname === '/income-streams') return 'income-streams';
+      if (window.location.pathname === '/live-worth') return 'live_worth';
     }
     return 'dashboard';
   });
@@ -517,6 +522,11 @@ export default function App() {
               {/* TAB: INCOME STREAMS */}
               {(activeTab === 'income-streams' || activeTab === 'income_streams') && (
                 <IncomeStreamsView />
+              )}
+
+              {/* TAB: LIVE WORTH */}
+              {(activeTab === 'live_worth' || activeTab === 'live-worth') && (
+                <LiveWorthView currentUser={currentUser} />
               )}
 
               {/* TAB 5: WALLETS */}
