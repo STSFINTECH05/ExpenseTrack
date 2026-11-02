@@ -49,6 +49,7 @@ export default function GoalTargetView() {
   const [descriptiveNotes, setDescriptiveNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalError, setModalError] = useState(null);
+  const [successNotification, setSuccessNotification] = useState(null);
 
   // Add Cash Modal State
   const [isAddCashModalOpen, setIsAddCashModalOpen] = useState(false);
@@ -113,8 +114,14 @@ export default function GoalTargetView() {
     try {
       const payload = {
         name,
+        purpose: name,
         target_amount: cap,
+        targetAmount: cap,
+        target_cap: cap,
         description: descriptiveNotes.trim(),
+        notes: descriptiveNotes.trim(),
+        type: 'goal',
+        category: 'goal',
       };
 
       const res = await fetch(`${API_BASE_URL}/api/wallets`, {
@@ -127,16 +134,27 @@ export default function GoalTargetView() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || 'Failed to create isolated container');
+        throw new Error(data.message || data.error || 'Failed to create isolated container');
       }
 
-      // Reset and close
+      // Reset form state
       setPurposeName('');
       setTargetCap('');
       setDescriptiveNotes('');
+      setModalError(null);
+
+      // Close modal
       setIsSetupModalOpen(false);
 
-      // Refresh wallets list from database
+      // Display success indicator
+      setSuccessNotification(
+        data.message || `Goal wallet "${name}" activated successfully!`
+      );
+      setTimeout(() => {
+        setSuccessNotification(null);
+      }, 5000);
+
+      // Refresh target wallets list from database
       await fetchWallets(true);
     } catch (err) {
       console.error('Setup wallet error:', err);
@@ -359,6 +377,23 @@ export default function GoalTargetView() {
               Clear
             </button>
           )}
+        </div>
+      )}
+
+      {/* Success Notification Banner */}
+      {successNotification && (
+        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between shadow-sm animate-fadeIn">
+          <div className="flex items-center space-x-2.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            <span className="font-semibold">{successNotification}</span>
+          </div>
+          <button
+            onClick={() => setSuccessNotification(null)}
+            className="text-emerald-600 hover:text-emerald-800 p-1 rounded hover:bg-emerald-100 transition"
+            title="Dismiss"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 

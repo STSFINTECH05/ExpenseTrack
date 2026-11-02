@@ -125,8 +125,10 @@ export default function Header({
 
   return (
     <header
-      className="sticky top-0 z-40 bg-[#0d1322]/95 backdrop-blur-xl border-b border-slate-800 shadow-lg w-full max-w-full"
+      className="sticky top-0 z-40 bg-yellow-50/95 backdrop-blur-xl border-b border-yellow-200 shadow-xs w-full max-w-full"
       style={{
+        backgroundColor: '#FEFCE8',
+        borderColor: '#FEF08A',
         width: '100%',
         maxWidth: '100%',
       }}
@@ -150,10 +152,10 @@ export default function Header({
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition cursor-pointer flex-shrink-0"
+            className="md:hidden p-2 rounded-xl text-slate-700 hover:text-slate-900 hover:bg-yellow-100/80 border border-yellow-200/80 hover:border-yellow-300 transition cursor-pointer flex-shrink-0"
             aria-label="Toggle Navigation Menu"
           >
-            {isMobileMenuOpen ? <X className="w-5 h-5 text-emerald-400" /> : <Menu className="w-5 h-5" />}
+            {isMobileMenuOpen ? <X className="w-5 h-5 text-emerald-600" /> : <Menu className="w-5 h-5" />}
           </button>
 
           {/* Clickable Logo & Branding that toggles the sidebar */}
@@ -164,16 +166,16 @@ export default function Header({
             title="Toggle Sidebar"
           >
             {/* Company Logo Icon */}
-            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl overflow-hidden shadow-lg shadow-emerald-500/25 border border-emerald-500/30 flex-shrink-0 group-hover:scale-105 group-hover:border-emerald-400/60 group-active:scale-95 transition-all bg-[#090d16] flex items-center justify-center">
+            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl overflow-hidden shadow-xs border border-emerald-600/30 flex-shrink-0 group-hover:scale-105 group-hover:border-emerald-500 transition-all bg-white flex items-center justify-center p-0.5">
               <img
                 src={stsLogo}
                 alt="STS FINTECH Logo"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover rounded-lg"
               />
             </div>
 
             {/* Company Name ONLY */}
-            <span className="text-sm sm:text-base font-black tracking-tight text-white group-hover:text-emerald-400 transition-colors whitespace-nowrap">
+            <span className="text-sm sm:text-base font-black tracking-tight text-slate-900 group-hover:text-emerald-700 transition-colors whitespace-nowrap">
               STS FINTECH
             </span>
           </button>
@@ -184,7 +186,7 @@ export default function Header({
         {/* ========================================================= */}
         <div className="flex items-center justify-center mx-2 sm:mx-4">
           <nav
-            className="flex items-center space-x-1 bg-[#090d16]/90 p-1 rounded-xl border border-slate-800/90 shadow-inner"
+            className="flex items-center space-x-1 bg-yellow-100/70 p-1 rounded-xl border border-yellow-200 shadow-inner"
             aria-label="Primary Navigation"
           >
             {/* Expense Tab */}
@@ -193,8 +195,8 @@ export default function Header({
               onClick={() => setActiveMainTab && setActiveMainTab('Expense')}
               className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Expense'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-yellow-200/60'
               }`}
             >
               Expense
@@ -206,8 +208,8 @@ export default function Header({
               onClick={() => setActiveMainTab && setActiveMainTab('Wallet')}
               className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Wallet'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-yellow-200/60'
               }`}
             >
               Wallet
@@ -219,8 +221,8 @@ export default function Header({
               onClick={() => setActiveMainTab && setActiveMainTab('Social')}
               className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Social'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-yellow-200/60'
               }`}
             >
               Social
@@ -234,30 +236,30 @@ export default function Header({
         <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
           {/* 1. Search Bar */}
           <div className="relative hidden md:block">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
               placeholder="Search transactions..."
-              className="w-36 lg:w-48 bg-[#090d16] border border-slate-800/90 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all shadow-inner"
+              className="w-36 lg:w-48 bg-white/90 border border-yellow-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600/40 focus:border-emerald-600 focus:bg-white transition-all shadow-inner"
             />
           </div>
 
           {/* Global Language Selector Dropdown [ 🌐 English ▾ ] */}
-          <LanguageDropdown variant="dark" />
+          <LanguageDropdown variant="light" />
 
           {/* 2. Notification Icon Button */}
           <div className="relative" ref={notificationRef}>
             <button
               type="button"
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 border border-slate-800 transition"
+              className="relative p-2 rounded-xl text-slate-700 hover:text-slate-900 bg-white/80 hover:bg-yellow-100/80 border border-yellow-200/80 hover:border-yellow-300 transition shadow-xs"
               title="Notifications"
               aria-label="View notifications"
             >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400" />
+              <Bell className="w-4 h-4 text-slate-700" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 shadow-xs shadow-emerald-500" />
             </button>
 
             {/* Notification Popover */}
@@ -297,46 +299,46 @@ export default function Header({
                 setActiveTab('subscription');
               }
             }}
-            className={`relative p-2 rounded-xl border transition-all duration-200 cursor-pointer group ${
+            className={`relative p-2 rounded-xl border transition-all duration-200 cursor-pointer group shadow-xs ${
               activeTab === 'subscription'
-                ? 'text-emerald-400 bg-emerald-500/15 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.35)]'
-                : 'text-slate-400 hover:text-emerald-400 hover:bg-slate-800/80 border-slate-800 hover:border-emerald-500/50 hover:shadow-[0_0_12px_rgba(16,185,129,0.35)]'
+                ? 'text-emerald-700 bg-emerald-100/80 border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+                : 'text-slate-700 hover:text-emerald-700 bg-white/80 hover:bg-yellow-100/80 border-yellow-200/80 hover:border-emerald-500/50'
             }`}
             title="Subscription Plans"
             aria-label="Subscription Plans"
           >
-            <Crown className="w-4 h-4 transition-transform group-hover:scale-110" />
+            <Crown className="w-4 h-4 transition-transform group-hover:scale-110 text-slate-700 group-hover:text-emerald-700" />
           </button>
 
           {/* 3. Login Details / User Profile with Floating Dropdown Menu */}
-          <div className="relative pl-1 sm:pl-2 border-l border-slate-800/80" ref={profileMenuRef}>
+          <div className="relative pl-1 sm:pl-2 border-l border-yellow-200" ref={profileMenuRef}>
             <button
               type="button"
               onClick={() => setShowProfileMenu((prev) => !prev)}
-              className="flex items-center space-x-2.5 p-1 rounded-xl hover:bg-slate-800/60 transition group cursor-pointer text-left"
+              className="flex items-center space-x-2.5 p-1 rounded-xl hover:bg-yellow-100/80 transition group cursor-pointer text-left"
               aria-label="User account menu"
             >
               {userAvatar ? (
                 <img
                   src={userAvatar}
                   alt={userName}
-                  className="w-8 h-8 rounded-full object-cover border border-emerald-500/50 shadow-sm flex-shrink-0"
+                  className="w-8 h-8 rounded-full object-cover border border-emerald-600/50 shadow-sm flex-shrink-0"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 p-[1.5px] shadow-md shadow-emerald-500/10 flex-shrink-0">
-                  <div className="w-full h-full rounded-full bg-[#090d16] flex items-center justify-center font-bold text-[11px] text-emerald-400">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 p-[1.5px] shadow-sm flex-shrink-0">
+                  <div className="w-full h-full rounded-full bg-white flex items-center justify-center font-bold text-[11px] text-emerald-700">
                     {userInitials}
                   </div>
                 </div>
               )}
               <div className="hidden xl:block text-left">
-                <p className="text-xs font-semibold text-slate-200 leading-tight" title={userEmail}>
+                <p className="text-xs font-semibold text-slate-800 leading-tight" title={userEmail}>
                   {displayEmail}
                 </p>
               </div>
               <ChevronDown
-                className={`w-3.5 h-3.5 text-slate-400 transition-transform hidden sm:block ${
-                  showProfileMenu ? 'rotate-180 text-emerald-400' : 'group-hover:text-slate-200'
+                className={`w-3.5 h-3.5 text-slate-500 transition-transform hidden sm:block ${
+                  showProfileMenu ? 'rotate-180 text-emerald-600' : 'group-hover:text-slate-900'
                 }`}
               />
             </button>
@@ -427,11 +429,11 @@ export default function Header({
             <button
               type="button"
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 border border-slate-800 transition"
+              className="p-2 rounded-xl text-slate-700 hover:text-slate-900 bg-white/80 hover:bg-yellow-100/80 border border-yellow-200/80 hover:border-yellow-300 transition shadow-xs"
               title="More options"
               aria-label="More options"
             >
-              <MoreVertical className="w-4 h-4" />
+              <MoreVertical className="w-4 h-4 text-slate-700" />
             </button>
 
             {/* Dropdown Menu */}
