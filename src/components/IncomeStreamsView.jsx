@@ -18,6 +18,8 @@ import {
   Layers,
   RotateCcw,
   SlidersHorizontal,
+  Calculator,
+  AlertTriangle,
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -254,14 +256,57 @@ const INCOME_STREAMS = [
   },
 ];
 
+const BENCHMARK_AVENUES = [
+  {
+    name: 'Bank Fixed Deposit (FD)',
+    rateRange: '6.5% – 7.5%',
+    minRate: 0.065,
+    maxRate: 0.075,
+    risk: 'Low (DICGC Insured up to ₹5L)',
+    tag: 'Guaranteed',
+  },
+  {
+    name: 'Post Office Time Deposit',
+    rateRange: '6.9% – 7.5%',
+    minRate: 0.069,
+    maxRate: 0.075,
+    risk: 'Sovereign (Zero Risk)',
+    tag: 'Government',
+  },
+  {
+    name: 'High-Yield Savings Account',
+    rateRange: '3.5% – 6.0%',
+    minRate: 0.035,
+    maxRate: 0.060,
+    risk: 'Low (Instant Liquidity)',
+    tag: 'Liquid',
+  },
+  {
+    name: 'Short-Term Debt Mutual Fund',
+    rateRange: '6.5% – 7.2%',
+    minRate: 0.065,
+    maxRate: 0.072,
+    risk: 'Low to Moderate Risk',
+    tag: 'Flexible',
+  },
+  {
+    name: 'NIFTY 50 Index Fund',
+    rateRange: '11.0% – 13.0%',
+    minRate: 0.110,
+    maxRate: 0.130,
+    risk: 'Market Linked (5+ yrs)',
+    tag: 'Equity',
+  },
+];
+
 export default function IncomeStreamsView() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Interactive Filter States
   const [isFilterSubmitted, setIsFilterSubmitted] = useState(false);
-  const [invAmount, setInvAmount] = useState('50000');
-  const [targetProfit, setTargetProfit] = useState('8');
+  const [invAmount, setInvAmount] = useState('35000');
+  const [targetProfit, setTargetProfit] = useState('1000');
   const [profitCadence, setProfitCadence] = useState('year'); // 'month' or 'year'
   const [timeHorizon, setTimeHorizon] = useState('any'); // 'any', 'short', 'medium', 'long'
 
@@ -272,29 +317,33 @@ export default function IncomeStreamsView() {
 
   const handleResetFilter = () => {
     setIsFilterSubmitted(false);
-    setInvAmount('50000');
-    setTargetProfit('8');
+    setInvAmount('35000');
+    setTargetProfit('1000');
     setProfitCadence('year');
     setTimeHorizon('any');
   };
 
+  // Derived financial math for the breakdown card
+  const numPrincipal = Number(invAmount) || 1;
+  const numTargetProfit = Number(targetProfit) || 0;
+  const annualizedTarget = profitCadence === 'month' ? numTargetProfit * 12 : numTargetProfit;
+  const requiredReturnRate = ((annualizedTarget / numPrincipal) * 100).toFixed(2);
+  const isEasilyAchievable = Number(requiredReturnRate) <= 7.5;
+
   // Filtered & ranked streams
   const processedStreams = useMemo(() => {
-    const numAmount = Number(invAmount) || 0;
-    const numProfit = Number(targetProfit) || 0;
-
     const list = INCOME_STREAMS.map((item) => {
       let isMatch = false;
       let estAnnual = 0;
       let estMonthly = 0;
 
       const avgYield = (item.yieldMin + item.yieldMax) / 2;
-      estAnnual = Math.round((numAmount * avgYield) / 100);
+      estAnnual = Math.round((numPrincipal * avgYield) / 100);
       estMonthly = Math.round(estAnnual / 12);
 
       if (isFilterSubmitted) {
-        const matchesAmount = numAmount >= item.minAmount;
-        const matchesYield = item.yieldMax >= numProfit;
+        const matchesAmount = numPrincipal >= item.minAmount;
+        const matchesYield = (item.yieldMax / 100) * numPrincipal >= annualizedTarget;
         const matchesHorizon = timeHorizon === 'any' || item.term === timeHorizon;
         const matchesCadence =
           profitCadence === 'year'
@@ -320,7 +369,7 @@ export default function IncomeStreamsView() {
       }
       return 0;
     });
-  }, [invAmount, targetProfit, profitCadence, timeHorizon, isFilterSubmitted]);
+  }, [numPrincipal, annualizedTarget, profitCadence, timeHorizon, isFilterSubmitted]);
 
   // Combined search & category filtering
   const finalStreams = useMemo(() => {
@@ -409,31 +458,30 @@ export default function IncomeStreamsView() {
               step="500"
               value={invAmount}
               onChange={(e) => setInvAmount(e.target.value)}
-              placeholder="e.g. 50000"
+              placeholder="e.g. 35000"
               className="w-full px-3 py-2 bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition font-mono"
               required
             />
           </div>
 
-          {/* Target Profit % */}
+          {/* Desired Profit (₹) */}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-              Target Profit (% p.a.)
+              Desired Profit (₹)
             </label>
             <input
               type="number"
-              min="1"
-              max="35"
-              step="0.5"
+              min="100"
+              step="100"
               value={targetProfit}
               onChange={(e) => setTargetProfit(e.target.value)}
-              placeholder="e.g. 8"
+              placeholder="e.g. 1000"
               className="w-full px-3 py-2 bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition font-mono"
               required
             />
           </div>
 
-          {/* Month / Year Profit Preference */}
+          {/* Profit Cadence */}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
               Profit Cadence
@@ -448,7 +496,7 @@ export default function IncomeStreamsView() {
             </select>
           </div>
 
-          {/* Long Term or Short Term */}
+          {/* Term Horizon */}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
               Term Horizon
@@ -476,22 +524,110 @@ export default function IncomeStreamsView() {
             </button>
           </div>
         </form>
-
-        {isFilterSubmitted && (
-          <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between text-xs text-slate-600 dark:text-slate-400">
-            <span>
-              Targeting ₹{Number(invAmount).toLocaleString('en-IN')} with {targetProfit}%+ returns ({timeHorizon === 'any' ? 'Any Horizon' : `${timeHorizon} Term`})
-            </span>
-            <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center space-x-1">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{finalStreams.filter((s) => s.isMatch).length} matched streams surfaced to top</span>
-            </span>
-          </div>
-        )}
       </div>
 
       {/* ========================================================================= */}
-      {/* 3. Interactive Category Tabs & Search Bar                                 */}
+      {/* 3. Feasibility Breakdown & Formula Card (Shown upon Submit)               */}
+      {/* ========================================================================= */}
+      {isFilterSubmitted && (
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1322] shadow-sm p-6 space-y-6 animate-fadeIn">
+          {/* Math Formula Ribbon */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+            <div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                To earn <strong className="text-slate-900 dark:text-white">₹{annualizedTarget.toLocaleString('en-IN')} per year</strong> on an investment of <strong className="text-slate-900 dark:text-white">₹{numPrincipal.toLocaleString('en-IN')}</strong>, your required annual return rate is:
+              </p>
+            </div>
+
+            {/* Formula Block */}
+            <div className="px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 flex items-center space-x-3">
+              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Formula:</span>
+              <div className="font-mono text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center space-x-1.5">
+                <span>({annualizedTarget.toLocaleString('en-IN')} / {numPrincipal.toLocaleString('en-IN')}) × 100 =</span>
+                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-md">
+                  {requiredReturnRate}% p.a.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Feasibility Insight Callout */}
+          <div className={`p-4 rounded-xl border text-xs leading-relaxed flex items-start space-x-3 ${isEasilyAchievable
+              ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/60 text-slate-700 dark:text-slate-300'
+              : 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/60 text-slate-700 dark:text-slate-300'
+            }`}>
+            <div className="mt-0.5 flex-shrink-0">
+              {isEasilyAchievable ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              )}
+            </div>
+            <div>
+              Because <strong className="text-slate-900 dark:text-white">{requiredReturnRate}%</strong> is very low compared to standard market yields, you can achieve this easily with virtually <strong className="text-slate-900 dark:text-white">zero risk</strong> using standard guaranteed instruments. In fact, most standard avenues will deliver <strong className="text-emerald-600 dark:text-emerald-400">₹{Math.round(numPrincipal * 0.065).toLocaleString('en-IN')} to ₹{Math.round(numPrincipal * 0.075).toLocaleString('en-IN')}+ per year</strong>, significantly exceeding your target.
+            </div>
+          </div>
+
+          {/* Comparison Table */}
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3">
+              Comparison of Suitable Options
+            </h4>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold">
+                    <th className="pb-3 pl-2">Investment Avenue</th>
+                    <th className="pb-3">Typical Yield (% p.a.)</th>
+                    <th className="pb-3">Annual Profit on ₹{numPrincipal.toLocaleString('en-IN')}</th>
+                    <th className="pb-3">Risk Level</th>
+                    <th className="pb-3 text-right pr-2">Outcome</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/70">
+                  {BENCHMARK_AVENUES.map((item, i) => {
+                    const minProfit = Math.round(numPrincipal * item.minRate);
+                    const maxProfit = Math.round(numPrincipal * item.maxRate);
+                    const beatsTarget = minProfit >= annualizedTarget;
+
+                    return (
+                      <tr key={i} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
+                        <td className="py-3.5 pl-2 font-bold text-slate-900 dark:text-slate-100">
+                          {item.name}
+                        </td>
+                        <td className="py-3.5 font-mono text-slate-700 dark:text-slate-300">
+                          {item.rateRange}
+                        </td>
+                        <td className="py-3.5 font-mono font-bold text-slate-900 dark:text-white">
+                          ₹{minProfit.toLocaleString('en-IN')} – ₹{maxProfit.toLocaleString('en-IN')}
+                        </td>
+                        <td className="py-3.5 text-slate-600 dark:text-slate-400">
+                          {item.risk}
+                        </td>
+                        <td className="py-3.5 text-right pr-2">
+                          {beatsTarget ? (
+                            <span className="inline-flex items-center text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full">
+                              Surpasses Target (+₹{(minProfit - annualizedTarget).toLocaleString('en-IN')})
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-2 py-0.5 rounded-full">
+                              Below Target
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4. Interactive Category Tabs & Search Bar                                 */}
       {/* ========================================================================= */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         {/* Category Pills */}
@@ -530,7 +666,7 @@ export default function IncomeStreamsView() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 4. Income Stream Cards Grid                                               */}
+      {/* 5. Income Stream Cards Grid                                               */}
       {/* ========================================================================= */}
       {finalStreams.length === 0 ? (
         <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 text-slate-400 text-sm">
@@ -645,7 +781,7 @@ export default function IncomeStreamsView() {
       )}
 
       {/* ========================================================================= */}
-      {/* 5. Strategic Allocation Framework Card                                    */}
+      {/* 6. Strategic Allocation Framework Card                                    */}
       {/* ========================================================================= */}
       <div className="p-6 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
