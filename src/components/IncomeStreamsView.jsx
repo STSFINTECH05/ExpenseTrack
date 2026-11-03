@@ -6,20 +6,16 @@ import {
   Building2,
   Search,
   Filter,
-  ArrowUpRight,
   Clock,
   Sparkles,
   CheckCircle2,
-  Info,
-  DollarSign,
-  PieChart,
-  ChevronRight,
-  ExternalLink,
   Layers,
   RotateCcw,
   SlidersHorizontal,
   Calculator,
   AlertTriangle,
+  Lightbulb,
+  ArrowRight,
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -44,8 +40,8 @@ const INCOME_STREAMS = [
     yieldMin: 6.5,
     yieldMax: 8.5,
     minAmount: 1000,
-    term: 'short', // short: <=1yr, medium: 1-5yr, long: 5+yr
-    payoutType: 'both', // 'monthly', 'annual', 'both'
+    term: 'short',
+    payoutType: 'both',
     summary: 'Stable bank and NBFC term deposits offering guaranteed, highly predictable interest yields.',
     guide: [
       'Open via your net banking app with scheduled commercial banks or DICGC-insured institutions.',
@@ -303,7 +299,7 @@ export default function IncomeStreamsView() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Interactive Filter States
+  // Interactive Filter States (initialized with defaults)
   const [isFilterSubmitted, setIsFilterSubmitted] = useState(false);
   const [invAmount, setInvAmount] = useState('35000');
   const [targetProfit, setTargetProfit] = useState('1000');
@@ -323,25 +319,34 @@ export default function IncomeStreamsView() {
     setTimeHorizon('any');
   };
 
-  // Derived financial math for the breakdown card
-  const numPrincipal = Number(invAmount) || 1;
-  const numTargetProfit = Number(targetProfit) || 0;
+  // Safe numerical conversions
+  const numPrincipal = Math.max(Number(invAmount) || 0, 1);
+  const numTargetProfit = Math.max(Number(targetProfit) || 0, 0);
   const annualizedTarget = profitCadence === 'month' ? numTargetProfit * 12 : numTargetProfit;
+
+  // Rate calculations
   const requiredReturnRate = ((annualizedTarget / numPrincipal) * 100).toFixed(2);
-  const isEasilyAchievable = Number(requiredReturnRate) <= 7.5;
+  const rateNum = Number(requiredReturnRate);
+
+  // Capital suggestion: how much capital would be needed to hit this profit realistically at 7.5% safe rate
+  const realisticSafeRate = 0.075;
+  const suggestedPrincipalAtSafeRate = Math.round(annualizedTarget / realisticSafeRate);
+  const isHighProfitExceeded = rateNum > 12.0; // Needs suggestion if target exceeds safe market returns
+
+  // Apply suggested amount automatically if user clicks suggestion chip
+  const handleApplySuggestedAmount = (amt) => {
+    setInvAmount(String(amt));
+  };
 
   // Filtered & ranked streams
   const processedStreams = useMemo(() => {
     const list = INCOME_STREAMS.map((item) => {
       let isMatch = false;
-      let estAnnual = 0;
-      let estMonthly = 0;
-
       const avgYield = (item.yieldMin + item.yieldMax) / 2;
-      estAnnual = Math.round((numPrincipal * avgYield) / 100);
-      estMonthly = Math.round(estAnnual / 12);
+      const estAnnual = Math.round((numPrincipal * avgYield) / 100);
+      const estMonthly = Math.round(estAnnual / 12);
 
-      if (isFilterSubmitted) {
+      if (isFilterSubmitted && numPrincipal > 0 && annualizedTarget > 0) {
         const matchesAmount = numPrincipal >= item.minAmount;
         const matchesYield = (item.yieldMax / 100) * numPrincipal >= annualizedTarget;
         const matchesHorizon = timeHorizon === 'any' || item.term === timeHorizon;
@@ -361,7 +366,6 @@ export default function IncomeStreamsView() {
       };
     });
 
-    // Match priority sorting: matches float to top
     return list.sort((a, b) => {
       if (isFilterSubmitted) {
         if (a.isMatch && !b.isMatch) return -1;
@@ -388,9 +392,7 @@ export default function IncomeStreamsView() {
 
   return (
     <div className="space-y-8 animate-fadeIn pb-12">
-      {/* ========================================================================= */}
-      {/* 1. Header Banner & Context                                                */}
-      {/* ========================================================================= */}
+      {/* 1. Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
         <div>
           <div className="flex items-center space-x-2.5">
@@ -408,7 +410,6 @@ export default function IncomeStreamsView() {
           </div>
         </div>
 
-        {/* Quick summary stats */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-xs">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
@@ -421,9 +422,7 @@ export default function IncomeStreamsView() {
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* 2. Interactive Match Filter (Enter Amount, Profit, Horizon)              */}
-      {/* ========================================================================= */}
+      {/* 2. Interactive Match Filter Form */}
       <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100 dark:border-slate-800/80">
           <div className="flex items-center space-x-2">
@@ -447,7 +446,6 @@ export default function IncomeStreamsView() {
         </div>
 
         <form onSubmit={handleFilterSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-          {/* Enter Amount */}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
               Enter Amount (₹)
@@ -458,13 +456,12 @@ export default function IncomeStreamsView() {
               step="500"
               value={invAmount}
               onChange={(e) => setInvAmount(e.target.value)}
-              placeholder="e.g. 35000"
+              placeholder="35000"
               className="w-full px-3 py-2 bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition font-mono"
               required
             />
           </div>
 
-          {/* Desired Profit (₹) */}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
               Desired Profit (₹)
@@ -475,13 +472,12 @@ export default function IncomeStreamsView() {
               step="100"
               value={targetProfit}
               onChange={(e) => setTargetProfit(e.target.value)}
-              placeholder="e.g. 1000"
+              placeholder="1000"
               className="w-full px-3 py-2 bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition font-mono"
               required
             />
           </div>
 
-          {/* Profit Cadence */}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
               Profit Cadence
@@ -496,7 +492,6 @@ export default function IncomeStreamsView() {
             </select>
           </div>
 
-          {/* Term Horizon */}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
               Term Horizon
@@ -513,7 +508,6 @@ export default function IncomeStreamsView() {
             </select>
           </div>
 
-          {/* Submit Button */}
           <div className="flex items-end">
             <button
               type="submit"
@@ -526,12 +520,10 @@ export default function IncomeStreamsView() {
         </form>
       </div>
 
-      {/* ========================================================================= */}
-      {/* 3. Feasibility Breakdown & Formula Card (Shown upon Submit)               */}
-      {/* ========================================================================= */}
+      {/* 3. Feasibility Breakdown Card */}
       {isFilterSubmitted && (
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1322] shadow-sm p-6 space-y-6 animate-fadeIn">
-          {/* Math Formula Ribbon */}
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1322] shadow-sm p-6 space-y-5 animate-fadeIn">
+          {/* Formula Ribbon */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800/80">
             <div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -539,34 +531,52 @@ export default function IncomeStreamsView() {
               </p>
             </div>
 
-            {/* Formula Block */}
             <div className="px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 flex items-center space-x-3">
               <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Formula:</span>
               <div className="font-mono text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center space-x-1.5">
                 <span>({annualizedTarget.toLocaleString('en-IN')} / {numPrincipal.toLocaleString('en-IN')}) × 100 =</span>
-                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-md">
+                <span className={`text-sm font-black px-2.5 py-0.5 rounded-md ${isHighProfitExceeded
+                    ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10'
+                    : 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
+                  }`}>
                   {requiredReturnRate}% p.a.
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Feasibility Insight Callout */}
-          <div className={`p-4 rounded-xl border text-xs leading-relaxed flex items-start space-x-3 ${isEasilyAchievable
-              ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/60 text-slate-700 dark:text-slate-300'
-              : 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/60 text-slate-700 dark:text-slate-300'
-            }`}>
-            <div className="mt-0.5 flex-shrink-0">
-              {isEasilyAchievable ? (
+          {/* Capital Suggestion Callout if profit is too high for the current amount */}
+          {isHighProfitExceeded ? (
+            <div className="p-4 rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50/80 dark:bg-amber-950/40 text-xs text-slate-800 dark:text-slate-200 flex items-start space-x-3">
+              <div className="mt-0.5 flex-shrink-0">
+                <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="space-y-1.5 flex-1">
+                <p className="leading-relaxed">
+                  <strong className="text-slate-900 dark:text-white">Capital Adjustment Suggestion: </strong>
+                  To get a profit of <strong className="text-amber-700 dark:text-amber-300">₹{annualizedTarget.toLocaleString('en-IN')}/year</strong>, earning <strong className="text-slate-900 dark:text-white">{requiredReturnRate}% p.a.</strong> is beyond standard guaranteed yields.
+                  At realistic safe market rates (~<strong>7.5% p.a.</strong> in FDs), your investment amount needs to be approximately <strong className="text-emerald-700 dark:text-emerald-400 font-mono text-sm">₹{suggestedPrincipalAtSafeRate.toLocaleString('en-IN')}</strong>.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleApplySuggestedAmount(suggestedPrincipalAtSafeRate)}
+                  className="inline-flex items-center space-x-1 text-[11px] font-bold text-amber-800 dark:text-amber-300 hover:underline pt-0.5 cursor-pointer"
+                >
+                  <span>Set investment amount to ₹{suggestedPrincipalAtSafeRate.toLocaleString('en-IN')}</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/30 text-xs text-slate-700 dark:text-slate-300 flex items-start space-x-3">
+              <div className="mt-0.5 flex-shrink-0">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              ) : (
-                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              )}
+              </div>
+              <div>
+                Because <strong className="text-slate-900 dark:text-white">{requiredReturnRate}%</strong> is very low compared to standard market yields, you can achieve this easily with virtually <strong className="text-slate-900 dark:text-white">zero risk</strong> using standard guaranteed instruments. In fact, most standard avenues will deliver <strong className="text-emerald-600 dark:text-emerald-400">₹{Math.round(numPrincipal * 0.065).toLocaleString('en-IN')} to ₹{Math.round(numPrincipal * 0.075).toLocaleString('en-IN')}+ per year</strong>, significantly exceeding your target.
+              </div>
             </div>
-            <div>
-              Because <strong className="text-slate-900 dark:text-white">{requiredReturnRate}%</strong> is very low compared to standard market yields, you can achieve this easily with virtually <strong className="text-slate-900 dark:text-white">zero risk</strong> using standard guaranteed instruments. In fact, most standard avenues will deliver <strong className="text-emerald-600 dark:text-emerald-400">₹{Math.round(numPrincipal * 0.065).toLocaleString('en-IN')} to ₹{Math.round(numPrincipal * 0.075).toLocaleString('en-IN')}+ per year</strong>, significantly exceeding your target.
-            </div>
-          </div>
+          )}
 
           {/* Comparison Table */}
           <div>
@@ -626,11 +636,8 @@ export default function IncomeStreamsView() {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 4. Interactive Category Tabs & Search Bar                                 */}
-      {/* ========================================================================= */}
+      {/* 4. Interactive Category Tabs & Search Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Category Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 w-full sm:w-auto scrollbar-none">
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
@@ -652,7 +659,6 @@ export default function IncomeStreamsView() {
           })}
         </div>
 
-        {/* Search Filter */}
         <div className="relative w-full sm:w-64">
           <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
@@ -665,9 +671,7 @@ export default function IncomeStreamsView() {
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* 5. Income Stream Cards Grid                                               */}
-      {/* ========================================================================= */}
+      {/* 5. Income Stream Cards Grid */}
       {finalStreams.length === 0 ? (
         <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 text-slate-400 text-sm">
           No income streams match &quot;{searchQuery}&quot;. Clear the search filter to see all strategies.
@@ -687,13 +691,11 @@ export default function IncomeStreamsView() {
                   }`}
               >
                 <div>
-                  {/* Top Badges */}
                   <div className="flex items-center justify-between gap-2 mb-3">
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80">
                       {item.assetClass}
                     </span>
 
-                    {/* Matched Pill or Standard Risk Badge */}
                     {item.isMatch ? (
                       <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500 text-white flex items-center space-x-1 shadow-xs">
                         <Sparkles className="w-3 h-3" />
@@ -713,12 +715,10 @@ export default function IncomeStreamsView() {
                     )}
                   </div>
 
-                  {/* Card Title */}
                   <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 tracking-tight group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     {item.title}
                   </h3>
 
-                  {/* Return Horizon Pill */}
                   <div className="mt-2.5 flex items-center space-x-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
                     <div className="p-1 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex-shrink-0">
                       <Clock className="w-3.5 h-3.5" />
@@ -728,7 +728,6 @@ export default function IncomeStreamsView() {
                     </span>
                   </div>
 
-                  {/* Profit Calculation Highlight on Match */}
                   {isFilterSubmitted && (
                     <div className="mt-3 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
                       <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
@@ -740,12 +739,10 @@ export default function IncomeStreamsView() {
                     </div>
                   )}
 
-                  {/* Short Summary */}
                   <p className="mt-3 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                     {item.summary}
                   </p>
 
-                  {/* Practical 2-line Guide */}
                   <div className="mt-4 p-3 rounded-xl bg-slate-50 dark:bg-[#080d19] border border-slate-100 dark:border-slate-800/80 space-y-1.5">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                       How to Get Started:
@@ -763,7 +760,6 @@ export default function IncomeStreamsView() {
                   </div>
                 </div>
 
-                {/* Bottom Key Highlights */}
                 <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap gap-1.5">
                   {item.highlights.map((badge, idx) => (
                     <span
@@ -780,9 +776,7 @@ export default function IncomeStreamsView() {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 6. Strategic Allocation Framework Card                                    */}
-      {/* ========================================================================= */}
+      {/* 6. Strategic Allocation Guidance */}
       <div className="p-6 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1 max-w-2xl">
