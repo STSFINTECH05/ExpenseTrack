@@ -16,6 +16,11 @@ import {
   AlertTriangle,
   Lightbulb,
   ArrowRight,
+  Landmark,
+  Mail,
+  ChevronRight,
+  ExternalLink,
+  Info,
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -24,6 +29,187 @@ const CATEGORIES = [
   { id: 'market', label: 'Market & Index Growth', icon: TrendingUp },
   { id: 'metals', label: 'Precious Metals & Commodities', icon: Coins },
   { id: 'cashflow', label: 'Cash-Flow Assets', icon: Building2 },
+];
+
+// --- BANK FD DIRECTORY DATA WITH RATES & DIGITAL PROCESS ---
+const BANK_FD_RATES = [
+  {
+    bank: 'State Bank of India (SBI)',
+    category: 'Public Sector',
+    generalRate: '6.80% – 7.10%',
+    seniorRate: '7.30% – 7.60%',
+    tenure: '1 Yr to 3 Yrs (Amrit Kalash 400D @ 7.10%)',
+    minDeposit: 1000,
+    process: [
+      'Login to YONO SBI App or OnlineSBI portal.',
+      'Navigate to Deposits > Open Fixed Deposit (e-TDR / e-STDR).',
+      'Select tenure, payout cadence, and fund from linked savings account.',
+      'Instant digital receipt generated; no branch visit required.',
+    ],
+  },
+  {
+    bank: 'HDFC Bank',
+    category: 'Private Sector',
+    generalRate: '7.00% – 7.25%',
+    seniorRate: '7.50% – 7.75%',
+    tenure: '15 Months to 55 Months',
+    minDeposit: 5000,
+    process: [
+      'Open HDFC MobileBanking app > Transact > Open Fixed Deposit.',
+      'Choose Cumulative (compounding quarterly) or Non-cumulative (monthly/quarterly interest).',
+      'Authenticate via NetBanking MPIN / OTP to complete instant creation.',
+    ],
+  },
+  {
+    bank: 'ICICI Bank',
+    category: 'Private Sector',
+    generalRate: '7.00% – 7.20%',
+    seniorRate: '7.50% – 7.75%',
+    tenure: '15 Months to 2 Years',
+    minDeposit: 10000,
+    process: [
+      'Open iMobile Pay app > Accounts & Deposits > Deposits > Open FD.',
+      'Select tenure and payout preferences.',
+      'Instant FD activation with digital certificate download.',
+    ],
+  },
+  {
+    bank: 'Punjab National Bank (PNB)',
+    category: 'Public Sector',
+    generalRate: '6.80% – 7.25%',
+    seniorRate: '7.30% – 7.75%',
+    tenure: '400 Days to 2 Years',
+    minDeposit: 1000,
+    process: [
+      'Access PNB ONE App > Services > Deposits > Open Term Deposit.',
+      'Authorize via TPIN / OTP to lock interest rate.',
+    ],
+  },
+  {
+    bank: 'Bank of Baroda (BoB)',
+    category: 'Public Sector',
+    generalRate: '6.85% – 7.15%',
+    seniorRate: '7.35% – 7.65%',
+    tenure: '399 Days (Baroda Tiranga Plus) to 3 Years',
+    minDeposit: 1000,
+    process: [
+      'Login to bob World Mobile App > Save & Invest > Fixed Deposit.',
+      'Enter amount and auto-renewal instructions.',
+    ],
+  },
+  {
+    bank: 'Axis Bank',
+    category: 'Private Sector',
+    generalRate: '7.10% – 7.20%',
+    seniorRate: '7.60% – 7.75%',
+    tenure: '15 Months to 3 Years',
+    minDeposit: 5000,
+    process: [
+      'Login to Axis Mobile app > FD / RD > Open FD.',
+      'Verify details and submit using mPIN.',
+    ],
+  },
+  {
+    bank: 'Kotak Mahindra Bank',
+    category: 'Private Sector',
+    generalRate: '7.10% – 7.40%',
+    seniorRate: '7.60% – 7.90%',
+    tenure: '390 Days to 23 Months',
+    minDeposit: 5000,
+    process: [
+      'Open Kotak 811 app > Investments > Term Deposits > Open Fixed Deposit.',
+      'Instant opening with zero branch paperwork.',
+    ],
+  },
+  {
+    bank: 'Unity / Suryoday / Equitas Small Finance Banks',
+    category: 'Small Finance Bank (DICGC Insured up to ₹5L)',
+    generalRate: '8.00% – 8.60%',
+    seniorRate: '8.50% – 9.10%',
+    tenure: '1 Year to 3 Years',
+    minDeposit: 1000,
+    process: [
+      'Complete Aadhaar Video-KYC on the SFB official website/app.',
+      'Transfer funds via UPI / IMPS from any bank account.',
+      'Receive digital deposit advice within 5 minutes.',
+    ],
+  },
+];
+
+// --- POST OFFICE SMALL SAVINGS SCHEMES DIRECTORY ---
+const POST_OFFICE_SCHEMES = [
+  {
+    schemeName: 'Post Office Time Deposit (POTD)',
+    rate: '6.9% – 7.5% p.a.',
+    tenure: '1, 2, 3, or 5 Years',
+    compounding: 'Compounded Quarterly, Paid Annually',
+    minDeposit: '₹1,000 (No upper limit)',
+    taxBenefit: '5-Year POTD qualifies under Section 80C',
+    process: 'Open via India Post IPPB App or visit any Head/Sub Post Office with Form 1, Aadhaar, and PAN.',
+  },
+  {
+    schemeName: 'Senior Citizen Savings Scheme (SCSS)',
+    rate: '8.2% p.a.',
+    tenure: '5 Years (Extendable by 3 years)',
+    compounding: 'Paid Quarterly on 1st of April, July, Oct, Jan',
+    minDeposit: '₹1,000 to ₹30,00,000',
+    taxBenefit: 'Qualifies for 80C deduction; Age 60+ eligible',
+    process: 'Submit SCSS application form at Post Office or designated bank branches with age proof.',
+  },
+  {
+    schemeName: 'Monthly Income Scheme (POMIS)',
+    rate: '7.4% p.a.',
+    tenure: '5 Years',
+    compounding: 'Credited Monthly to Post Office Savings Account',
+    minDeposit: '₹1,000 (Max ₹9L Single, ₹15L Joint)',
+    taxBenefit: 'Interest is taxable; no TDS deducted at source',
+    process: 'Submit joint/single account form with KYC documents at Post Office branch.',
+  },
+  {
+    schemeName: 'National Savings Certificate (NSC - VIII Issue)',
+    rate: '7.7% p.a.',
+    tenure: '5 Years Lock-in',
+    compounding: 'Compounded Annually, Paid at Maturity',
+    minDeposit: '₹1,000 (No upper limit)',
+    taxBenefit: 'Section 80C tax rebate on principal & reinvested interest',
+    process: 'Purchase via Post Office e-Banking portal or offline at nearest post office.',
+  },
+  {
+    schemeName: 'Public Provident Fund (PPF)',
+    rate: '7.1% p.a.',
+    tenure: '15 Years',
+    compounding: 'Compounded Annually (EEE Tax Exempt)',
+    minDeposit: '₹500 to ₹1,50,000 per financial year',
+    taxBenefit: 'Triple Tax Exemption (EEE): Principal, Interest & Maturity 100% Tax-Free',
+    process: 'Open online via Post Office IPPB or any major scheduled commercial bank netbanking.',
+  },
+  {
+    schemeName: 'Sukanya Samriddhi Yojana (SSY)',
+    rate: '8.2% p.a.',
+    tenure: 'Until girl child turns 21 or gets married',
+    compounding: 'Compounded Annually',
+    minDeposit: '₹250 to ₹1,50,000 per financial year',
+    taxBenefit: 'Triple Tax Exemption (EEE) for parents of girl children under 10 years',
+    process: 'Submit girl child birth certificate and parent KYC at any Post Office counter.',
+  },
+  {
+    schemeName: 'Kisan Vikas Patra (KVP)',
+    rate: '7.5% p.a.',
+    tenure: 'Doubles money in 115 Months (9 Yrs & 7 Mos)',
+    compounding: 'Compounded Annually, Paid on Maturity',
+    minDeposit: '₹1,000 (No maximum limit)',
+    taxBenefit: 'Taxable according to investor tax slab',
+    process: 'Available online via DOP internet banking or across all Post Office counters.',
+  },
+  {
+    schemeName: 'Mahila Samman Savings Certificate',
+    rate: '7.5% p.a.',
+    tenure: '2 Years Fixed',
+    compounding: 'Compounded Quarterly',
+    minDeposit: '₹1,000 to ₹2,00,000 (For women only)',
+    taxBenefit: 'Standard interest taxation',
+    process: 'Submit Application Form-1 at Post Office with KYC before March deadline.',
+  },
 ];
 
 const INCOME_STREAMS = [
@@ -299,6 +485,9 @@ export default function IncomeStreamsView() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Fixed Deposit & Post Office Directory Views
+  const [activeDirectoryTab, setActiveDirectoryTab] = useState('none'); // 'none' | 'bank_fd' | 'post_office'
+
   // Interactive Filter States (initialized with defaults)
   const [isFilterSubmitted, setIsFilterSubmitted] = useState(false);
   const [invAmount, setInvAmount] = useState('35000');
@@ -328,12 +517,11 @@ export default function IncomeStreamsView() {
   const requiredReturnRate = ((annualizedTarget / numPrincipal) * 100).toFixed(2);
   const rateNum = Number(requiredReturnRate);
 
-  // Capital suggestion: how much capital would be needed to hit this profit realistically at 7.5% safe rate
+  // Capital suggestion
   const realisticSafeRate = 0.075;
   const suggestedPrincipalAtSafeRate = Math.round(annualizedTarget / realisticSafeRate);
-  const isHighProfitExceeded = rateNum > 12.0; // Needs suggestion if target exceeds safe market returns
+  const isHighProfitExceeded = rateNum > 12.0;
 
-  // Apply suggested amount automatically if user clicks suggestion chip
   const handleApplySuggestedAmount = (amt) => {
     setInvAmount(String(amt));
   };
@@ -410,17 +598,175 @@ export default function IncomeStreamsView() {
           </div>
         </div>
 
+        {/* Directory Quick-Toggle Buttons */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-xs">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span>4 Asset Classes</span>
-          </span>
-          <span className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-xs">
-            <Coins className="w-3.5 h-3.5 text-amber-500" />
-            <span>9 Curated Streams</span>
-          </span>
+          <button
+            type="button"
+            onClick={() =>
+              setActiveDirectoryTab((prev) => (prev === 'bank_fd' ? 'none' : 'bank_fd'))
+            }
+            className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-xs transition-colors cursor-pointer ${activeDirectoryTab === 'bank_fd'
+                ? 'bg-emerald-600 text-white border-emerald-600'
+                : 'bg-white dark:bg-[#0c1322] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500'
+              }`}
+          >
+            <Landmark className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Bank FD Rates & Process</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              setActiveDirectoryTab((prev) => (prev === 'post_office' ? 'none' : 'post_office'))
+            }
+            className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-xs transition-colors cursor-pointer ${activeDirectoryTab === 'post_office'
+                ? 'bg-amber-600 text-white border-amber-600'
+                : 'bg-white dark:bg-[#0c1322] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-500'
+              }`}
+          >
+            <Mail className="w-3.5 h-3.5 text-amber-500" />
+            <span>Post Office Schemes</span>
+          </button>
         </div>
       </div>
+
+      {/* --- DIRECTORY SECTION 1: ALL BANK FD RATES & PROCESS --- */}
+      {activeDirectoryTab === 'bank_fd' && (
+        <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800/80 bg-white dark:bg-[#0c1322] p-6 shadow-sm space-y-4 animate-fadeIn">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center space-x-2.5">
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <Landmark className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  Top Bank Fixed Deposit Rates & Online Opening Process
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  All scheduled banks are covered up to ₹5,00,000 principal + interest under DICGC insurance.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveDirectoryTab('none')}
+              className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-semibold cursor-pointer"
+            >
+              ✕ Close
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2">
+            {BANK_FD_RATES.map((b, i) => (
+              <div
+                key={i}
+                className="p-4 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#080d19] flex flex-col justify-between space-y-3"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-slate-900 dark:text-white">
+                      {b.bank}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      {b.category}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 mt-2.5 text-xs font-mono">
+                    <div className="p-2 rounded-lg bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800">
+                      <span className="block text-[10px] text-slate-400 uppercase font-sans font-bold">General Public</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">{b.generalRate}</span>
+                    </div>
+                    <div className="p-2 rounded-lg bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800">
+                      <span className="block text-[10px] text-slate-400 uppercase font-sans font-bold">Senior Citizens</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-400 text-sm">{b.seniorRate}</span>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2">
+                    <strong className="text-slate-700 dark:text-slate-300">Best Tenure:</strong> {b.tenure} • <strong className="text-slate-700 dark:text-slate-300">Min:</strong> ₹{b.minDeposit.toLocaleString('en-IN')}
+                  </p>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-white dark:bg-[#0c1322] border border-slate-100 dark:border-slate-800/60 text-[11px] space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Online Process:</span>
+                  {b.process.map((step, idx) => (
+                    <div key={idx} className="flex items-start space-x-1.5 text-slate-600 dark:text-slate-300">
+                      <span className="text-emerald-500 font-bold">•</span>
+                      <span>{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* --- DIRECTORY SECTION 2: ALL POST OFFICE SCHEMES & RATES --- */}
+      {activeDirectoryTab === 'post_office' && (
+        <div className="rounded-2xl border border-amber-200 dark:border-amber-800/80 bg-white dark:bg-[#0c1322] p-6 shadow-sm space-y-4 animate-fadeIn">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center space-x-2.5">
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <Mail className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  Post Office Small Savings Schemes (Govt. Guaranteed)
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Backed by Sovereign Guarantee with zero default risk and periodic quarterly interest revisions.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveDirectoryTab('none')}
+              className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-semibold cursor-pointer"
+            >
+              ✕ Close
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold">
+                  <th className="pb-3 pl-2">Scheme Name</th>
+                  <th className="pb-3">Interest Rate (% p.a.)</th>
+                  <th className="pb-3">Tenure / Horizon</th>
+                  <th className="pb-3">Deposit Limits</th>
+                  <th className="pb-3">Tax Benefits / Rules</th>
+                  <th className="pb-3 pr-2">Opening Method</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/70">
+                {POST_OFFICE_SCHEMES.map((sch, i) => (
+                  <tr key={i} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
+                    <td className="py-3.5 pl-2 font-bold text-slate-900 dark:text-slate-100">
+                      {sch.schemeName}
+                    </td>
+                    <td className="py-3.5 font-mono font-bold text-amber-600 dark:text-amber-400">
+                      {sch.rate}
+                    </td>
+                    <td className="py-3.5 text-slate-700 dark:text-slate-300 font-mono">
+                      {sch.tenure}
+                    </td>
+                    <td className="py-3.5 text-slate-600 dark:text-slate-400">
+                      {sch.minDeposit}
+                    </td>
+                    <td className="py-3.5 text-[11px] text-slate-600 dark:text-slate-400">
+                      {sch.taxBenefit}
+                    </td>
+                    <td className="py-3.5 pr-2 text-[11px] text-slate-500 dark:text-slate-400">
+                      {sch.process}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* 2. Interactive Match Filter Form */}
       <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -536,8 +882,8 @@ export default function IncomeStreamsView() {
               <div className="font-mono text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center space-x-1.5">
                 <span>({annualizedTarget.toLocaleString('en-IN')} / {numPrincipal.toLocaleString('en-IN')}) × 100 =</span>
                 <span className={`text-sm font-black px-2.5 py-0.5 rounded-md ${isHighProfitExceeded
-                    ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10'
-                    : 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
+                  ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10'
+                  : 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
                   }`}>
                   {requiredReturnRate}% p.a.
                 </span>
@@ -545,7 +891,7 @@ export default function IncomeStreamsView() {
             </div>
           </div>
 
-          {/* Capital Suggestion Callout if profit is too high for the current amount */}
+          {/* Capital Suggestion Callout */}
           {isHighProfitExceeded ? (
             <div className="p-4 rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50/80 dark:bg-amber-950/40 text-xs text-slate-800 dark:text-slate-200 flex items-start space-x-3">
               <div className="mt-0.5 flex-shrink-0">
@@ -648,8 +994,8 @@ export default function IncomeStreamsView() {
                 type="button"
                 onClick={() => setActiveCategory(cat.id)}
                 className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 flex items-center space-x-1.5 cursor-pointer ${isActive
-                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30 font-bold'
-                    : 'bg-white dark:bg-[#0c1322] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
+                  ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30 font-bold'
+                  : 'bg-white dark:bg-[#0c1322] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-800'
                   }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -686,8 +1032,8 @@ export default function IncomeStreamsView() {
               <div
                 key={item.id}
                 className={`rounded-2xl bg-white dark:bg-[#0c1322] p-5 shadow-sm transition-all duration-200 flex flex-col justify-between group relative ${item.isMatch
-                    ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20 shadow-md'
-                    : 'border border-slate-200 dark:border-slate-800 hover:border-emerald-500/40 hover:shadow-md'
+                  ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20 shadow-md'
+                  : 'border border-slate-200 dark:border-slate-800 hover:border-emerald-500/40 hover:shadow-md'
                   }`}
               >
                 <div>
@@ -704,10 +1050,10 @@ export default function IncomeStreamsView() {
                     ) : (
                       <span
                         className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${isEmerald
-                            ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/80'
-                            : isAmber
-                              ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/80'
-                              : 'bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800/80'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/80'
+                          : isAmber
+                            ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/80'
+                            : 'bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800/80'
                           }`}
                       >
                         {item.risk}
