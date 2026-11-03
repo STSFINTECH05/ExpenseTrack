@@ -15,7 +15,51 @@ import {
   Trash2,
   Check,
   ChevronDown,
+  MapPin,
+  Compass,
+  ExternalLink,
+  Navigation,
 } from 'lucide-react';
+
+// Curated database of famous places for popular cities
+const FAMOUS_DESTINATIONS = {
+  goa: [
+    { name: 'Baga Beach', type: 'Beach & Watersports', desc: 'Vibrant nightlife, shacks, and watersport excursions.' },
+    { name: 'Basilica of Bom Jesus', type: 'UNESCO Heritage', desc: 'Historic 16th-century baroque architecture in Old Goa.' },
+    { name: 'Dudhsagar Falls', type: 'Nature & Trek', desc: 'Four-tiered scenic waterfall in the Western Ghats.' },
+    { name: 'Aguada Fort', type: 'Historic Lighthouse', desc: '17th-century Portuguese fort overlooking Sinquerim Beach.' },
+  ],
+  chennai: [
+    { name: 'Marina Beach', type: 'Coastal Promenade', desc: 'One of the longest natural urban beaches in the world.' },
+    { name: 'Kapaleeshwarar Temple', type: 'Dravidian Architecture', desc: 'Historic 7th-century temple in Mylapore.' },
+    { name: 'San Thome Basilica', type: 'Historic Cathedral', desc: 'Neo-Gothic cathedral built over the tomb of St. Thomas.' },
+    { name: 'Fort St. George', type: 'Colonial Heritage', desc: 'First English fortress in India, built in 1644.' },
+  ],
+  bengaluru: [
+    { name: 'Cubbon Park', type: 'Botanical Garden', desc: '300-acre lush green corridor in the heart of the city.' },
+    { name: 'Bangalore Palace', type: 'Heritage Palace', desc: 'Tudor-style royal estate inspired by Windsor Castle.' },
+    { name: 'Bannerghatta National Park', type: 'Wildlife Safari', desc: 'Biological reserve featuring a zoo and safari excursions.' },
+    { name: 'Nandi Hills', type: 'Scenic Sunrise Trek', desc: 'Historic hill fortress offering panoramic valley views.' },
+  ],
+  mumbai: [
+    { name: 'Gateway of India', type: 'Historic Arch', desc: 'Iconic 20th-century monument overlooking the Arabian Sea.' },
+    { name: 'Marine Drive', type: 'Queens Necklace', desc: '3.6 km arc-shaped coastal boulevard.' },
+    { name: 'Elephanta Caves', type: 'UNESCO Heritage', desc: 'Rock-cut cave temples dedicated to Lord Shiva on Elephanta Island.' },
+    { name: 'Chhatrapati Shivaji Terminus', type: 'Victorian Gothic', desc: 'Historic rail terminal and UNESCO world heritage site.' },
+  ],
+  puducherry: [
+    { name: 'White Town / French Quarter', type: 'Heritage Streets', desc: 'Pastel colonial villas, boutique cafes, and bougainvillea streets.' },
+    { name: 'Promenade Beach', type: 'Scenic Boardwalk', desc: 'Peaceful traffic-free seafront promenade along Goubert Avenue.' },
+    { name: 'Sri Aurobindo Ashram', type: 'Spiritual Center', desc: 'Serene community center founded by Sri Aurobindo and The Mother.' },
+    { name: 'Chunnambar Boat House & Paradise Beach', type: 'Ferry Excursion', desc: 'Scenic backwater boat cruise leading to secluded white sands.' },
+  ],
+  delhi: [
+    { name: 'Qutub Minar', type: 'UNESCO Monument', desc: '73-meter tall red sandstone victory tower built in 1192.' },
+    { name: 'India Gate', type: 'War Memorial', desc: 'Iconic monumental triumphal arch dedicated to soldiers.' },
+    { name: 'Red Fort (Lal Qila)', type: 'Mughal Architecture', desc: 'Historic fortress that served as the main residence of Mughal emperors.' },
+    { name: 'Humayun Tomb', type: 'UNESCO Heritage', desc: 'Grand 16th-century garden tomb prototype of the Taj Mahal.' },
+  ],
+};
 
 export default function SplitAndCollectPlaceholder() {
   // =========================================================================
@@ -28,6 +72,7 @@ export default function SplitAndCollectPlaceholder() {
   // Modal State: Create Ticket
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [ticketTitle, setTicketTitle] = useState('');
+  const [ticketLocation, setTicketLocation] = useState('');
   const [ticketCurrency, setTicketCurrency] = useState('INR (₹)');
   const [ticketDescription, setTicketDescription] = useState('');
   const [participantName, setParticipantName] = useState('');
@@ -62,7 +107,6 @@ export default function SplitAndCollectPlaceholder() {
   };
 
   const handleRemoveParticipant = (idToRemove) => {
-    // Keep 'You' in the group
     setParticipants(participants.filter((p) => p.id !== idToRemove || p.isSelf));
   };
 
@@ -73,6 +117,7 @@ export default function SplitAndCollectPlaceholder() {
     const newTicket = {
       id: `ticket-${Date.now()}`,
       title: ticketTitle.trim(),
+      location: ticketLocation.trim(),
       currency: ticketCurrency,
       description: ticketDescription.trim() || 'Team collaborative split ledger',
       createdAt: new Date().toISOString(),
@@ -86,6 +131,7 @@ export default function SplitAndCollectPlaceholder() {
 
     // Reset form
     setTicketTitle('');
+    setTicketLocation('');
     setTicketDescription('');
     setTicketCurrency('INR (₹)');
     setParticipants([{ id: 'user-you', name: 'You', email: 'admin@stsfintech.com', isSelf: true }]);
@@ -113,11 +159,9 @@ export default function SplitAndCollectPlaceholder() {
       expenses: [newExpense, ...activeTicket.expenses],
     };
 
-    // Update both activeTicket and the ticket in ticketsList
     setActiveTicket(updatedTicket);
     setTicketsList(ticketsList.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
 
-    // Reset form
     setExpenseTitle('');
     setExpenseAmount('');
     setExpensePaidBy('You');
@@ -156,14 +200,31 @@ export default function SplitAndCollectPlaceholder() {
     const symbol = currencyStr.includes('$')
       ? '$'
       : currencyStr.includes('€')
-      ? '€'
-      : currencyStr.includes('£')
-      ? '£'
-      : '₹';
+        ? '€'
+        : currencyStr.includes('£')
+          ? '£'
+          : '₹';
     return `${symbol}${Number(val).toLocaleString('en-IN', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
+  };
+
+  // Resolve attractions based on ticket location
+  const getPlacesForLocation = (loc) => {
+    if (!loc) return [];
+    const normalized = loc.toLowerCase().replace(/[^a-z]/g, '');
+    for (const key in FAMOUS_DESTINATIONS) {
+      if (normalized.includes(key) || key.includes(normalized)) {
+        return FAMOUS_DESTINATIONS[key];
+      }
+    }
+    // Generic fallback for any other custom destination entered
+    return [
+      { name: `${loc} City Center & Promenade`, type: 'Local Landmark', desc: `Central exploration and cultural hub in ${loc}.` },
+      { name: `${loc} Heritage Market`, type: 'Shopping & Dining', desc: `Popular local eateries and artisan shopping district.` },
+      { name: `${loc} Scenic Viewpoint`, type: 'Sightseeing', desc: `Panoramic lookout point and photo destination in ${loc}.` },
+    ];
   };
 
   // Compute simplified debt transactions minimizing payments
@@ -176,7 +237,6 @@ export default function SplitAndCollectPlaceholder() {
     const count = ticket.participants.length || 1;
     const equalShare = totalOutlay / count;
 
-    // Calculate raw net balance for each participant
     const rawBalances = ticket.participants.map((p) => {
       const totalPaid = (ticket.expenses || [])
         .filter((exp) => exp.paidBy === p.name)
@@ -199,7 +259,6 @@ export default function SplitAndCollectPlaceholder() {
       }
     });
 
-    // Sort descending by amount to generate direct and minimized debt paths
     debtors.sort((a, b) => b.amount - a.amount);
     creditors.sort((a, b) => b.amount - a.amount);
 
@@ -236,14 +295,12 @@ export default function SplitAndCollectPlaceholder() {
     return transactions;
   };
 
-  // Compute individual balances for active ticket with settled debt deductions
   const computeParticipantBalances = (ticket, simplifiedDebts = []) => {
     if (!ticket || !ticket.participants) return [];
     const totalOutlay = calculateTotalOutlay(ticket);
     const count = ticket.participants.length || 1;
     const equalShare = totalOutlay / count;
 
-    // Calculate settlement adjustments for each participant
     const adjustments = {};
     ticket.participants.forEach((p) => {
       adjustments[p.name] = 0;
@@ -251,11 +308,9 @@ export default function SplitAndCollectPlaceholder() {
 
     simplifiedDebts.forEach((debt) => {
       if (debt.isSettled) {
-        // Payer (debtor) has settled: increases balance towards 0
         if (adjustments[debt.from] !== undefined) {
           adjustments[debt.from] += debt.amount;
         }
-        // Receiver (creditor) has received: decreases balance towards 0
         if (adjustments[debt.to] !== undefined) {
           adjustments[debt.to] -= debt.amount;
         }
@@ -278,13 +333,12 @@ export default function SplitAndCollectPlaceholder() {
     });
   };
 
-  // Filtered tickets based on search input
   const filteredTickets = ticketsList.filter((ticket) =>
     ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (ticket.location && ticket.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
     ticket.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Filtered expenses in active ticket
   const filteredExpenses = (activeTicket?.expenses || []).filter((exp) =>
     exp.title.toLowerCase().includes(expenseSearchQuery.toLowerCase()) ||
     exp.paidBy.toLowerCase().includes(expenseSearchQuery.toLowerCase())
@@ -299,6 +353,7 @@ export default function SplitAndCollectPlaceholder() {
     const participantBalances = computeParticipantBalances(activeTicket, simplifiedDebts);
     const currencyTag = activeTicket.currency?.split(' ')[0] || 'INR';
     const allDebtsSettled = simplifiedDebts.length > 0 && simplifiedDebts.every((d) => d.isSettled);
+    const famousPlaces = activeTicket.location ? getPlacesForLocation(activeTicket.location) : [];
 
     return (
       <div className="space-y-6 animate-fadeIn pb-12">
@@ -324,9 +379,19 @@ export default function SplitAndCollectPlaceholder() {
         {/* Ticket Summary Banner */}
         <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6 transition-colors">
           <div className="space-y-2">
-            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-[#0d5236] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-              {currencyTag} GROUP
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-[#0d5236] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                {currencyTag} GROUP
+              </span>
+
+              {activeTicket.location && (
+                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                  <MapPin className="w-3 h-3 text-red-500" />
+                  <span>{activeTicket.location}</span>
+                </span>
+              )}
+            </div>
+
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight capitalize">
               {activeTicket.title}
             </h2>
@@ -356,9 +421,7 @@ export default function SplitAndCollectPlaceholder() {
 
         {/* Split 2-Column Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* =============================================================== */}
-          {/* LEFT COLUMN: LOGGED EXPENSES                                     */}
-          {/* =============================================================== */}
+          {/* LEFT COLUMN: LOGGED EXPENSES */}
           <div className="lg:col-span-7 bg-white dark:bg-[#0c1322] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4 transition-colors">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center space-x-2.5">
@@ -457,11 +520,8 @@ export default function SplitAndCollectPlaceholder() {
             )}
           </div>
 
-          {/* =============================================================== */}
-          {/* RIGHT COLUMN: BALANCES & SETTLEMENTS                            */}
-          {/* =============================================================== */}
+          {/* RIGHT COLUMN: BALANCES & SETTLEMENTS */}
           <div className="lg:col-span-5 space-y-5">
-            {/* Summary (INR) Card */}
             <div className="bg-white dark:bg-[#0c1322] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4 transition-colors">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                 <h3 className="text-xs font-black tracking-wider uppercase text-slate-700 dark:text-slate-300">
@@ -513,8 +573,8 @@ export default function SplitAndCollectPlaceholder() {
                           {isSettled
                             ? formatCurrency(0, activeTicket.currency)
                             : isPositive
-                            ? `+${formatCurrency(member.netBalance, activeTicket.currency)}`
-                            : `-${formatCurrency(Math.abs(member.netBalance), activeTicket.currency)}`}
+                              ? `+${formatCurrency(member.netBalance, activeTicket.currency)}`
+                              : `-${formatCurrency(Math.abs(member.netBalance), activeTicket.currency)}`}
                         </span>
                       </div>
                     </div>
@@ -538,7 +598,6 @@ export default function SplitAndCollectPlaceholder() {
                 Automated debt simplification minimizes total transactions required to balance accounts among all group members.
               </p>
 
-              {/* Status Banner when all debts are settled */}
               {allDebtsSettled && (
                 <div className="p-3 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center space-x-2 animate-fadeIn shadow-sm">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
@@ -546,7 +605,6 @@ export default function SplitAndCollectPlaceholder() {
                 </div>
               )}
 
-              {/* Transaction List */}
               {simplifiedDebts.length === 0 ? (
                 <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-300 flex items-center space-x-2">
                   <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
@@ -561,11 +619,10 @@ export default function SplitAndCollectPlaceholder() {
                   {simplifiedDebts.map((debt) => (
                     <div
                       key={debt.id}
-                      className={`p-3 rounded-xl border transition flex items-center justify-between gap-3 ${
-                        debt.isSettled
+                      className={`p-3 rounded-xl border transition flex items-center justify-between gap-3 ${debt.isSettled
                           ? 'bg-slate-900/60 border-emerald-500/20 opacity-80'
                           : 'bg-slate-900/90 border-slate-800 hover:border-slate-700'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center space-x-2 min-w-0 flex-1">
                         <span className="font-semibold text-xs text-slate-100 truncate">
@@ -607,6 +664,101 @@ export default function SplitAndCollectPlaceholder() {
             </div>
           </div>
         </div>
+
+        {/* =============================================================== */}
+        {/* NEW SECTION: FAMOUS PLACES & MAP ACCORDING TO LOCATION           */}
+        {/* =============================================================== */}
+        {activeTicket.location && (
+          <div className="rounded-3xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-[#0d5236] dark:text-emerald-400 flex items-center justify-center">
+                  <Compass className="w-5 h-5 stroke-[2.2]" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white capitalize flex items-center gap-2">
+                    <span>Famous Places in {activeTicket.location}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      Destination Guide
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Recommended spots and places to explore for your team while in {activeTicket.location}.
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeTicket.location)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition self-start sm:self-auto cursor-pointer"
+              >
+                <Navigation className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Open in Google Maps</span>
+                <ExternalLink className="w-3 h-3 text-slate-400" />
+              </a>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+              {/* Left Column: Famous Places Cards */}
+              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {famousPlaces.map((place, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 rounded-2xl bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800/80 hover:border-emerald-500/40 transition flex flex-col justify-between space-y-2 group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-[#0d5236] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70">
+                          {place.type}
+                        </span>
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name} ${activeTicket.location}`)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          title="View on Google Maps"
+                          className="opacity-0 group-hover:opacity-100 transition text-slate-400 hover:text-emerald-600"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                        {place.name}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
+                        {place.desc}
+                      </p>
+                    </div>
+
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name} ${activeTicket.location}`)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] font-bold text-[#0d5236] dark:text-emerald-400 hover:underline flex items-center gap-1 pt-1 self-start"
+                    >
+                      <MapPin className="w-3 h-3 text-red-500" />
+                      <span>Directions</span>
+                    </a>
+                  </div>
+                ))}
+              </div>
+
+              {/* Right Column: Embedded Interactive Google Map */}
+              <div className="lg:col-span-5 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 min-h-[260px] relative shadow-inner flex flex-col">
+                <iframe
+                  title={`Map of ${activeTicket.location}`}
+                  width="100%"
+                  height="100%"
+                  className="w-full h-full min-h-[260px] border-0"
+                  loading="lazy"
+                  allowFullScreen
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(activeTicket.location)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Modal: Add Expense */}
         {showAddExpenseModal && (
@@ -735,7 +887,7 @@ export default function SplitAndCollectPlaceholder() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search split tickets..."
+          placeholder="Search split tickets by title or location..."
           className="w-full bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/30 focus:border-[#0d5236] transition shadow-sm"
         />
       </div>
@@ -743,7 +895,6 @@ export default function SplitAndCollectPlaceholder() {
       {/* Tickets List OR Empty State Display */}
       {filteredTickets.length === 0 ? (
         <div className="rounded-3xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-12 sm:p-16 text-center max-w-xl mx-auto shadow-sm space-y-5 my-8 transition-colors">
-          {/* Centered Users Outline Icon */}
           <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 mx-auto flex items-center justify-center">
             <Users className="w-8 h-8 stroke-[1.5]" />
           </div>
@@ -778,9 +929,17 @@ export default function SplitAndCollectPlaceholder() {
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#0d5236] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 uppercase">
-                      {ticket.currency?.split(' ')[0]} GROUP
-                    </span>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#0d5236] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 uppercase">
+                        {ticket.currency?.split(' ')[0]} GROUP
+                      </span>
+                      {ticket.location && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-red-500" />
+                          <span>{ticket.location}</span>
+                        </span>
+                      )}
+                    </div>
                     <h4 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1 capitalize">
                       {ticket.title}
                     </h4>
@@ -831,10 +990,10 @@ export default function SplitAndCollectPlaceholder() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateTicket} className="space-y-5">
+            <form onSubmit={handleCreateTicket} className="space-y-4">
               {/* Field 1: Ticket Title */}
               <div>
-                <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-1">
                   Ticket Title
                 </label>
                 <input
@@ -843,20 +1002,41 @@ export default function SplitAndCollectPlaceholder() {
                   value={ticketTitle}
                   onChange={(e) => setTicketTitle(e.target.value)}
                   placeholder="e.g. Goa Trip, Office lunch split"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white transition"
+                  className="w-full bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white dark:focus:bg-[#080d19] transition"
                 />
               </div>
 
-              {/* Field 2: Group Currency & Description (2-column row) */}
+              {/* Field 2: Location (Added directly below Ticket Title) */}
+              <div>
+                <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-red-500" />
+                  <span>Trip / Venue Location</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={ticketLocation}
+                    onChange={(e) => setTicketLocation(e.target.value)}
+                    placeholder="e.g. Goa, Chennai, Bengaluru, Mumbai, Puducherry..."
+                    className="w-full bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white dark:focus:bg-[#080d19] transition"
+                  />
+                  <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Enter a city name to automatically load famous tourist places and map navigation.
+                </p>
+              </div>
+
+              {/* Field 3: Group Currency & Description */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                  <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-1">
                     Group Currency
                   </label>
                   <select
                     value={ticketCurrency}
                     onChange={(e) => setTicketCurrency(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white transition cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white transition cursor-pointer"
                   >
                     <option value="INR (₹)">INR (₹)</option>
                     <option value="USD ($)">USD ($)</option>
@@ -866,7 +1046,7 @@ export default function SplitAndCollectPlaceholder() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
+                  <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-1">
                     Description
                   </label>
                   <input
@@ -874,18 +1054,17 @@ export default function SplitAndCollectPlaceholder() {
                     value={ticketDescription}
                     onChange={(e) => setTicketDescription(e.target.value)}
                     placeholder="Optional details"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white transition"
+                    className="w-full bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white transition"
                   />
                 </div>
               </div>
 
-              {/* Field 3: Participants List */}
+              {/* Field 4: Participants List */}
               <div className="space-y-2.5">
-                <label className="block text-xs font-bold uppercase text-slate-700">
+                <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300">
                   Participants List
                 </label>
 
-                {/* 2 Inputs with + Add button */}
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
                   <div className="sm:col-span-5">
                     <input
@@ -893,7 +1072,7 @@ export default function SplitAndCollectPlaceholder() {
                       value={participantName}
                       onChange={(e) => setParticipantName(e.target.value)}
                       placeholder="Add participant name..."
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white"
+                      className="w-full bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white"
                     />
                   </div>
                   <div className="sm:col-span-5">
@@ -902,7 +1081,7 @@ export default function SplitAndCollectPlaceholder() {
                       value={participantEmail}
                       onChange={(e) => setParticipantEmail(e.target.value)}
                       placeholder="enter mail"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white"
+                      className="w-full bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white"
                     />
                   </div>
                   <div className="sm:col-span-2">
@@ -916,16 +1095,14 @@ export default function SplitAndCollectPlaceholder() {
                   </div>
                 </div>
 
-                {/* Pill Chips Showing Added Participants */}
                 <div className="flex flex-wrap gap-2 pt-2">
                   {participants.map((p) => (
                     <span
                       key={p.id}
-                      className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
-                        p.isSelf
-                          ? 'bg-emerald-50 text-[#0d5236] border-emerald-300 font-bold'
-                          : 'bg-slate-100 text-slate-800 border-slate-200'
-                      }`}
+                      className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium border ${p.isSelf
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 text-[#0d5236] dark:text-emerald-400 border-emerald-300 font-bold'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+                        }`}
                     >
                       <span>{p.name}</span>
                       {!p.isSelf && (
@@ -942,7 +1119,7 @@ export default function SplitAndCollectPlaceholder() {
                 </div>
               </div>
 
-              {/* Submit Button: Full-width dark green #0d5236, rounded-xl */}
+              {/* Submit Button */}
               <button
                 type="submit"
                 className="w-full py-3.5 rounded-xl bg-[#0d5236] hover:bg-[#093d28] text-white font-bold text-sm shadow-md transition cursor-pointer active:scale-95"
