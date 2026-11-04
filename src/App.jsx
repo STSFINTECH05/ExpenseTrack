@@ -71,7 +71,7 @@ export default function App() {
   const getInitialRoute = () => {
     const path = window.location.pathname;
     if (path === '/login' || path === '/auth' || path === '/signin' || path === '/signup') return 'auth';
-    if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth') return 'dashboard';
+    if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth' || path === '/organisation-maintainer' || path === '/organisation_maintainer') return 'dashboard';
     return 'landing';
   };
 
@@ -136,7 +136,7 @@ export default function App() {
       } else if (path === '/signup') {
         setCurrentRoute('auth');
         setAuthMode('signup');
-      } else if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth') {
+      } else if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth' || path === '/organisation-maintainer' || path === '/organisation_maintainer') {
         setCurrentRoute('dashboard');
         if (path === '/settings') {
           setActiveTab('settings');
@@ -146,6 +146,9 @@ export default function App() {
           setMainNavTab('Expense');
         } else if (path === '/live-worth') {
           setActiveTab('live_worth');
+          setMainNavTab('Expense');
+        } else if (path === '/organisation-maintainer' || path === '/organisation_maintainer') {
+          setActiveTab('organisation_maintainer');
           setMainNavTab('Expense');
         }
       } else {
@@ -211,6 +214,7 @@ export default function App() {
       if (window.location.pathname === '/settings') return 'settings';
       if (window.location.pathname === '/income-streams') return 'income-streams';
       if (window.location.pathname === '/live-worth') return 'live_worth';
+      if (window.location.pathname === '/organisation-maintainer' || window.location.pathname === '/organisation_maintainer') return 'organisation_maintainer';
     }
     return 'dashboard';
   });
@@ -528,6 +532,11 @@ export default function App() {
               {/* TAB: LIVE WORTH */}
               {(activeTab === 'live_worth' || activeTab === 'live-worth') && (
                 <LiveWorthView currentUser={currentUser} />
+              )}
+
+              {/* TAB: ORGANISATION MAINTAINER */}
+              {(activeTab === 'organisation_maintainer' || activeTab === 'organisation-maintainer') && (
+                <OrganisationMaintainer currentUser={currentUser} />
               )}
 
               {/* TAB 5: WALLETS */}

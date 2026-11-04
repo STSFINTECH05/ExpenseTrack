@@ -9,6 +9,7 @@ import {
   Settings as SettingsIcon,
   TrendingUp,
   Activity,
+  Building2,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -59,6 +60,11 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
       label: t('live_worth', 'Live Worth'),
       icon: Activity,
     },
+    {
+      id: 'organisation_maintainer',
+      label: t('organisation_maintainer', 'Organisation Maintainer'),
+      icon: Building2,
+    },
   ];
 
   return (
@@ -76,7 +82,8 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
             (item.id === 'income-streams' && (activeTab === 'income-streams' || activeTab === 'income_streams')) ||
             (item.id === 'goal_target' && (activeTab === 'goal-target' || activeTab === 'goal_target')) ||
             (item.id === 'bills_reminders' && (activeTab === 'bill-reminder' || activeTab === 'bills-reminders')) ||
-            (item.id === 'split_collect' && (activeTab === 'split-collect' || activeTab === 'split_collect'));
+            (item.id === 'split_collect' && (activeTab === 'split-collect' || activeTab === 'split_collect')) ||
+            (item.id === 'organisation_maintainer' && (activeTab === 'organisation_maintainer' || activeTab === 'organisation-maintainer'));
 
           const isStrategicAlert = item.id === 'bills_reminders' || item.id === 'live_worth';
 
