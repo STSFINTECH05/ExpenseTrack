@@ -25,6 +25,7 @@ import {
   FileText,
   File,
   Paperclip,
+  Zap,
   X,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -102,6 +103,9 @@ const ROLE_OPTIONS = [
   'Administrative Staff',
   'Technical Staff',
   'Support Employee',
+  'Rent',
+  'Electric bill',
+  'Office needs',
 ];
 
 // Document details extractor function for Excel, CSV, and PDF
@@ -182,7 +186,13 @@ const extractDetailsFromFile = async (file) => {
   // 3. EXTRACT CATEGORY / ROLE
   let extractedRole = 'Faculty';
   const lowerCorpus = fullCorpus.toLowerCase();
-  if (lowerCorpus.includes('administrative') || lowerCorpus.includes('admin') || lowerCorpus.includes('registrar') || lowerCorpus.includes('accountant') || lowerCorpus.includes('office')) {
+  if (lowerCorpus.includes('electric') || lowerCorpus.includes('electricity') || lowerCorpus.includes('power bill') || lowerCorpus.includes('electric bill')) {
+    extractedRole = 'Electric bill';
+  } else if (lowerCorpus.includes('rent') || lowerCorpus.includes('lease') || lowerCorpus.includes('tenancy')) {
+    extractedRole = 'Rent';
+  } else if (lowerCorpus.includes('office needs') || lowerCorpus.includes('stationery') || lowerCorpus.includes('pantry') || lowerCorpus.includes('supplies')) {
+    extractedRole = 'Office needs';
+  } else if (lowerCorpus.includes('administrative') || lowerCorpus.includes('admin') || lowerCorpus.includes('registrar') || lowerCorpus.includes('accountant') || lowerCorpus.includes('office')) {
     extractedRole = 'Administrative Staff';
   } else if (lowerCorpus.includes('technical') || lowerCorpus.includes('tech') || lowerCorpus.includes('engineer') || lowerCorpus.includes('developer') || lowerCorpus.includes('cloud') || lowerCorpus.includes('lab')) {
     extractedRole = 'Technical Staff';
@@ -525,6 +535,24 @@ export default function OrganisationMaintainer() {
           icon: Briefcase,
           badgeClass:
             'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60',
+        };
+      case 'Rent':
+        return {
+          icon: Building2,
+          badgeClass:
+            'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800/60',
+        };
+      case 'Electric bill':
+        return {
+          icon: Zap,
+          badgeClass:
+            'bg-yellow-50 dark:bg-yellow-950/60 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800/60',
+        };
+      case 'Office needs':
+        return {
+          icon: Briefcase,
+          badgeClass:
+            'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800/60',
         };
       default:
         return {
