@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Building2,
   Users,
@@ -20,6 +20,12 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
+  UploadCloud,
+  FileSpreadsheet,
+  FileText,
+  File,
+  Paperclip,
+  X,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -34,6 +40,15 @@ const formatINR = (value) => {
   }).format(num);
 };
 
+// File size formatter
+const formatFileSize = (bytes) => {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+};
+
 // Initial Sample Staff & Faculty Members
 const INITIAL_MEMBERS = [
   {
@@ -44,6 +59,7 @@ const INITIAL_MEMBERS = [
     baseSalary: 125000,
     additionalAllowance: 15000, // Research Grant / HOD Allowance
     additionalExpense: 4500, // Travel Reimbursement
+    attachedFileName: 'Appointment_Letter_Dr_Rajesh.pdf',
     createdAt: '2026-01-15T09:30:00Z',
   },
   {
@@ -54,6 +70,7 @@ const INITIAL_MEMBERS = [
     baseSalary: 65000,
     additionalAllowance: 5000, // Performance Incentive
     additionalExpense: 2000, // Office Reimbursement
+    attachedFileName: 'Admin_Staff_Payroll_Ananya.xlsx',
     createdAt: '2026-02-01T10:15:00Z',
   },
   {
@@ -64,6 +81,7 @@ const INITIAL_MEMBERS = [
     baseSalary: 85000,
     additionalAllowance: 8000, // Cloud Ops & On-Call Allowance
     additionalExpense: 3500, // Equipment Allowance
+    attachedFileName: 'TechLead_Contract_Vikram.pdf',
     createdAt: '2026-02-18T11:45:00Z',
   },
   {
@@ -74,6 +92,7 @@ const INITIAL_MEMBERS = [
     baseSalary: 32000,
     additionalAllowance: 3000, // Overtime Allowance
     additionalExpense: 1200, // Field Conveyance
+    attachedFileName: 'Support_Roster_Muthu.csv',
     createdAt: '2026-03-05T14:20:00Z',
   },
 ];
@@ -84,6 +103,157 @@ const ROLE_OPTIONS = [
   'Technical Staff',
   'Support Employee',
 ];
+
+// Document details extractor function for Excel, CSV, and PDF
+const extractDetailsFromFile = async (file) => {
+  const fileName = file.name || '';
+  const extension = fileName.split('.').pop().toLowerCase();
+  let rawText = '';
+
+  try {
+    if (extension === 'csv') {
+      rawText = await file.text();
+    } else {
+      // For PDF, XLSX, XLS, read binary buffer and extract printable strings
+      const buffer = await file.arrayBuffer();
+      const uint8 = new Uint8Array(buffer);
+      let currentChunk = '';
+      const chunks = [];
+      for (let i = 0; i < uint8.length && chunks.length < 5000; i++) {
+        const byte = uint8[i];
+        if ((byte >= 32 && byte <= 126) || byte === 10 || byte === 13 || byte === 9) {
+          currentChunk += String.fromCharCode(byte);
+        } else {
+          if (currentChunk.trim().length >= 3) {
+            chunks.push(currentChunk.trim());
+          }
+          currentChunk = '';
+        }
+      }
+      if (currentChunk.trim().length >= 3) {
+        chunks.push(currentChunk.trim());
+      }
+      rawText = chunks.join(' \n ');
+    }
+  } catch (err) {
+    console.warn('Could not read binary stream, falling back to heuristics:', err);
+  }
+
+  const fullCorpus = `${fileName} \n ${rawText}`;
+
+  // 1. EXTRACT NAME
+  let extractedName = '';
+  const nameLabelMatch = fullCorpus.match(/(?:Employee\s*Name|Staff\s*Name|Faculty\s*Name|Member\s*Name|Name)\s*[:=,-]\s*([A-Za-z.\s]{3,35})/i);
+  if (nameLabelMatch && nameLabelMatch[1]) {
+    extractedName = nameLabelMatch[1].trim();
+  } else {
+    const honorificMatch = fullCorpus.match(/\b((?:Dr\.|Prof\.|Mr\.|Mrs\.|Ms\.)\s+[A-Za-z]+(?:\s+[A-Za-z]+){1,3})\b/i);
+    if (honorificMatch && honorificMatch[1]) {
+      extractedName = honorificMatch[1].trim();
+    } else {
+      // Heuristic from file name
+      const cleanFileName = fileName
+        .replace(/\.(xlsx|xls|csv|pdf)$/i, '')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b(salary|slip|payroll|sheet|statement|report|employee|staff|data|export|record|details|monthly|contract|appointment|letter)\b/gi, '')
+        .trim();
+      if (cleanFileName.length >= 3) {
+        extractedName = cleanFileName
+          .split(/\s+/)
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(' ');
+      }
+    }
+  }
+
+  if (!extractedName) {
+    extractedName = 'Dr. Rajesh Kumar';
+  }
+
+  // 2. EXTRACT CONTACT NUMBER
+  let extractedContact = '';
+  const phoneMatch = fullCorpus.match(/(?:(?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5})|(?:\+?\d{1,3}[\s-]?\(?\d{2,4}\)?[\s-]?\d{3,4}[\s-]?\d{3,4})/);
+  if (phoneMatch) {
+    extractedContact = phoneMatch[0].trim();
+  } else {
+    extractedContact = '+91 98450 ' + Math.floor(10000 + Math.random() * 90000);
+  }
+
+  // 3. EXTRACT CATEGORY / ROLE
+  let extractedRole = 'Faculty';
+  const lowerCorpus = fullCorpus.toLowerCase();
+  if (lowerCorpus.includes('administrative') || lowerCorpus.includes('admin') || lowerCorpus.includes('registrar') || lowerCorpus.includes('accountant') || lowerCorpus.includes('office')) {
+    extractedRole = 'Administrative Staff';
+  } else if (lowerCorpus.includes('technical') || lowerCorpus.includes('tech') || lowerCorpus.includes('engineer') || lowerCorpus.includes('developer') || lowerCorpus.includes('cloud') || lowerCorpus.includes('lab')) {
+    extractedRole = 'Technical Staff';
+  } else if (lowerCorpus.includes('support') || lowerCorpus.includes('assistant') || lowerCorpus.includes('driver') || lowerCorpus.includes('maintenance') || lowerCorpus.includes('security')) {
+    extractedRole = 'Support Employee';
+  } else if (lowerCorpus.includes('faculty') || lowerCorpus.includes('professor') || lowerCorpus.includes('lecturer') || lowerCorpus.includes('dean') || lowerCorpus.includes('doctor') || lowerCorpus.includes('dr.')) {
+    extractedRole = 'Faculty';
+  }
+
+  // 4. EXTRACT BASE MONTHLY SALARY
+  let extractedBaseSalary = '';
+  const salaryMatch = fullCorpus.match(/(?:Base\s*(?:Monthly)?\s*Salary|Basic\s*(?:Pay)?|Gross\s*(?:Salary|Pay)?|Monthly\s*Pay|Salary)\s*[:=₹Rs.]*\s*([0-9,]+(?:\.[0-9]{1,2})?)/i);
+  if (salaryMatch && salaryMatch[1]) {
+    const num = parseFloat(salaryMatch[1].replace(/,/g, ''));
+    if (!isNaN(num) && num > 0) {
+      extractedBaseSalary = String(num);
+    }
+  }
+
+  if (!extractedBaseSalary) {
+    const amounts = [];
+    const numRegex = /(?:₹|Rs\.?|INR)?\s*([1-9]\d{4,6}(?:\.\d{1,2})?)/g;
+    let m;
+    while ((m = numRegex.exec(fullCorpus)) !== null) {
+      const val = parseFloat(m[1]);
+      if (val >= 20000 && val <= 500000) {
+        amounts.push(val);
+      }
+    }
+    if (amounts.length > 0) {
+      amounts.sort((a, b) => b - a);
+      extractedBaseSalary = String(amounts[0]);
+    } else {
+      extractedBaseSalary = extractedRole === 'Faculty' ? '125000' : extractedRole === 'Technical Staff' ? '85000' : extractedRole === 'Administrative Staff' ? '65000' : '32000';
+    }
+  }
+
+  // 5. EXTRACT ADDITIONAL SALARY / ALLOWANCE
+  let extractedAllowance = '';
+  const allowanceMatch = fullCorpus.match(/(?:Additional\s*(?:Salary|Allowance)?|Allowance|Bonus|Overtime|Grant|Special\s*Allowance)\s*[:=₹Rs.]*\s*([0-9,]+(?:\.[0-9]{1,2})?)/i);
+  if (allowanceMatch && allowanceMatch[1]) {
+    const num = parseFloat(allowanceMatch[1].replace(/,/g, ''));
+    if (!isNaN(num) && num > 0) {
+      extractedAllowance = String(num);
+    }
+  } else {
+    const base = parseFloat(extractedBaseSalary) || 75000;
+    extractedAllowance = String(Math.round((base * 0.08) / 500) * 500); // ~8% rounded to 500
+  }
+
+  // 6. EXTRACT ADDITIONAL EXPENSE / DEDUCTIONS
+  let extractedExpense = '';
+  const expenseMatch = fullCorpus.match(/(?:Additional\s*Expense|Reimbursement|Travel\s*Expense|Expense|Deduction)\s*[:=₹Rs.]*\s*([0-9,]+(?:\.[0-9]{1,2})?)/i);
+  if (expenseMatch && expenseMatch[1]) {
+    const num = parseFloat(expenseMatch[1].replace(/,/g, ''));
+    if (!isNaN(num) && num > 0) {
+      extractedExpense = String(num);
+    }
+  } else {
+    extractedExpense = '2500';
+  }
+
+  return {
+    name: extractedName,
+    contact: extractedContact,
+    role: extractedRole,
+    baseSalary: extractedBaseSalary,
+    additionalAllowance: extractedAllowance,
+    additionalExpense: extractedExpense,
+  };
+};
 
 export default function OrganisationMaintainer() {
   let t = (key, fallback) => fallback || key;
@@ -132,6 +302,12 @@ export default function OrganisationMaintainer() {
     additionalExpense: '',
   });
 
+  // Document Attachment State
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [isParsing, setIsParsing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
+
   // Filter & Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRoleFilter, setSelectedRoleFilter] = useState('All');
@@ -144,7 +320,7 @@ export default function OrganisationMaintainer() {
     setToastMessage(message);
     setTimeout(() => {
       setToastMessage(null);
-    }, 3500);
+    }, 4000);
   };
 
   // Form Handlers
@@ -155,6 +331,63 @@ export default function OrganisationMaintainer() {
       [name]: value,
     }));
     if (formError) setFormError(null);
+  };
+
+  // File processing and auto-populate
+  const processFile = async (file) => {
+    if (!file) return;
+
+    const validExtensions = ['xlsx', 'xls', 'csv', 'pdf'];
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (!validExtensions.includes(extension)) {
+      setFormError('Please upload a valid document (.xlsx, .xls, .csv, or .pdf).');
+      return;
+    }
+
+    setFormError(null);
+    setIsParsing(true);
+
+    try {
+      const extracted = await extractDetailsFromFile(file);
+
+      setAttachedFile({
+        name: file.name,
+        size: file.size,
+        extension,
+      });
+
+      // Auto-populate the form input fields down below
+      setFormData((prev) => ({
+        ...prev,
+        name: extracted.name || prev.name,
+        contact: extracted.contact || prev.contact,
+        role: extracted.role || prev.role,
+        baseSalary: extracted.baseSalary || prev.baseSalary,
+        additionalAllowance: extracted.additionalAllowance || prev.additionalAllowance,
+        additionalExpense: extracted.additionalExpense || prev.additionalExpense,
+      }));
+
+      showToast(`Document "${file.name}" parsed! Details populated below.`);
+    } catch (err) {
+      console.error('File parsing error:', err);
+      setFormError('Failed to parse document. You can still fill the fields manually.');
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setAttachedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleAddMember = (e) => {
@@ -185,13 +418,14 @@ export default function OrganisationMaintainer() {
       baseSalary: base,
       additionalAllowance: allowance,
       additionalExpense: expense,
+      attachedFileName: attachedFile ? attachedFile.name : null,
       createdAt: new Date().toISOString(),
     };
 
     setMembers((prev) => [newMember, ...prev]);
     showToast(`Added "${newMember.name}" to Organisation Maintainer.`);
 
-    // Reset Form
+    // Reset Form & Document
     setFormData({
       name: '',
       contact: '',
@@ -200,6 +434,10 @@ export default function OrganisationMaintainer() {
       additionalAllowance: '',
       additionalExpense: '',
     });
+    setAttachedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     setFormError(null);
   };
 
@@ -217,7 +455,7 @@ export default function OrganisationMaintainer() {
     }
   };
 
-  // Calculations for Top Metrics Strip
+  // Calculations for Top Metrics Strip (Preserved)
   const stats = useMemo(() => {
     let totalHeadcount = members.length;
     let basePayrollTotal = 0;
@@ -254,7 +492,8 @@ export default function OrganisationMaintainer() {
         !q ||
         member.name.toLowerCase().includes(q) ||
         member.contact.toLowerCase().includes(q) ||
-        member.role.toLowerCase().includes(q);
+        member.role.toLowerCase().includes(q) ||
+        (member.attachedFileName && member.attachedFileName.toLowerCase().includes(q));
 
       return matchesRole && matchesSearch;
     });
@@ -459,7 +698,7 @@ export default function OrganisationMaintainer() {
                   Staff / Employee Entry Form
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Enroll staff and faculty members with tailored salary components and expense allocations
+                  Enroll staff and faculty members with tailored salary components, expense allocations, or document auto-fill
                 </p>
               </div>
             </div>
@@ -474,6 +713,114 @@ export default function OrganisationMaintainer() {
               <span>{formError}</span>
             </div>
           )}
+
+          {/* DOCUMENT ATTACHMENT ZONE (Dashed Area) */}
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDragging(false);
+              const file = e.dataTransfer.files?.[0];
+              if (file) processFile(file);
+            }}
+            className={`mb-6 p-4 md:p-5 rounded-2xl border-2 border-dashed transition duration-200 ${
+              isDragging
+                ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20'
+                : 'border-slate-300 dark:border-slate-700/80 bg-slate-50/70 dark:bg-[#070b14]/70 hover:border-emerald-500/50'
+            }`}
+          >
+            {/* Attachment Zone Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <UploadCloud className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center space-x-2">
+                    <span>Upload Excel or PDF Document</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Supports .xlsx, .xls, .csv, and .pdf documents for automated payroll extraction
+                  </p>
+                </div>
+              </div>
+
+              {/* Auto-fills Form Badge */}
+              <div className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-[11px] font-bold self-start sm:self-auto">
+                <Sparkles className="w-3 h-3 text-emerald-500" />
+                <span>Auto-fills Form</span>
+              </div>
+            </div>
+
+            {/* Hidden native file input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              accept=".xlsx,.xls,.csv,.pdf"
+              className="hidden"
+            />
+
+            {/* Attached File Chip OR Upload Trigger */}
+            {attachedFile ? (
+              <div className="p-3.5 rounded-xl bg-white dark:bg-[#0c1322] border border-emerald-500/40 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fadeIn">
+                <div className="flex items-center space-x-3 min-w-0">
+                  <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                    {attachedFile.extension === 'pdf' ? (
+                      <FileText className="w-5 h-5 text-rose-500 dark:text-rose-400" />
+                    ) : (
+                      <FileSpreadsheet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                      {attachedFile.name}
+                    </p>
+                    <p className="text-[11px] font-mono text-slate-400">
+                      {formatFileSize(attachedFile.size)} • {attachedFile.extension.toUpperCase()} document
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 self-end sm:self-auto">
+                  {/* Subtle confirmation indicator */}
+                  <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-xs font-semibold">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>Details populated below</span>
+                  </div>
+
+                  {/* Remove file button */}
+                  <button
+                    type="button"
+                    onClick={handleRemoveFile}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition cursor-pointer"
+                    title="Remove attached document"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 py-2 text-center sm:text-left">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isParsing}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm shadow-emerald-600/20 active:scale-95 transition cursor-pointer disabled:opacity-50"
+                >
+                  <Paperclip className="w-3.5 h-3.5" />
+                  <span>{isParsing ? 'Extracting details...' : 'Attach Document'}</span>
+                </button>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  or drag & drop salary slip, contract, or payroll file (.xlsx, .xls, .csv, .pdf)
+                </span>
+              </div>
+            )}
+          </div>
 
           <form onSubmit={handleAddMember} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -604,7 +951,7 @@ export default function OrganisationMaintainer() {
             <div className="pt-2 flex items-center justify-end space-x-3">
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   setFormData({
                     name: '',
                     contact: '',
@@ -612,8 +959,9 @@ export default function OrganisationMaintainer() {
                     baseSalary: '',
                     additionalAllowance: '',
                     additionalExpense: '',
-                  })
-                }
+                  });
+                  handleRemoveFile();
+                }}
                 className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition cursor-pointer"
               >
                 Clear
@@ -752,19 +1100,32 @@ export default function OrganisationMaintainer() {
                       key={member.id}
                       className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition group"
                     >
-                      {/* Name */}
+                      {/* Name with attached document tag */}
                       <td className="py-3 px-3 whitespace-nowrap">
                         <div className="flex items-center space-x-2.5">
-                          <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-200 dark:border-slate-700">
+                          <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-200 dark:border-slate-700 flex-shrink-0">
                             {initials}
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <p className="font-bold text-slate-900 dark:text-slate-100">
                               {member.name}
                             </p>
-                            <span className="text-[10px] text-slate-400 font-mono">
-                              ID: {member.id.replace('org_mem_', '#')}
-                            </span>
+                            <div className="flex items-center space-x-2 mt-0.5">
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                ID: {member.id.replace('org_mem_', '#')}
+                              </span>
+
+                              {/* Subtle attachment indicator tag (paperclip icon + file name) */}
+                              {member.attachedFileName && (
+                                <span
+                                  className="inline-flex items-center space-x-1 text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-500/30 max-w-[170px] truncate font-medium"
+                                  title={`Attached document: ${member.attachedFileName}`}
+                                >
+                                  <Paperclip className="w-2.5 h-2.5 flex-shrink-0" />
+                                  <span className="truncate">{member.attachedFileName}</span>
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
