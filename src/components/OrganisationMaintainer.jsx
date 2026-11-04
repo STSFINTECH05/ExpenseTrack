@@ -30,16 +30,46 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-// Currency Formatter for Indian Rupees (₹XX,XXX.00)
-const formatINR = (value) => {
+// Supported Global Currencies
+const CURRENCIES = [
+  { code: 'INR', label: 'INR - Indian Rupee (₹)', symbol: '₹', locale: 'en-IN' },
+  { code: 'USD', label: 'USD - US Dollar ($)', symbol: '$', locale: 'en-US' },
+  { code: 'EUR', label: 'EUR - Euro (€)', symbol: '€', locale: 'de-DE' },
+  { code: 'GBP', label: 'GBP - British Pound (£)', symbol: '£', locale: 'en-GB' },
+  { code: 'AED', label: 'AED - UAE Dirham (د.إ)', symbol: 'د.إ', locale: 'ar-AE' },
+  { code: 'SGD', label: 'SGD - Singapore Dollar (S$)', symbol: 'S$', locale: 'en-SG' },
+  { code: 'CAD', label: 'CAD - Canadian Dollar (C$)', symbol: 'C$', locale: 'en-CA' },
+  { code: 'AUD', label: 'AUD - Australian Dollar (A$)', symbol: 'A$', locale: 'en-AU' },
+  { code: 'JPY', label: 'JPY - Japanese Yen (¥)', symbol: '¥', locale: 'ja-JP', decimals: 0 },
+  { code: 'CHF', label: 'CHF - Swiss Franc (CHF)', symbol: 'CHF', locale: 'de-CH' },
+  { code: 'SAR', label: 'SAR - Saudi Riyal (﷼)', symbol: '﷼', locale: 'ar-SA' },
+  { code: 'QAR', label: 'QAR - Qatari Riyal (QR)', symbol: 'QR', locale: 'ar-QA' },
+  { code: 'KWD', label: 'KWD - Kuwaiti Dinar (KD)', symbol: 'KD', locale: 'ar-KW', decimals: 3 },
+];
+
+// Dynamic Global Currency Formatter
+const formatCurrency = (value, currencyCode = 'INR') => {
   const num = Number(value) || 0;
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 2,
-  }).format(num);
+  const curr = CURRENCIES.find((c) => c.code === currencyCode) || CURRENCIES[0];
+  const maxDecimals = typeof curr.decimals === 'number' ? curr.decimals : 2;
+  const minDecimals = typeof curr.decimals === 'number' ? curr.decimals : 2;
+
+  try {
+    return new Intl.NumberFormat(curr.locale, {
+      style: 'currency',
+      currency: curr.code,
+      maximumFractionDigits: maxDecimals,
+      minimumFractionDigits: minDecimals,
+    }).format(num);
+  } catch (err) {
+    return `${curr.symbol}${num.toLocaleString(undefined, {
+      minimumFractionDigits: minDecimals,
+      maximumFractionDigits: maxDecimals,
+    })}`;
+  }
 };
+
+const formatINR = (value) => formatCurrency(value, 'INR');
 
 // File size formatter
 const formatFileSize = (bytes) => {
@@ -301,6 +331,27 @@ export default function OrganisationMaintainer() {
     }
   }, [members]);
 
+  // Currency Selector State (defaults to INR, synced with localStorage)
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    try {
+      return localStorage.getItem('sts_org_currency') || 'INR';
+    } catch {
+      return 'INR';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sts_org_currency', selectedCurrency);
+    } catch (e) {
+      console.warn('Failed to persist organisation currency:', e);
+    }
+  }, [selectedCurrency]);
+
+  const activeCurrency = useMemo(() => {
+    return CURRENCIES.find((c) => c.code === selectedCurrency) || CURRENCIES[0];
+  }, [selectedCurrency]);
+
   // Form State
   const [isFormOpen, setIsFormOpen] = useState(true);
   const [formData, setFormData] = useState({
@@ -413,7 +464,7 @@ export default function OrganisationMaintainer() {
     }
     const base = parseFloat(formData.baseSalary);
     if (isNaN(base) || base < 0) {
-      setFormError('Please enter a valid Base Monthly Salary in ₹.');
+      setFormError(`Please enter a valid Base Monthly Salary in ${activeCurrency.symbol}.`);
       return;
     }
 
@@ -649,19 +700,23 @@ export default function OrganisationMaintainer() {
           </div>
         </div>
 
-        {/* Base Payroll Total (₹) */}
+        {/* Base Payroll Total */}
         <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-sky-500/40 hover:shadow-md transition">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">
-                Base Payroll Total (₹)
+                Base Payroll Total ({activeCurrency.symbol})
               </p>
               <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1 tracking-tight font-mono">
-                {formatINR(stats.basePayrollTotal)}
+                {formatCurrency(stats.basePayrollTotal, selectedCurrency)}
               </h3>
             </div>
-            <div className="p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60">
-              <IndianRupee className="w-5 h-5" />
+            <div className="p-2.5 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60 flex items-center justify-center font-mono font-bold w-10 h-10">
+              {activeCurrency.code === 'INR' ? (
+                <IndianRupee className="w-5 h-5" />
+              ) : (
+                <span className="text-sm font-black">{activeCurrency.symbol}</span>
+              )}
             </div>
           </div>
           <div className="mt-4 flex items-center text-[11px] text-slate-500 dark:text-slate-400">
@@ -669,15 +724,15 @@ export default function OrganisationMaintainer() {
           </div>
         </div>
 
-        {/* Additional Comp / Expenses Total (₹) */}
+        {/* Additional Comp / Expenses Total */}
         <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-amber-500/40 hover:shadow-md transition">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">
-                Additional Comp / Expenses Total (₹)
+                Additional Comp / Expenses Total ({activeCurrency.symbol})
               </p>
               <h3 className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1 tracking-tight font-mono">
-                {formatINR(stats.additionalCompExpensesTotal)}
+                {formatCurrency(stats.additionalCompExpensesTotal, selectedCurrency)}
               </h3>
             </div>
             <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60">
@@ -690,15 +745,15 @@ export default function OrganisationMaintainer() {
           </div>
         </div>
 
-        {/* Net Monthly Outflow (₹) */}
+        {/* Net Monthly Outflow */}
         <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-rose-500/40 hover:shadow-md transition">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">
-                Net Monthly Outflow (₹)
+                Net Monthly Outflow ({activeCurrency.symbol})
               </p>
               <h3 className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1 tracking-tight font-mono">
-                {formatINR(stats.netMonthlyOutflow)}
+                {formatCurrency(stats.netMonthlyOutflow, selectedCurrency)}
               </h3>
             </div>
             <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60">
@@ -716,7 +771,7 @@ export default function OrganisationMaintainer() {
       {/* ========================================================================= */}
       {isFormOpen && (
         <section className="bg-white dark:bg-[#0c1322] rounded-2xl border border-slate-200 dark:border-slate-800 p-5 md:p-6 shadow-sm transition animate-fadeIn">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 mb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 mb-5 gap-3">
             <div className="flex items-center space-x-2.5">
               <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                 <UserPlus className="w-5 h-5" />
@@ -730,9 +785,30 @@ export default function OrganisationMaintainer() {
                 </p>
               </div>
             </div>
-            <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-              INR (₹)
-            </span>
+
+            {/* Global Currency Selector Dropdown */}
+            <div className="flex items-center space-x-2 self-start sm:self-auto">
+              <label htmlFor="org-currency-selector" className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden sm:inline">
+                Currency:
+              </label>
+              <select
+                id="org-currency-selector"
+                aria-label="Select Global Currency"
+                value={selectedCurrency}
+                onChange={(e) => setSelectedCurrency(e.target.value)}
+                className="bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 cursor-pointer shadow-xs transition"
+              >
+                {CURRENCIES.map((curr) => (
+                  <option
+                    key={curr.code}
+                    value={curr.code}
+                    className="bg-white dark:bg-[#0c1322] text-slate-900 dark:text-slate-100 font-sans"
+                  >
+                    {curr.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {formError && (
@@ -908,11 +984,11 @@ export default function OrganisationMaintainer() {
               {/* Base Monthly Salary */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  Base Monthly Salary (₹) <span className="text-rose-500">*</span>
+                  Base Monthly Salary ({activeCurrency.symbol}) <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs font-mono font-bold">
-                    ₹
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs font-mono font-bold pointer-events-none">
+                    {activeCurrency.symbol}
                   </span>
                   <input
                     type="number"
@@ -923,7 +999,8 @@ export default function OrganisationMaintainer() {
                     value={formData.baseSalary}
                     onChange={handleInputChange}
                     placeholder="e.g., 75000"
-                    className="w-full pl-8 pr-3.5 py-2.5 bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 font-mono placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:bg-white dark:focus:bg-[#0d1424] transition"
+                    style={{ paddingLeft: `${Math.max(2.25, 1.25 + activeCurrency.symbol.length * 0.55)}rem` }}
+                    className="w-full pr-3.5 py-2.5 bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 font-mono placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:bg-white dark:focus:bg-[#0d1424] transition"
                   />
                 </div>
               </div>
@@ -931,11 +1008,11 @@ export default function OrganisationMaintainer() {
               {/* Additional Salary / Allowance */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  Additional Salary / Allowance (₹)
+                  Additional Salary / Allowance ({activeCurrency.symbol})
                 </label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs font-mono font-bold">
-                    ₹
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs font-mono font-bold pointer-events-none">
+                    {activeCurrency.symbol}
                   </span>
                   <input
                     type="number"
@@ -945,7 +1022,8 @@ export default function OrganisationMaintainer() {
                     value={formData.additionalAllowance}
                     onChange={handleInputChange}
                     placeholder="Bonus, Overtime, Grant (e.g., 5000)"
-                    className="w-full pl-8 pr-3.5 py-2.5 bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 font-mono placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:bg-white dark:focus:bg-[#0d1424] transition"
+                    style={{ paddingLeft: `${Math.max(2.25, 1.25 + activeCurrency.symbol.length * 0.55)}rem` }}
+                    className="w-full pr-3.5 py-2.5 bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 font-mono placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:bg-white dark:focus:bg-[#0d1424] transition"
                   />
                 </div>
                 <p className="text-[10px] text-slate-400 mt-1">e.g., Bonus, Overtime, Research Grant</p>
@@ -954,11 +1032,11 @@ export default function OrganisationMaintainer() {
               {/* Additional Expense / Deductions */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  Additional Expense / Deductions (₹)
+                  Additional Expense / Deductions ({activeCurrency.symbol})
                 </label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs font-mono font-bold">
-                    ₹
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 text-xs font-mono font-bold pointer-events-none">
+                    {activeCurrency.symbol}
                   </span>
                   <input
                     type="number"
@@ -968,7 +1046,8 @@ export default function OrganisationMaintainer() {
                     value={formData.additionalExpense}
                     onChange={handleInputChange}
                     placeholder="Travel, Advance (e.g., 2000)"
-                    className="w-full pl-8 pr-3.5 py-2.5 bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 font-mono placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:bg-white dark:focus:bg-[#0d1424] transition"
+                    style={{ paddingLeft: `${Math.max(2.25, 1.25 + activeCurrency.symbol.length * 0.55)}rem` }}
+                    className="w-full pr-3.5 py-2.5 bg-slate-50 dark:bg-[#070b14] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-slate-100 font-mono placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:bg-white dark:focus:bg-[#0d1424] transition"
                   />
                 </div>
                 <p className="text-[10px] text-slate-400 mt-1">e.g., Travel Expense Reimbursement, Advance Deduction</p>
@@ -1178,22 +1257,22 @@ export default function OrganisationMaintainer() {
 
                       {/* Base Salary */}
                       <td className="py-3 px-3 text-right font-mono font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
-                        {formatINR(member.baseSalary)}
+                        {formatCurrency(member.baseSalary, selectedCurrency)}
                       </td>
 
                       {/* Additional Comp/Expense */}
                       <td className="py-3 px-3 text-right whitespace-nowrap">
                         <p className="font-mono font-semibold text-amber-600 dark:text-amber-400">
-                          {formatINR(addTotal)}
+                          {formatCurrency(addTotal, selectedCurrency)}
                         </p>
                         <span className="text-[10px] text-slate-400 font-mono block">
-                          +₹{Number(member.additionalAllowance || 0).toLocaleString('en-IN')} allow. / +₹{Number(member.additionalExpense || 0).toLocaleString('en-IN')} exp.
+                          +{activeCurrency.symbol}{Number(member.additionalAllowance || 0).toLocaleString(activeCurrency.locale)} allow. / +{activeCurrency.symbol}{Number(member.additionalExpense || 0).toLocaleString(activeCurrency.locale)} exp.
                         </span>
                       </td>
 
                       {/* Net Payout */}
                       <td className="py-3 px-3 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap text-sm">
-                        {formatINR(netPayout)}
+                        {formatCurrency(netPayout, selectedCurrency)}
                       </td>
 
                       {/* Action (Delete/Remove) */}
