@@ -19,9 +19,11 @@ import {
   Calculator as CalculatorIcon,
   Calendar as CalendarIcon,
   Crown,
+  StickyNote,
 } from 'lucide-react';
 import CalculatorModal from './CalculatorModal';
 import CalendarModal from './CalendarModal';
+import NotesModal from './NotesModal';
 import LanguageDropdown from './LanguageDropdown';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -55,6 +57,7 @@ export default function Header({
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
   const moreMenuRef = useRef(null);
   const notificationRef = useRef(null);
   const profileMenuRef = useRef(null);
@@ -487,6 +490,24 @@ export default function Header({
                     <p className="text-[10px] text-slate-400">Bill & reminder dates</p>
                   </div>
                 </button>
+
+                {/* 3. Notes Option */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    setShowNotes(true);
+                  }}
+                  className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer mt-0.5"
+                >
+                  <div className="p-1.5 rounded-lg bg-slate-800 text-slate-300 group-hover:bg-amber-500/20 group-hover:text-amber-400 transition">
+                    <StickyNote className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-200 group-hover:text-white">Notes</p>
+                    <p className="text-[10px] text-slate-400">Quick thoughts & records</p>
+                  </div>
+                </button>
               </div>
             )}
           </div>
@@ -503,6 +524,12 @@ export default function Header({
       <CalendarModal
         isOpen={showCalendar}
         onClose={() => setShowCalendar(false)}
+      />
+
+      {/* Quick Notes & Records Modal */}
+      <NotesModal
+        isOpen={showNotes}
+        onClose={() => setShowNotes(false)}
       />
     </header>
   );
