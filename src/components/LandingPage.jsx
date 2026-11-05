@@ -318,7 +318,7 @@ export default function LandingPage({ onNavigateToAuth, onLaunchDashboard }) {
       {/* ========================================================= */}
       {/* 2. TOP NAVBAR (Clean Full-Width, Edge-to-Edge)            */}
       {/* ========================================================= */}
-      <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-xs">
+      <header className="sticky top-0 left-0 right-0 z-50 w-full bg-white/80 dark:bg-[#0c1322]/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 shadow-xs">
         <div className="w-full px-6 sm:px-8 h-20 flex items-center justify-between">
           {/* Left: Brand Logo & Title Only (No Subtext) */}
           <div
