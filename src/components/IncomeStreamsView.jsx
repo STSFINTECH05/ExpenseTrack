@@ -21,7 +21,9 @@ import {
   ChevronRight,
   ExternalLink,
   Info,
+  Building,
 } from 'lucide-react';
+import RealEstateModal from './RealEstateModal';
 
 const CATEGORIES = [
   { id: 'all', label: 'All Streams', icon: Layers },
@@ -488,6 +490,9 @@ export default function IncomeStreamsView() {
   // Fixed Deposit & Post Office Directory Views
   const [activeDirectoryTab, setActiveDirectoryTab] = useState('none'); // 'none' | 'bank_fd' | 'post_office'
 
+  // Real Estate Land & Sq. Ft. Valuation Modal State
+  const [isRealEstateModalOpen, setIsRealEstateModalOpen] = useState(false);
+
   // Interactive Filter States (initialized with defaults)
   const [isFilterSubmitted, setIsFilterSubmitted] = useState(false);
   const [invAmount, setInvAmount] = useState('35000');
@@ -600,6 +605,16 @@ export default function IncomeStreamsView() {
 
         {/* Directory Quick-Toggle Buttons */}
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Real Estate Valuation Button */}
+          <button
+            type="button"
+            onClick={() => setIsRealEstateModalOpen(true)}
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-xs transition-colors cursor-pointer bg-white dark:bg-[#0c1322] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400"
+          >
+            <Building className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Real Estate</span>
+          </button>
+
           <button
             type="button"
             onClick={() =>
@@ -1152,6 +1167,12 @@ export default function IncomeStreamsView() {
           </div>
         </div>
       </div>
+
+      {/* Real Estate Land & Sq. Ft. Valuation Modal */}
+      <RealEstateModal
+        isOpen={isRealEstateModalOpen}
+        onClose={() => setIsRealEstateModalOpen(false)}
+      />
     </div>
   );
 }
