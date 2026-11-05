@@ -199,7 +199,7 @@ export default function SegregationView() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-            {t('segregation', 'Segregation')}
+            {t('expenses', 'Expenses')}
           </h2>
         </div>
 

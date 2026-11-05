@@ -32,7 +32,7 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
     },
     {
       id: 'segregation',
-      label: t('segregation', 'Segregation'),
+      label: t('expenses', 'Expenses'),
       icon: Layers,
     },
     {
