@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Wallet,
   Plus,
@@ -15,10 +15,19 @@ import {
   Trash2,
   Check,
   ChevronDown,
+  ChevronUp,
   MapPin,
   Compass,
   ExternalLink,
   Navigation,
+  Mic,
+  MicOff,
+  Bot,
+  Sparkles,
+  Volume2,
+  VolumeX,
+  Radio,
+  Loader2,
 } from 'lucide-react';
 
 // Curated database of famous places for popular cities
@@ -61,6 +70,127 @@ const FAMOUS_DESTINATIONS = {
   ],
 };
 
+// =========================================================================
+// AI Voice Command Parser & Natural Language Understanding
+// =========================================================================
+const parseVoiceTicketCommand = (text) => {
+  if (!text) return null;
+  const raw = text.trim();
+  const lower = raw.toLowerCase();
+
+  // Location detection: popular cities and tourist destinations
+  const cityMap = {
+    goa: 'Goa',
+    chennai: 'Chennai',
+    bengaluru: 'Bengaluru',
+    bangalore: 'Bengaluru',
+    mumbai: 'Mumbai',
+    bombay: 'Mumbai',
+    puducherry: 'Puducherry',
+    pondicherry: 'Puducherry',
+    delhi: 'Delhi',
+    'new delhi': 'Delhi',
+    hyderabad: 'Hyderabad',
+    kolkata: 'Kolkata',
+    kerala: 'Kerala',
+    jaipur: 'Jaipur',
+    manali: 'Manali',
+    agra: 'Agra',
+    ooty: 'Ooty',
+    shimla: 'Shimla',
+  };
+
+  let detectedLocation = '';
+  for (const [key, val] of Object.entries(cityMap)) {
+    if (new RegExp(`\\b${key}\\b`, 'i').test(lower)) {
+      detectedLocation = val;
+      break;
+    }
+  }
+
+  // Participants detection: "with [name] and [name]" or "with [name], [name]"
+  const detectedParticipants = [];
+  const withMatch = raw.match(/with\s+([^,.\n]+)/i);
+  if (withMatch && withMatch[1]) {
+    const rawNames = withMatch[1]
+      .replace(/\s+for\s+.*$/i, '')
+      .replace(/\s+in\s+.*$/i, '')
+      .split(/\s+and\s+|,\s*|\s*&\s*/i);
+
+    rawNames.forEach((n) => {
+      const clean = n.trim().replace(/^the\s+/i, '').replace(/[^a-zA-Z0-9\s]/g, '');
+      if (
+        clean &&
+        !['team', 'friends', 'colleagues', 'everyone', 'us', 'all', 'office', 'group'].includes(
+          clean.toLowerCase()
+        )
+      ) {
+        detectedParticipants.push(clean.charAt(0).toUpperCase() + clean.slice(1));
+      }
+    });
+  }
+
+  // Currency detection
+  let detectedCurrency = 'INR (₹)';
+  if (lower.includes('dollar') || lower.includes('usd') || lower.includes('$')) {
+    detectedCurrency = 'USD ($)';
+  } else if (lower.includes('euro') || lower.includes('€')) {
+    detectedCurrency = 'EUR (€)';
+  } else if (lower.includes('pound') || lower.includes('gbp') || lower.includes('£')) {
+    detectedCurrency = 'GBP (£)';
+  } else if (lower.includes('rupee') || lower.includes('inr') || lower.includes('₹')) {
+    detectedCurrency = 'INR (₹)';
+  }
+
+  // Budget / amount detection
+  let detectedBudget = '';
+  const amountMatch = raw.match(/(?:for|amount|budget|cost|of)\s+(?:rs\.?|inr|\$|€|£)?\s*([0-9,]+)/i);
+  if (amountMatch && amountMatch[1]) {
+    detectedBudget = amountMatch[1].replace(/,/g, '');
+  }
+
+  // Clean Title extraction
+  let cleanTitle = raw
+    .replace(/^create\s+(?:a\s+|an\s+)?/i, '')
+    .replace(/^start\s+(?:a\s+|an\s+)?/i, '')
+    .replace(/^make\s+(?:a\s+|an\s+)?/i, '')
+    .replace(/^new\s+/i, '')
+    .replace(/\s+split\s+ticket/i, ' Split')
+    .replace(/\s+ticket/i, '');
+
+  // If title still has "with ...", trim it off title for cleaner title name
+  const withIdx = cleanTitle.search(/\s+with\s+/i);
+  if (withIdx !== -1) {
+    cleanTitle = cleanTitle.substring(0, withIdx).trim();
+  }
+
+  // Capitalize words in title
+  cleanTitle = cleanTitle
+    .split(' ')
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
+    .trim();
+
+  if (!cleanTitle) {
+    cleanTitle = raw.charAt(0).toUpperCase() + raw.slice(1);
+  }
+
+  return {
+    title: cleanTitle,
+    location: detectedLocation,
+    currency: detectedCurrency,
+    participants: detectedParticipants,
+    budget: detectedBudget,
+    rawText: raw,
+  };
+};
+
+const getSpeechRecognition = () => {
+  if (typeof window === 'undefined') return null;
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+};
+
 export default function SplitAndCollectPlaceholder() {
   // =========================================================================
   // Core Component State
@@ -80,6 +210,281 @@ export default function SplitAndCollectPlaceholder() {
   const [participants, setParticipants] = useState([
     { id: 'user-you', name: 'You', email: 'admin@stsfintech.com', isSelf: true },
   ]);
+
+  // Voice Assistant & AI Voice Recognition Bot States
+  const [isListeningTitle, setIsListeningTitle] = useState(false);
+  const [isBotListening, setIsBotListening] = useState(false);
+  const [isBotSpeaking, setIsBotSpeaking] = useState(false);
+  const [isBotMuted, setIsBotMuted] = useState(false);
+  const [botTranscript, setBotTranscript] = useState('');
+  const [botResponse, setBotResponse] = useState('');
+  const [botStatus, setBotStatus] = useState('idle'); // 'idle' | 'listening' | 'processing' | 'speaking'
+  const [showAiBot, setShowAiBot] = useState(true);
+  const [voiceError, setVoiceError] = useState('');
+
+  const titleRecognitionRef = useRef(null);
+  const botRecognitionRef = useRef(null);
+  const transcriptRef = useRef('');
+
+  // Stop all active voice operations (Recognition & SpeechSynthesis)
+  const stopAllVoice = () => {
+    if (titleRecognitionRef.current) {
+      try {
+        titleRecognitionRef.current.stop();
+      } catch (e) {}
+      titleRecognitionRef.current = null;
+    }
+    if (botRecognitionRef.current) {
+      try {
+        botRecognitionRef.current.stop();
+      } catch (e) {}
+      botRecognitionRef.current = null;
+    }
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
+    }
+    setIsListeningTitle(false);
+    setIsBotListening(false);
+    setIsBotSpeaking(false);
+    setBotStatus('idle');
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopAllVoice();
+    };
+  }, []);
+
+  // Text-to-speech for AI Bot voice replies
+  const speakBotResponse = (text) => {
+    if (isBotMuted || typeof window === 'undefined' || !window.speechSynthesis) {
+      setBotStatus('idle');
+      return;
+    }
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.05;
+      utterance.onstart = () => {
+        setIsBotSpeaking(true);
+        setBotStatus('speaking');
+      };
+      utterance.onend = () => {
+        setIsBotSpeaking(false);
+        setBotStatus('idle');
+      };
+      utterance.onerror = () => {
+        setIsBotSpeaking(false);
+        setBotStatus('idle');
+      };
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.warn('Speech synthesis error:', err);
+      setIsBotSpeaking(false);
+      setBotStatus('idle');
+    }
+  };
+
+  // Apply parsed voice command to the ticket form
+  const applyVoiceCommand = (parsed) => {
+    if (!parsed) return;
+
+    if (parsed.title) {
+      setTicketTitle(parsed.title);
+    }
+
+    if (parsed.location) {
+      setTicketLocation(parsed.location);
+    }
+
+    if (parsed.currency) {
+      setTicketCurrency(parsed.currency);
+    }
+
+    if (parsed.budget) {
+      setTicketDescription(`Budget: ${parsed.currency.split(' ')[0]} ${parsed.budget}`);
+    }
+
+    if (parsed.participants && parsed.participants.length > 0) {
+      setParticipants((prev) => {
+        const existingNames = new Set(prev.map((p) => p.name.toLowerCase()));
+        const toAdd = parsed.participants
+          .filter((name) => !existingNames.has(name.toLowerCase()))
+          .map((name) => ({
+            id: `part-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            name,
+            email: `${name.toLowerCase().replace(/\s+/g, '')}@stsfintech.com`,
+            isSelf: false,
+          }));
+        return [...prev, ...toAdd];
+      });
+    }
+
+    // Friendly speech feedback
+    const parts = [];
+    parts.push(`Ticket title set to "${parsed.title}".`);
+    if (parsed.location) parts.push(`Location set to ${parsed.location}.`);
+    if (parsed.participants && parsed.participants.length > 0) {
+      parts.push(`Added ${parsed.participants.join(' and ')} to participants.`);
+    }
+    if (parsed.budget) {
+      parts.push(`Budget noted as ${parsed.currency.split(' ')[0]} ${parsed.budget}.`);
+    }
+
+    const responseMsg = `Got it! ${parts.join(' ')}`;
+    setBotResponse(responseMsg);
+    speakBotResponse(responseMsg);
+  };
+
+  // Toggle Direct Voice Recognition for Ticket Title
+  const handleToggleTitleVoice = () => {
+    setVoiceError('');
+    if (isListeningTitle) {
+      stopAllVoice();
+      return;
+    }
+
+    stopAllVoice();
+    const SpeechRec = getSpeechRecognition();
+    if (!SpeechRec) {
+      setVoiceError(
+        'Speech recognition is not supported in this browser. Please use Google Chrome, Microsoft Edge, or Safari.'
+      );
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRec();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListeningTitle(true);
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map((result) => result[0].transcript)
+          .join('');
+        if (transcript.trim()) {
+          const formatted = transcript
+            .trim()
+            .split(' ')
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' ');
+          setTicketTitle(formatted);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Title voice error:', event.error);
+        if (event.error === 'not-allowed') {
+          setVoiceError('Microphone permission was denied. Please allow microphone access in your browser settings.');
+        } else if (event.error !== 'no-speech') {
+          setVoiceError(`Voice recognition error: ${event.error}`);
+        }
+        setIsListeningTitle(false);
+      };
+
+      recognition.onend = () => {
+        setIsListeningTitle(false);
+      };
+
+      titleRecognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.warn('Failed to start title voice recognition:', err);
+      setVoiceError('Could not start microphone. Please check browser permissions.');
+      setIsListeningTitle(false);
+    }
+  };
+
+  // Toggle AI Voice Recognition Bot
+  const handleToggleBotVoice = () => {
+    setVoiceError('');
+    if (isBotListening) {
+      stopAllVoice();
+      return;
+    }
+
+    stopAllVoice();
+    const SpeechRec = getSpeechRecognition();
+    if (!SpeechRec) {
+      setVoiceError(
+        'Speech recognition is not supported in this browser. Please use Google Chrome, Microsoft Edge, or Safari.'
+      );
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRec();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      transcriptRef.current = '';
+
+      recognition.onstart = () => {
+        setIsBotListening(true);
+        setBotStatus('listening');
+        setBotTranscript('');
+        setBotResponse('Listening to your voice command... Speak now!');
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map((result) => result[0].transcript)
+          .join('');
+        transcriptRef.current = transcript;
+        setBotTranscript(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Bot voice error:', event.error);
+        if (event.error === 'not-allowed') {
+          setVoiceError('Microphone permission was denied. Please allow microphone access in your browser.');
+        } else if (event.error !== 'no-speech') {
+          setVoiceError(`Voice error: ${event.error}`);
+        }
+        setIsBotListening(false);
+        setBotStatus('idle');
+      };
+
+      recognition.onend = () => {
+        setIsBotListening(false);
+        const finalSpoken = transcriptRef.current.trim();
+        if (finalSpoken) {
+          setBotStatus('processing');
+          const parsed = parseVoiceTicketCommand(finalSpoken);
+          applyVoiceCommand(parsed);
+        } else {
+          setBotStatus('idle');
+        }
+      };
+
+      titleRecognitionRef.current = null;
+      botRecognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.warn('Failed to start AI voice bot:', err);
+      setVoiceError('Could not activate AI voice bot.');
+      setIsBotListening(false);
+      setBotStatus('idle');
+    }
+  };
+
+  // Run quick prompt or simulated voice command through AI Voice Bot
+  const handleRunBotCommand = (text) => {
+    stopAllVoice();
+    setBotTranscript(text);
+    setBotStatus('processing');
+    const parsed = parseVoiceTicketCommand(text);
+    applyVoiceCommand(parsed);
+  };
 
   // Modal State: Add Expense (in Active Ticket Detail View)
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
@@ -113,6 +518,8 @@ export default function SplitAndCollectPlaceholder() {
   const handleCreateTicket = (e) => {
     e.preventDefault();
     if (!ticketTitle.trim()) return;
+
+    stopAllVoice();
 
     const newTicket = {
       id: `ticket-${Date.now()}`,
@@ -983,27 +1390,289 @@ export default function SplitAndCollectPlaceholder() {
               </div>
               <button
                 type="button"
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  stopAllVoice();
+                  setShowCreateModal(false);
+                }}
                 className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
+            {/* ========================================================================= */}
+            {/* AI VOICE RECOGNITION BOT ASSISTANT WIDGET                                 */}
+            {/* ========================================================================= */}
+            <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/50 dark:from-[#091b15] dark:via-[#0c1624] dark:to-[#071714] p-3.5 sm:p-4 shadow-sm relative overflow-hidden transition-all">
+              {/* Subtle decorative glow */}
+              <div className="absolute -top-10 -right-10 w-28 h-28 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
+
+              {/* Header: Bot Identity & Controls */}
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className={`relative w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
+                      isBotListening
+                        ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/40 ring-4 ring-rose-400/30 animate-pulse'
+                        : isBotSpeaking
+                        ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/40 ring-4 ring-cyan-400/30'
+                        : 'bg-[#0d5236] text-white shadow-md'
+                    }`}
+                  >
+                    <Bot className="w-4 h-4" />
+                    {(isBotListening || isBotSpeaking) && (
+                      <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-1">
+                        STS AI Voice Assistant Bot
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        <Sparkles className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+                        AI Voice
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      Voice recognition &amp; smart auto-split assistant
+                    </p>
+                  </div>
+                </div>
+
+                {/* Voice Bot Top Action Controls */}
+                <div className="flex items-center gap-1">
+                  {/* Sound Mute/Unmute */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isBotSpeaking) {
+                        window.speechSynthesis?.cancel();
+                        setIsBotSpeaking(false);
+                      }
+                      setIsBotMuted(!isBotMuted);
+                    }}
+                    className={`p-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                      isBotMuted
+                        ? 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 bg-slate-100 dark:bg-slate-800'
+                        : 'text-emerald-700 dark:text-emerald-400 bg-emerald-100/70 dark:bg-emerald-950/60 hover:bg-emerald-200/60'
+                    }`}
+                    title={isBotMuted ? 'Unmute AI Voice responses' : 'Mute AI Voice responses'}
+                  >
+                    {isBotMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                  </button>
+
+                  {/* Expand/Collapse Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setShowAiBot(!showAiBot)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                    title={showAiBot ? 'Collapse AI Bot' : 'Expand AI Bot'}
+                  >
+                    {showAiBot ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Voice Bot Body */}
+              {showAiBot && (
+                <div className="space-y-3 pt-1 border-t border-emerald-500/10 dark:border-emerald-900/30">
+                  {/* Main Voice Activation Button & Audio Waveform Visualizer */}
+                  <div className="flex flex-col sm:flex-row items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={handleToggleBotVoice}
+                      className={`w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs tracking-wide transition-all shadow-sm cursor-pointer ${
+                        isBotListening
+                          ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/30 animate-pulse'
+                          : 'bg-[#0d5236] hover:bg-[#093d28] text-white shadow-emerald-900/20 active:scale-98'
+                      }`}
+                    >
+                      {isBotListening ? (
+                        <>
+                          <MicOff className="w-4 h-4 text-white" />
+                          <span>Stop Listening</span>
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="w-4 h-4 text-emerald-200" />
+                          <span>Talk to AI Voice Bot</span>
+                        </>
+                      )}
+
+                      {/* Equalizer Wave bars inside button when active */}
+                      {(isBotListening || isBotSpeaking) && (
+                        <div className="flex items-center gap-0.5 ml-1 h-4">
+                          <span className="w-0.5 bg-white rounded-full animate-voice-wave-1"></span>
+                          <span className="w-0.5 bg-white rounded-full animate-voice-wave-2"></span>
+                          <span className="w-0.5 bg-white rounded-full animate-voice-wave-3"></span>
+                          <span className="w-0.5 bg-white rounded-full animate-voice-wave-4"></span>
+                          <span className="w-0.5 bg-white rounded-full animate-voice-wave-5"></span>
+                        </div>
+                      )}
+                    </button>
+
+                    {/* Status Badge */}
+                    <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/80 dark:bg-[#080d19]/80 border border-slate-200/80 dark:border-slate-800 text-[11px] font-semibold text-slate-700 dark:text-slate-300 w-full sm:w-auto justify-center">
+                      {isBotListening ? (
+                        <span className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+                          <Radio className="w-3.5 h-3.5 animate-spin" />
+                          <span>Listening to voice...</span>
+                        </span>
+                      ) : isBotSpeaking ? (
+                        <span className="flex items-center gap-1.5 text-cyan-600 dark:text-cyan-400">
+                          <Volume2 className="w-3.5 h-3.5 animate-bounce" />
+                          <span>AI Speaking...</span>
+                        </span>
+                      ) : botStatus === 'processing' ? (
+                        <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>AI Processing...</span>
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                          <span>AI Ready to Listen</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Voice Error notice if any */}
+                  {voiceError && (
+                    <div className="px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs flex items-center justify-between gap-2">
+                      <span>{voiceError}</span>
+                      <button
+                        type="button"
+                        onClick={() => setVoiceError('')}
+                        className="text-amber-600 hover:text-amber-900 font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Live Voice Transcript & Bot Response Bubble */}
+                  {(botTranscript || botResponse) && (
+                    <div className="space-y-2 p-2.5 rounded-xl bg-white/90 dark:bg-[#080d19]/90 border border-slate-200/70 dark:border-slate-800/80 text-xs">
+                      {botTranscript && (
+                        <div className="flex items-start gap-1.5 text-slate-600 dark:text-slate-300">
+                          <span className="font-bold text-slate-900 dark:text-slate-100 shrink-0">🗣️ You said:</span>
+                          <span className="italic break-words">"{botTranscript}"</span>
+                        </div>
+                      )}
+                      {botResponse && (
+                        <div className="flex items-start gap-1.5 text-emerald-700 dark:text-emerald-400 pt-1 border-t border-slate-100 dark:border-slate-800/60 font-medium">
+                          <span className="font-bold shrink-0">🤖 STS Bot:</span>
+                          <span className="break-words">{botResponse}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Suggestion Prompt Chips */}
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5 flex items-center gap-1">
+                      <Sparkles className="w-2.5 h-2.5" />
+                      <span>Tap to Test Voice Command / Quick Fill:</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        'Goa Beach Trip with Alex & Sarah',
+                        'Office Lunch in Chennai with Rahul',
+                        'Bengaluru Tech Summit with Team',
+                        'Mumbai Weekend Getaway',
+                      ].map((prompt, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleRunBotCommand(prompt)}
+                          className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-200/60 dark:border-emerald-800/60 text-[11px] text-[#0d5236] dark:text-emerald-300 font-medium transition cursor-pointer flex items-center gap-1 active:scale-95"
+                        >
+                          <Mic className="w-3 h-3 opacity-70" />
+                          <span>{prompt}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <form onSubmit={handleCreateTicket} className="space-y-4">
-              {/* Field 1: Ticket Title */}
+              {/* Field 1: Ticket Title (with integrated Voice Recognition) */}
               <div>
-                <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-1">
-                  Ticket Title
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={ticketTitle}
-                  onChange={(e) => setTicketTitle(e.target.value)}
-                  placeholder="e.g. Goa Trip, Office lunch split"
-                  className="w-full bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white dark:focus:bg-[#080d19] transition"
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300">
+                    Ticket Title
+                  </label>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                    <Mic className="w-3 h-3" /> Voice Dictation Enabled
+                  </span>
+                </div>
+
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    required
+                    value={ticketTitle}
+                    onChange={(e) => setTicketTitle(e.target.value)}
+                    placeholder="e.g. Goa Trip, Office lunch split"
+                    className={`w-full bg-slate-50 dark:bg-[#080d19] border rounded-xl pl-4 pr-20 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
+                      isListeningTitle
+                        ? 'border-rose-500 ring-2 ring-rose-400/40 shadow-sm'
+                        : 'border-slate-200 dark:border-slate-800 focus:ring-[#0d5236]/40 focus:bg-white dark:focus:bg-[#080d19]'
+                    }`}
+                  />
+
+                  {/* Voice Recognition Controls directly inside Ticket Title */}
+                  <div className="absolute right-2 flex items-center gap-1">
+                    {ticketTitle && (
+                      <button
+                        type="button"
+                        onClick={() => setTicketTitle('')}
+                        className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition rounded-lg"
+                        title="Clear title"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleToggleTitleVoice}
+                      className={`relative p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer ${
+                        isListeningTitle
+                          ? 'bg-rose-500 text-white animate-pulse shadow-md shadow-rose-500/30'
+                          : 'bg-emerald-50 dark:bg-emerald-950/70 text-[#0d5236] dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
+                      }`}
+                      title={isListeningTitle ? 'Stop voice dictation' : 'Voice dictation for Ticket Title'}
+                    >
+                      {isListeningTitle ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Active listening banner for Ticket Title */}
+                {isListeningTitle && (
+                  <div className="mt-1.5 flex items-center justify-between px-3 py-1.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl text-xs text-rose-700 dark:text-rose-300 animate-fadeIn">
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                      </span>
+                      <span className="font-medium">Listening... Speak your ticket title now</span>
+                    </div>
+                    <div className="flex items-center gap-1 h-3">
+                      <span className="w-0.5 bg-rose-500 rounded-full animate-voice-wave-1"></span>
+                      <span className="w-0.5 bg-rose-500 rounded-full animate-voice-wave-2"></span>
+                      <span className="w-0.5 bg-rose-500 rounded-full animate-voice-wave-3"></span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Field 2: Location (Added directly below Ticket Title) */}
