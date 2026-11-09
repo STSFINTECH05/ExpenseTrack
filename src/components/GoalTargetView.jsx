@@ -561,8 +561,8 @@ export default function GoalTargetView() {
           </button>
         </div>
       ) : (
-        /* Active Cards Grid */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        /* Active Cards Stack */
+        <div className="flex flex-col gap-4 w-full">
           {filteredWallets.map((wallet) => {
             const saved = Number(wallet.saved_amount) || 0;
             const target = Number(wallet.target_amount) || 0;
