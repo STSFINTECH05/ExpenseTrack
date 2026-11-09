@@ -267,7 +267,24 @@ export default function BillsAndRemindersView() {
                 </div>
               ))}
             </div>
-          ) : null}
+          ) : (
+            <div className="py-12 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 p-8 space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400">
+                <Receipt className="w-6 h-6 stroke-[1.8]" />
+              </div>
+              <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm">No scheduled bills yet</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                You have no upcoming bills or reminders scheduled. Add your first bill to start tracking upcoming dues and payment automation.
+              </p>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-sm cursor-pointer active:scale-95"
+              >
+                <Plus className="w-4 h-4 stroke-[2.5]" />
+                <span>Add Your First Bill</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

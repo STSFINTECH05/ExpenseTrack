@@ -18,42 +18,16 @@ import {
 } from 'lucide-react';
 
 export default function OrganisationMaintainer() {
-  // Initial demo data modeled on an institution / college like VIT
-  const [members, setMembers] = useState([
-    {
-      id: 'emp-1',
-      name: 'Dr. K. Ramanathan',
-      phone: '+91 98401 23456',
-      role: 'Senior Professor (Faculty)',
-      category: 'Faculty',
-      baseSalary: 125000,
-      additionalSalary: 15000, // Research grant / HRA allowance
-      expenses: 2500, // Lab supplies / travel reimbursement
-      joinedDate: '2024-06-15'
-    },
-    {
-      id: 'emp-2',
-      name: 'Ananya Deshmukh',
-      phone: '+91 97890 54321',
-      role: 'Assistant Registrar',
-      category: 'Administrative Staff',
-      baseSalary: 68000,
-      additionalSalary: 5000, // Overtime / Special allowance
-      expenses: 1200, // Office courier / stationary
-      joinedDate: '2024-09-01'
-    },
-    {
-      id: 'emp-3',
-      name: 'Suresh Kumar M',
-      phone: '+91 94440 98765',
-      role: 'Systems Administrator',
-      category: 'Technical Staff',
-      baseSalary: 52000,
-      additionalSalary: 4000,
-      expenses: 800,
-      joinedDate: '2025-01-10'
-    }
-  ]);
+  const [members, setMembers] = useState(() => {
+    try {
+      const stored = localStorage.getItem('sts_org_members');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  });
 
   // Form states
   const [showAddModal, setShowAddModal] = useState(false);

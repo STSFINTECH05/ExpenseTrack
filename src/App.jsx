@@ -160,12 +160,25 @@ export default function App() {
   }, []);
 
   const handleAuthSuccess = (userData) => {
+    try {
+      const prevStored = localStorage.getItem('sts_user');
+      const prevUser = prevStored ? JSON.parse(prevStored) : null;
+      if (!prevUser || prevUser.email !== userData.email) {
+        localStorage.removeItem('sts_bills');
+        localStorage.removeItem('sts_goals');
+        localStorage.removeItem('sts_splits');
+        localStorage.removeItem('sts_bank_accounts');
+        localStorage.removeItem('sts_org_members');
+      }
+    } catch (e) {}
     setCurrentUser(userData);
     try {
       localStorage.setItem('sts_user', JSON.stringify(userData));
     } catch (e) {
       console.warn(e);
     }
+    window.dispatchEvent(new Event('sts_data_updated'));
+    window.dispatchEvent(new Event('sts_bank_accounts_updated'));
     setActiveTab('dashboard');
     navigateTo('dashboard');
   };
@@ -174,11 +187,18 @@ export default function App() {
     try {
       localStorage.removeItem('sts_user');
       localStorage.removeItem('sts_user_avatar');
+      localStorage.removeItem('sts_bills');
+      localStorage.removeItem('sts_goals');
+      localStorage.removeItem('sts_splits');
+      localStorage.removeItem('sts_bank_accounts');
+      localStorage.removeItem('sts_org_members');
     } catch (e) {
       console.warn(e);
     }
     setCurrentUser(null);
     window.dispatchEvent(new Event('sts_avatar_changed'));
+    window.dispatchEvent(new Event('sts_data_updated'));
+    window.dispatchEvent(new Event('sts_bank_accounts_updated'));
     navigateTo('auth', 'signin');
   };
 

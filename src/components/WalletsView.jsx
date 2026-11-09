@@ -23,47 +23,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
-const DEFAULT_ACCOUNTS = [
-  {
-    id: 'acc-hdfc-01',
-    bankName: 'HDFC Bank',
-    accountHolder: 'Santhosh',
-    accountNumber: '50100432194209',
-    ifsc: 'HDFC0001234',
-    branchName: 'Indiranagar Branch, Bengaluru',
-    accountType: 'Salary',
-    isPrimary: true,
-    cardGradient: 'from-[#0b1b2b] via-[#0e273c] to-[#081522]',
-    accentColor: '#38bdf8',
-    createdAt: '2026-10-01T10:00:00Z',
-  },
-  {
-    id: 'acc-icici-02',
-    bankName: 'ICICI Bank',
-    accountHolder: 'Santhosh',
-    accountNumber: '000201568821',
-    ifsc: 'ICIC0000002',
-    branchName: 'MG Road Branch, Bengaluru',
-    accountType: 'Savings',
-    isPrimary: false,
-    cardGradient: 'from-[#121f29] via-[#102e2b] to-[#0a1b1a]',
-    accentColor: '#10b981',
-    createdAt: '2026-10-03T11:30:00Z',
-  },
-  {
-    id: 'acc-sbi-03',
-    bankName: 'State Bank of India (SBI)',
-    accountHolder: 'Santhosh',
-    accountNumber: '319800121045',
-    ifsc: 'SBIN0000456',
-    branchName: 'Commercial Street Branch, Bengaluru',
-    accountType: 'Current',
-    isPrimary: false,
-    cardGradient: 'from-[#181528] via-[#211a3b] to-[#100e1f]',
-    accentColor: '#a855f7',
-    createdAt: '2026-10-05T14:15:00Z',
-  },
-];
+const DEFAULT_ACCOUNTS = [];
 
 const POPULAR_BANKS = [
   'HDFC Bank',
