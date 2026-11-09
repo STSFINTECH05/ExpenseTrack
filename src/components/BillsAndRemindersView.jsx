@@ -10,8 +10,11 @@ import {
   AlertCircle,
   Tag,
   Wallet,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import AddIncomeModal from './AddIncomeModal';
+import EditIncomeModal from './EditIncomeModal';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -46,6 +49,8 @@ export default function BillsAndRemindersView() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBill, setEditingBill] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
   const fetchBills = useCallback(async (isSilent = false) => {
@@ -98,6 +103,47 @@ export default function BillsAndRemindersView() {
     setToastMessage(`"${newRecord.name}" successfully added to Bills & Reminders.`);
     setTimeout(() => setToastMessage(null), 4000);
     fetchBills(true);
+  };
+
+  const handleEditBill = (bill) => {
+    setEditingBill(bill);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSuccess = (updated) => {
+    setBills((prev) => {
+      const next = prev.map((b) => (b.id === updated.id ? updated : b));
+      try {
+        localStorage.setItem('sts_bills', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+    setToastMessage(`"${updated.name}" successfully updated.`);
+    setTimeout(() => setToastMessage(null), 4000);
+    setIsEditModalOpen(false);
+    setEditingBill(null);
+  };
+
+  const handleDeleteBill = async (bill) => {
+    if (!window.confirm(`Are you sure you want to delete bill "${bill.name}"?`)) return;
+
+    setBills((prev) => {
+      const next = prev.filter((b) => b.id !== bill.id);
+      try {
+        localStorage.setItem('sts_bills', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+    setToastMessage(`"${bill.name}" successfully removed.`);
+    setTimeout(() => setToastMessage(null), 4000);
+
+    try {
+      await fetch(`${API_BASE_URL}/api/segregation/${bill.id}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      console.warn('API error deleting bill record:', err);
+    }
   };
 
   return (
@@ -192,11 +238,31 @@ export default function BillsAndRemindersView() {
                       Due: {formatDate(bill.date)} • {bill.schedule}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <span className="font-mono font-bold text-red-600 dark:text-red-400 text-sm">
-                      {formatINR(bill.amount)}
-                    </span>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400">{bill.category}</p>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right">
+                      <span className="font-mono font-bold text-red-600 dark:text-red-400 text-sm">
+                        {formatINR(bill.amount)}
+                      </span>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">{bill.category}</p>
+                    </div>
+                    <div className="flex items-center space-x-1 pl-1 border-l border-slate-100 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => handleEditBill(bill)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition cursor-pointer"
+                        title={`Edit ${bill.name}`}
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteBill(bill)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                        title={`Delete ${bill.name}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -211,6 +277,17 @@ export default function BillsAndRemindersView() {
         onClose={() => setIsModalOpen(false)}
         defaultType="bill"
         onSuccess={handleModalSuccess}
+      />
+
+      {/* Edit Modal */}
+      <EditIncomeModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingBill(null);
+        }}
+        entry={editingBill}
+        onSuccess={handleEditSuccess}
       />
     </div>
   );

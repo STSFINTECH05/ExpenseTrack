@@ -41,10 +41,13 @@ export default function EditIncomeModal({ isOpen, onClose, entry, onSuccess }) {
 
   if (!isOpen || !entry) return null;
 
+  const isBill = entry.type === 'bill';
   const isIncome = entry.type?.includes('income');
   const isFixed = entry.type?.startsWith('fixed_');
 
-  const modalTitle = isIncome
+  const modalTitle = isBill
+    ? 'Edit Bill & Reminder'
+    : isIncome
     ? isFixed
       ? 'Edit Fixed Income'
       : 'Edit Additional Income'
