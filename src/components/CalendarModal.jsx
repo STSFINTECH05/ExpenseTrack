@@ -6,8 +6,7 @@ import {
   Bell,
   Receipt,
 } from 'lucide-react';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { getAuthHeaders, API_BASE_URL, getCurrentUser } from '../utils/api';
 
 // Currency Formatter for Indian Rupees (₹)
 const formatINR = (value) => {
@@ -31,9 +30,12 @@ export default function CalendarModal({ isOpen, onClose }) {
   useEffect(() => {
     if (!isOpen) return;
 
+    const user = getCurrentUser();
+    const storageKey = user?.email ? `sts_bills_${user.email}` : 'sts_bills';
+
     let loadedBills = [];
     try {
-      const stored = localStorage.getItem('sts_bills');
+      const stored = localStorage.getItem(storageKey) || localStorage.getItem('sts_bills');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -41,7 +43,7 @@ export default function CalendarModal({ isOpen, onClose }) {
         }
       }
     } catch (e) {
-      console.warn('Error reading sts_bills from localStorage:', e);
+      console.warn('Error reading bills from localStorage:', e);
     }
 
     setBills(loadedBills);
@@ -49,7 +51,9 @@ export default function CalendarModal({ isOpen, onClose }) {
     // Fetch fresh bills from backend API
     const fetchApiBills = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/segregation?type=bill`);
+        const res = await fetch(`${API_BASE_URL}/api/segregation?type=bill`, {
+          headers: getAuthHeaders(),
+        });
         if (res.ok) {
           const json = await res.json();
           let apiList = [];
@@ -64,7 +68,7 @@ export default function CalendarModal({ isOpen, onClose }) {
             );
             setBills(unique);
             try {
-              localStorage.setItem('sts_bills', JSON.stringify(unique));
+              localStorage.setItem(storageKey, JSON.stringify(unique));
             } catch (e) {}
           }
         }

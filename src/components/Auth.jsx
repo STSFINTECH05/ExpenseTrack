@@ -12,6 +12,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import stsLogo from '../assets/sts-fintech-logo.png';
+import { API_BASE_URL } from '../utils/api';
 
 export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLanding }) {
   const [mode, setMode] = useState(initialMode); // 'signin' | 'signup'
@@ -46,7 +47,7 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
   };
 
   // Handle Sign In submission
-  const handleSignInSubmit = (e) => {
+  const handleSignInSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg(null);
 
@@ -61,17 +62,57 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
     }
 
     setSuccessMsg('Signing in to STS FINTECH Ledger...');
-    setTimeout(() => {
-      onAuthSuccess({
+
+    try {
+      let token = null;
+      let userData = {
+        id: email,
         name: email.split('@')[0] || 'User',
         email: email,
         role: 'Finance Member',
-      });
-    }, 400);
+      };
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: signInPassword }),
+        });
+        const data = await res.json();
+        if (res.ok && data.token) {
+          token = data.token;
+          if (data.user) userData = { ...userData, ...data.user };
+        }
+      } catch (e) {}
+
+      if (!token) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/auth/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, name: email.split('@')[0] }),
+          });
+          const data = await res.json();
+          if (data.token) {
+            token = data.token;
+            if (data.user) userData = { ...userData, ...data.user };
+          }
+        } catch (e) {}
+      }
+
+      if (token) {
+        localStorage.setItem('sts_token', token);
+        userData.token = token;
+      }
+
+      onAuthSuccess(userData);
+    } catch (err) {
+      setErrorMsg(err.message || 'Login failed.');
+    }
   };
 
   // Handle Sign Up submission
-  const handleSignUpSubmit = (e) => {
+  const handleSignUpSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg(null);
 
@@ -100,22 +141,80 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
     }
 
     setSuccessMsg('Account created successfully! Launching your ledger...');
-    setTimeout(() => {
-      onAuthSuccess({
+
+    try {
+      let token = null;
+      let userData = {
+        id: email,
         name: name,
         email: email,
         role: 'Account Owner',
-      });
-    }, 400);
+      };
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password: signUpPassword }),
+        });
+        const data = await res.json();
+        if (res.ok && data.token) {
+          token = data.token;
+          if (data.user) userData = { ...userData, ...data.user };
+        }
+      } catch (e) {}
+
+      if (!token) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/auth/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, name }),
+          });
+          const data = await res.json();
+          if (data.token) {
+            token = data.token;
+            if (data.user) userData = { ...userData, ...data.user };
+          }
+        } catch (e) {}
+      }
+
+      if (token) {
+        localStorage.setItem('sts_token', token);
+        userData.token = token;
+      }
+
+      onAuthSuccess(userData);
+    } catch (err) {
+      setErrorMsg(err.message || 'Registration failed.');
+    }
   };
 
   // Handle Quick Demo Login
-  const handleQuickDemo = () => {
-    onAuthSuccess({
+  const handleQuickDemo = async () => {
+    const email = 'demo@stsfintech.com';
+    let token = null;
+    let userData = {
+      id: email,
       name: 'Admin STS',
-      email: 'demo@stsfintech.com',
+      email: email,
       role: 'Finance Lead (Demo)',
-    });
+    };
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name: 'Admin STS' }),
+      });
+      const data = await res.json();
+      if (data.token) {
+        token = data.token;
+        if (data.user) userData = { ...userData, ...data.user };
+        localStorage.setItem('sts_token', token);
+        userData.token = token;
+      }
+    } catch (e) {}
+    onAuthSuccess(userData);
   };
 
   return (

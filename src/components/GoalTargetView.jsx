@@ -17,8 +17,7 @@ import {
   RefreshCw,
   ArrowUpRight,
 } from 'lucide-react';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { getAuthHeaders, API_BASE_URL } from '../utils/api';
 
 // Format INR currency
 const formatINR = (value) => {
@@ -68,7 +67,9 @@ export default function GoalTargetView() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/wallets`);
+      const res = await fetch(`${API_BASE_URL}/api/wallets`, {
+        headers: getAuthHeaders(),
+      });
       if (!res.ok) {
         throw new Error(`Server returned HTTP ${res.status}`);
       }
@@ -126,9 +127,9 @@ export default function GoalTargetView() {
 
       const res = await fetch(`${API_BASE_URL}/api/wallets`, {
         method: 'POST',
-        headers: {
+        headers: getAuthHeaders({
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify(payload),
       });
 
@@ -189,9 +190,9 @@ export default function GoalTargetView() {
     try {
       const res = await fetch(`${API_BASE_URL}/api/wallets/${selectedWallet.id}/add-cash`, {
         method: 'POST',
-        headers: {
+        headers: getAuthHeaders({
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify({ amount }),
       });
 
@@ -245,6 +246,7 @@ export default function GoalTargetView() {
     try {
       const res = await fetch(`${API_BASE_URL}/api/wallets/${walletId}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
       if (res.ok) {
         await fetchWallets(true);

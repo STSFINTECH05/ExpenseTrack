@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, IndianRupee, Calendar, Clock, Tag, Wallet, FileText, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { getAuthHeaders, API_BASE_URL } from '../utils/api';
 
 const CATEGORY_OPTIONS = [
   'Consulting',
@@ -114,9 +114,9 @@ export default function AddIncomeModal({ isOpen, onClose, defaultType, onSuccess
 
       const res = await fetch(`${API_BASE_URL}/api/segregation`, {
         method: 'POST',
-        headers: {
+        headers: getAuthHeaders({
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify(payload),
       });
 

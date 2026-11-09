@@ -37,8 +37,7 @@ import IncomeStreamsView from './components/IncomeStreamsView';
 import LiveWorthView from './components/LiveWorthView';
 import { useLanguage } from './context/LanguageContext';
 import OrganisationMaintainer from './components/OrganisationMaintainer';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { getAuthHeaders, apiFetch, API_BASE_URL } from './utils/api';
 
 // Currency Formatter for Indian Rupees (₹)
 const formatINR = (value) => {
@@ -169,8 +168,12 @@ export default function App() {
         localStorage.removeItem('sts_splits');
         localStorage.removeItem('sts_bank_accounts');
         localStorage.removeItem('sts_org_members');
+        localStorage.removeItem('sts_token');
       }
     } catch (e) {}
+    if (userData.token) {
+      localStorage.setItem('sts_token', userData.token);
+    }
     setCurrentUser(userData);
     try {
       localStorage.setItem('sts_user', JSON.stringify(userData));
@@ -187,6 +190,7 @@ export default function App() {
     try {
       localStorage.removeItem('sts_user');
       localStorage.removeItem('sts_user_avatar');
+      localStorage.removeItem('sts_token');
       localStorage.removeItem('sts_bills');
       localStorage.removeItem('sts_goals');
       localStorage.removeItem('sts_splits');
@@ -201,6 +205,25 @@ export default function App() {
     window.dispatchEvent(new Event('sts_bank_accounts_updated'));
     navigateTo('auth', 'signin');
   };
+
+  // Ensure active user always has a valid JWT token stored
+  useEffect(() => {
+    if (currentUser?.email && !localStorage.getItem('sts_token')) {
+      fetch(`${API_BASE_URL}/api/auth/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: currentUser.email, name: currentUser.name }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.token) {
+            localStorage.setItem('sts_token', data.token);
+            setCurrentUser((prev) => ({ ...prev, token: data.token }));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [currentUser]);
 
   let t = (key, fallback) => fallback || key;
   try {
@@ -288,7 +311,9 @@ export default function App() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/payments`);
+      const res = await fetch(`${API_BASE_URL}/api/payments`, {
+        headers: getAuthHeaders(),
+      });
       if (!res.ok) {
         throw new Error(`Server returned HTTP ${res.status}: ${res.statusText}`);
       }
@@ -346,9 +371,9 @@ export default function App() {
 
       const res = await fetch(`${API_BASE_URL}/api/payments`, {
         method: 'POST',
-        headers: {
+        headers: getAuthHeaders({
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify(payload),
       });
 

@@ -23,8 +23,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { getAuthHeaders, API_BASE_URL, getCurrentUser } from '../utils/api';
 
 const formatINR = (value) => {
   const num = Number(value) || 0;
@@ -153,12 +152,16 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
 
   useEffect(() => {
     const loadLocalData = () => {
+      const user = getCurrentUser();
+      const userEmail = user?.email;
       // 1. Bills
       try {
-        const storedBills = localStorage.getItem('sts_bills');
+        const storedBills = userEmail ? (localStorage.getItem(`sts_bills_${userEmail}`) || localStorage.getItem('sts_bills')) : localStorage.getItem('sts_bills');
         if (storedBills) {
           const parsed = JSON.parse(storedBills);
-          if (Array.isArray(parsed) && parsed.length > 0) setBillsList(parsed);
+          if (Array.isArray(parsed)) setBillsList(parsed);
+        } else {
+          setBillsList([]);
         }
       } catch (e) {}
 
@@ -173,10 +176,12 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
 
       // 3. Goals
       try {
-        const storedGoals = localStorage.getItem('sts_goals');
+        const storedGoals = userEmail ? (localStorage.getItem(`sts_goals_${userEmail}`) || localStorage.getItem('sts_goals')) : localStorage.getItem('sts_goals');
         if (storedGoals) {
           const parsed = JSON.parse(storedGoals);
-          if (Array.isArray(parsed) && parsed.length > 0) setGoalsList(parsed);
+          if (Array.isArray(parsed)) setGoalsList(parsed);
+        } else {
+          setGoalsList([]);
         }
       } catch (e) {}
     };
@@ -186,15 +191,16 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
     // Also fetch initial data from backend APIs if available
     const fetchApiBacking = async () => {
       try {
+        const authHeaders = getAuthHeaders();
         const [billsRes, walletsRes] = await Promise.allSettled([
-          fetch(`${API_BASE_URL}/api/segregation?type=bill`),
-          fetch(`${API_BASE_URL}/api/wallets`),
+          fetch(`${API_BASE_URL}/api/segregation?type=bill`, { headers: authHeaders }),
+          fetch(`${API_BASE_URL}/api/wallets`, { headers: authHeaders }),
         ]);
 
         if (billsRes.status === 'fulfilled' && billsRes.value.ok) {
           const json = await billsRes.value.json();
           const items = json.data || (Array.isArray(json) ? json : []);
-          if (Array.isArray(items) && items.length > 0) {
+          if (Array.isArray(items)) {
             setBillsList(items);
           }
         }
@@ -202,7 +208,7 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
         if (walletsRes.status === 'fulfilled' && walletsRes.value.ok) {
           const json = await walletsRes.value.json();
           const items = json.data || (Array.isArray(json) ? json : []);
-          if (Array.isArray(items) && items.length > 0) {
+          if (Array.isArray(items)) {
             setGoalsList(items);
           }
         }

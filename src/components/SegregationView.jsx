@@ -23,8 +23,7 @@ import {
 import AddIncomeModal from './AddIncomeModal';
 import EditIncomeModal from './EditIncomeModal';
 import { useLanguage } from '../context/LanguageContext';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { getAuthHeaders, API_BASE_URL } from '../utils/api';
 
 const formatINR = (value) => {
   const num = Number(value) || 0;
@@ -66,7 +65,9 @@ export default function SegregationView() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/segregation`);
+      const res = await fetch(`${API_BASE_URL}/api/segregation`, {
+        headers: getAuthHeaders(),
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
@@ -131,6 +132,7 @@ export default function SegregationView() {
     try {
       await fetch(`${API_BASE_URL}/api/segregation/${item.id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
     } catch (err) {
       console.warn('API error deleting record:', err);

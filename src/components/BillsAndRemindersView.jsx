@@ -15,8 +15,7 @@ import {
 } from 'lucide-react';
 import AddIncomeModal from './AddIncomeModal';
 import EditIncomeModal from './EditIncomeModal';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { getAuthHeaders, API_BASE_URL, getCurrentUser } from '../utils/api';
 
 // Currency Formatter for Indian Rupees (₹)
 const formatINR = (value) => {
@@ -53,27 +52,32 @@ export default function BillsAndRemindersView() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
+  const currentUser = getCurrentUser();
+  const storageKey = currentUser?.email ? `sts_bills_${currentUser.email}` : 'sts_bills';
+
   const fetchBills = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
     else setRefreshing(true);
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/segregation?type=bill`);
+      const res = await fetch(`${API_BASE_URL}/api/segregation?type=bill`, {
+        headers: getAuthHeaders(),
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         const uniqueEntries = Array.from(new Map(json.data.map((item) => [item.id || item.name, item])).values());
         setBills(uniqueEntries);
         try {
-          localStorage.setItem('sts_bills', JSON.stringify(uniqueEntries));
+          localStorage.setItem(storageKey, JSON.stringify(uniqueEntries));
         } catch (e) {}
       } else if (Array.isArray(json)) {
         const billItems = json.filter((r) => r.type === 'bill');
         const uniqueEntries = Array.from(new Map(billItems.map((item) => [item.id || item.name, item])).values());
         setBills(uniqueEntries);
         try {
-          localStorage.setItem('sts_bills', JSON.stringify(uniqueEntries));
+          localStorage.setItem(storageKey, JSON.stringify(uniqueEntries));
         } catch (e) {}
       } else {
         setBills([]);
@@ -85,7 +89,7 @@ export default function BillsAndRemindersView() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     fetchBills();
@@ -96,7 +100,7 @@ export default function BillsAndRemindersView() {
       const combined = [newRecord, ...prev];
       const unique = Array.from(new Map(combined.map((item) => [item.id || item.name, item])).values());
       try {
-        localStorage.setItem('sts_bills', JSON.stringify(unique));
+        localStorage.setItem(storageKey, JSON.stringify(unique));
       } catch (e) {}
       return unique;
     });
@@ -114,7 +118,7 @@ export default function BillsAndRemindersView() {
     setBills((prev) => {
       const next = prev.map((b) => (b.id === updated.id ? updated : b));
       try {
-        localStorage.setItem('sts_bills', JSON.stringify(next));
+        localStorage.setItem(storageKey, JSON.stringify(next));
       } catch (e) {}
       return next;
     });
@@ -130,7 +134,7 @@ export default function BillsAndRemindersView() {
     setBills((prev) => {
       const next = prev.filter((b) => b.id !== bill.id);
       try {
-        localStorage.setItem('sts_bills', JSON.stringify(next));
+        localStorage.setItem(storageKey, JSON.stringify(next));
       } catch (e) {}
       return next;
     });
@@ -140,6 +144,7 @@ export default function BillsAndRemindersView() {
     try {
       await fetch(`${API_BASE_URL}/api/segregation/${bill.id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
     } catch (err) {
       console.warn('API error deleting bill record:', err);

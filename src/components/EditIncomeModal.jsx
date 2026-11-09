@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, IndianRupee, Calendar, Clock, Tag, Wallet, FileText, CheckCircle2, AlertCircle, Sparkles, Repeat } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { getAuthHeaders, API_BASE_URL } from '../utils/api';
 
 const SCHEDULE_OPTIONS = [
   'One-time',
@@ -87,9 +87,9 @@ export default function EditIncomeModal({ isOpen, onClose, entry, onSuccess }) {
     try {
       const res = await fetch(`${API_BASE_URL}/api/segregation/${entry.id}`, {
         method: 'PUT',
-        headers: {
+        headers: getAuthHeaders({
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify(payload),
       });
 
