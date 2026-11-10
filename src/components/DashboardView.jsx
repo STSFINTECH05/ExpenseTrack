@@ -379,7 +379,7 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
       {/* Header bar */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-          {t('dashboard', 'Dashboard')}
+          {t('document', 'Document')}
         </h1>
       </div>
 

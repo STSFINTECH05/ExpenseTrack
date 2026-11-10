@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   LayoutDashboard,
+  FileText,
   Layers,
   Users2,
   Target,
@@ -29,6 +30,11 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
       id: 'dashboard',
       label: t('dashboard', 'Dashboard'),
       icon: LayoutDashboard,
+    },
+    {
+      id: 'document',
+      label: t('document', 'Document'),
+      icon: FileText,
     },
     {
       id: 'segregation',

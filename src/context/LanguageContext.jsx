@@ -55,6 +55,7 @@ export const TRANSLATIONS = {
   en: {
     // Sidebar
     dashboard: 'Dashboard',
+    document: 'Document',
     segregation: 'Segregation',
     split_collect: 'Split & Collect',
     goal_target: 'Goal Target',
@@ -120,6 +121,7 @@ export const TRANSLATIONS = {
   ta: {
     // Sidebar
     dashboard: 'டாஷ்போர்டு',
+    document: 'ஆவணம்',
     segregation: 'பிரித்தெடுத்தல்',
     split_collect: 'பகிர்ந்து வசூலி',
     goal_target: 'இலக்கு நோக்கம்',
@@ -185,6 +187,7 @@ export const TRANSLATIONS = {
   hi: {
     // Sidebar
     dashboard: 'डैशबोर्ड',
+    document: 'दस्तावेज़',
     segregation: 'व्यय पृथक्करण',
     split_collect: 'बांटें और वसूलें',
     goal_target: 'लक्ष्य निर्धारण',
@@ -250,6 +253,7 @@ export const TRANSLATIONS = {
   te: {
     // Sidebar
     dashboard: 'డాష్‌బోర్డ్',
+    document: 'పత్రం',
     segregation: 'విభజన',
     split_collect: 'స్ప్లిట్ & కలెక్ట్',
     goal_target: 'లక్ష్య టార్గెట్',
@@ -315,6 +319,7 @@ export const TRANSLATIONS = {
   kn: {
     // Sidebar
     dashboard: 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',
+    document: 'ದಾಖಲೆ',
     segregation: 'ವರ್ಗೀಕರಣ',
     split_collect: 'ವಿಭಜಿಸಿ & ಸಂಗ್ರಹಿಸಿ',
     goal_target: 'ಗುರಿ ಗುರಿ',
@@ -380,6 +385,7 @@ export const TRANSLATIONS = {
   ml: {
     // Sidebar
     dashboard: 'ഡാഷ്‌ബോർഡ്',
+    document: 'രേഖ',
     segregation: 'തരംതിരിക്കൽ',
     split_collect: 'വിഭജിച്ചു ശേഖരിക്കുക',
     goal_target: 'ലക്ഷ്യസ്ഥാനം',

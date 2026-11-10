@@ -20,6 +20,7 @@ import {
   X,
 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
+import MainDashboardView from './components/MainDashboardView';
 import DashboardView from './components/DashboardView';
 import SegregationView from './components/SegregationView';
 import SplitAndCollectPlaceholder from './components/SplitAndCollectPlaceholder';
@@ -549,8 +550,13 @@ export default function App() {
             <SubscriptionPlansView currentUser={currentUser} />
           ) : (
             <>
-              {/* TAB 0: DASHBOARD (Active Default) */}
+              {/* TAB 0: NEW DASHBOARD (Active Default Overview) */}
               {activeTab === 'dashboard' && (
+                <MainDashboardView />
+              )}
+
+              {/* TAB: DOCUMENT / BANK STATEMENT & MODULES (Renamed from Dashboard) */}
+              {(activeTab === 'document' || activeTab === 'documents') && (
                 <DashboardView
                   setActiveTab={setActiveTab}
                   onNavigateToSegregation={() => setActiveTab('segregation')}
