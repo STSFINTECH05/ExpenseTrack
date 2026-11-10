@@ -41,6 +41,7 @@ export default function Header({
   currentUser,
   onOpenSettings,
   onOpenSubscription,
+  onOpenAbout,
   onSignOut,
 }) {
   let t = (key, fallback) => fallback || key;
@@ -261,6 +262,26 @@ export default function Header({
               className="w-36 lg:w-48 bg-white/90 border border-yellow-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600/40 focus:border-emerald-600 focus:bg-white transition-all shadow-inner"
             />
           </div>
+
+          {/* "About" Navigation Link placed immediately to the left of LanguageDropdown */}
+          <button
+            type="button"
+            onClick={() => {
+              if (onOpenAbout) {
+                onOpenAbout();
+              } else if (setActiveTab) {
+                setActiveTab('about');
+              }
+            }}
+            className={`text-xs sm:text-sm font-semibold px-2.5 sm:px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+              activeTab === 'about'
+                ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                : 'text-slate-700 hover:text-emerald-700 hover:bg-yellow-100/80'
+            }`}
+            title="About STS FINTECH"
+          >
+            About
+          </button>
 
           {/* Global Language Selector Dropdown [ 🌐 English ▾ ] */}
           <LanguageDropdown variant="light" />

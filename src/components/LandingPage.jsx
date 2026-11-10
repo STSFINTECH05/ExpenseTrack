@@ -3,7 +3,7 @@ import { ArrowRight, Play, TrendingUp, ShieldCheck, PieChart, IndianRupee } from
 import stsLogo from '../assets/sts-fintech-logo.png';
 import LanguageDropdown from './LanguageDropdown';
 
-export default function LandingPage({ onNavigateToAuth, onLaunchDashboard }) {
+export default function LandingPage({ onNavigateToAuth, onLaunchDashboard, onNavigateToAbout }) {
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Curved Arch Calculations for "STS FINTECH" (10 letters)
@@ -338,7 +338,15 @@ export default function LandingPage({ onNavigateToAuth, onLaunchDashboard }) {
           </div>
 
           {/* Right Action Buttons (Flush to Top Right) */}
-          <div className="flex items-center space-x-2.5 sm:space-x-3.5 flex-shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-3.5 flex-shrink-0">
+            {/* "About" Navigation Link placed immediately to the left of LanguageDropdown */}
+            <button
+              onClick={onNavigateToAbout}
+              className="text-xs sm:text-sm font-semibold text-slate-700 hover:text-emerald-700 px-2 sm:px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+            >
+              About
+            </button>
+
             {/* Global Language Selector Dropdown [ 🌐 English ▾ ] */}
             <LanguageDropdown variant="light" />
 

@@ -34,6 +34,7 @@ import Header from './components/Header';
 import LandingPage from './components/LandingPage';
 import Auth from './components/Auth';
 import Settings from './components/Settings';
+import AboutView from './components/AboutView';
 import IncomeStreamsView from './components/IncomeStreamsView';
 import LiveWorthView from './components/LiveWorthView';
 import { useLanguage } from './context/LanguageContext';
@@ -67,9 +68,10 @@ const formatDate = (dateString) => {
 };
 
 export default function App() {
-  // Primary Route State: 'landing' (/) | 'auth' (/login) | 'dashboard' (/dashboard) | '/settings' | '/income-streams'
+  // Primary Route State: 'landing' (/) | 'auth' (/login) | 'dashboard' (/dashboard) | 'about' (/about) | '/settings' | '/income-streams'
   const getInitialRoute = () => {
     const path = window.location.pathname;
+    if (path === '/about') return 'about';
     if (path === '/login' || path === '/auth' || path === '/signin' || path === '/signup') return 'auth';
     if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth' || path === '/organisation-maintainer' || path === '/organisation_maintainer') return 'dashboard';
     return 'landing';
@@ -119,6 +121,7 @@ export default function App() {
     let targetPath = '/';
     if (route === 'auth') targetPath = mode === 'signup' ? '/signup' : '/login';
     else if (route === 'dashboard') targetPath = '/dashboard';
+    else if (route === 'about') targetPath = '/about';
     else targetPath = '/';
 
     if (window.location.pathname !== targetPath) {
@@ -130,7 +133,9 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname;
-      if (path === '/login' || path === '/auth' || path === '/signin') {
+      if (path === '/about') {
+        setCurrentRoute('about');
+      } else if (path === '/login' || path === '/auth' || path === '/signin') {
         setCurrentRoute('auth');
         setAuthMode('signin');
       } else if (path === '/signup') {
@@ -445,7 +450,73 @@ export default function App() {
       <LandingPage
         onNavigateToAuth={(mode) => navigateTo('auth', mode)}
         onLaunchDashboard={() => navigateTo('dashboard')}
+        onNavigateToAbout={() => navigateTo('about')}
       />
+    );
+  }
+
+  // 1.5. Standalone About Page Route (Public & Authenticated)
+  if (currentRoute === 'about') {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 flex flex-col font-sans">
+        <header className="sticky top-0 left-0 right-0 z-50 w-full bg-white/80 dark:bg-[#0c1322]/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 shadow-xs">
+          <div className="w-full px-6 sm:px-8 h-20 flex items-center justify-between">
+            <div
+              onClick={() => navigateTo(currentUser ? 'dashboard' : 'landing')}
+              className="flex items-center space-x-3 cursor-pointer group"
+            >
+              <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl overflow-hidden shadow-xs border border-emerald-500/40 bg-white p-0.5 group-hover:scale-105 group-hover:border-emerald-500 transition-all flex items-center justify-center">
+                <img
+                  src={stsLogo}
+                  alt="STS FINTECH Logo"
+                  className="h-full w-full object-cover rounded-lg"
+                />
+              </div>
+              <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
+                STS FINTECH
+              </span>
+            </div>
+            <div className="flex items-center space-x-2.5 sm:space-x-3.5">
+              <button
+                onClick={() => navigateTo(currentUser ? 'dashboard' : 'landing')}
+                className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              >
+                {currentUser ? 'Workspace' : 'Home'}
+              </button>
+              {!currentUser ? (
+                <>
+                  <button
+                    onClick={() => navigateTo('auth', 'signin')}
+                    className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 px-3 py-1.5 rounded-lg transition cursor-pointer"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => navigateTo('auth', 'signup')}
+                    className="px-4 py-2 text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition cursor-pointer"
+                  >
+                    Get Started
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => navigateTo('dashboard')}
+                  className="px-4 py-2 text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition cursor-pointer"
+                >
+                  Dashboard
+                </button>
+              )}
+            </div>
+          </div>
+        </header>
+        <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <AboutView
+            onBackToDashboard={currentUser ? () => navigateTo('dashboard') : null}
+            onNavigateToAuth={(mode) => navigateTo('auth', mode)}
+            currentUser={currentUser}
+          />
+        </main>
+      </div>
     );
   }
 
@@ -486,6 +557,10 @@ export default function App() {
         onOpenSubscription={() => {
           setMainNavTab('Expense');
           setActiveTab('subscription');
+        }}
+        onOpenAbout={() => {
+          setMainNavTab('Expense');
+          setActiveTab('about');
         }}
         onSignOut={handleSignOut}
       />
@@ -611,6 +686,14 @@ export default function App() {
               {/* TAB 8: SUBSCRIPTION PLANS */}
               {activeTab === 'subscription' && (
                 <SubscriptionPlansView currentUser={currentUser} />
+              )}
+
+              {/* TAB: ABOUT US (Header Navbar View) */}
+              {activeTab === 'about' && (
+                <AboutView
+                  onBackToDashboard={() => setActiveTab('dashboard')}
+                  currentUser={currentUser}
+                />
               )}
 
               {/* TAB 6: DIRECT PAYMENTS (Preserved feature) */}
