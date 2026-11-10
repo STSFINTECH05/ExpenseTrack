@@ -35,10 +35,11 @@ import Auth from './components/Auth';
 import Settings from './components/Settings';
 import IncomeStreamsView from './components/IncomeStreamsView';
 import LiveWorthView from './components/LiveWorthView';
+import FinancialIntelligenceView from './components/FinancialIntelligenceView';
+import AIFinancialChatbot from './components/AIFinancialChatbot';
 import { useLanguage } from './context/LanguageContext';
 import OrganisationMaintainer from './components/OrganisationMaintainer';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import apiClient, { API_BASE_URL } from './apiClient';
 
 // Currency Formatter for Indian Rupees (₹)
 const formatINR = (value) => {
@@ -71,7 +72,19 @@ export default function App() {
   const getInitialRoute = () => {
     const path = window.location.pathname;
     if (path === '/login' || path === '/auth' || path === '/signin' || path === '/signup') return 'auth';
-    if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth' || path === '/organisation-maintainer' || path === '/organisation_maintainer') return 'dashboard';
+    if (
+      path === '/dashboard' ||
+      path === '/settings' ||
+      path === '/income-streams' ||
+      path === '/live-worth' ||
+      path === '/organisation-maintainer' ||
+      path === '/organisation_maintainer' ||
+      path === '/financial-intelligence' ||
+      path === '/financial_intelligence' ||
+      path === '/ai-financial-assistant' ||
+      path === '/ai_financial_assistant' ||
+      path === '/ai-chatbot'
+    ) return 'dashboard';
     return 'landing';
   };
 
@@ -136,10 +149,13 @@ export default function App() {
       } else if (path === '/signup') {
         setCurrentRoute('auth');
         setAuthMode('signup');
-      } else if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth' || path === '/organisation-maintainer' || path === '/organisation_maintainer') {
+      } else if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth' || path === '/organisation-maintainer' || path === '/organisation_maintainer' || path === '/financial-intelligence' || path === '/financial_intelligence') {
         setCurrentRoute('dashboard');
         if (path === '/settings') {
           setActiveTab('settings');
+          setMainNavTab('Expense');
+        } else if (path === '/financial-intelligence' || path === '/financial_intelligence') {
+          setActiveTab('financial_intelligence');
           setMainNavTab('Expense');
         } else if (path === '/income-streams') {
           setActiveTab('income-streams');
@@ -159,7 +175,99 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  const [isSessionChecking, setIsSessionChecking] = useState(true);
+
+  const clearUserStorage = () => {
+    try {
+      localStorage.removeItem('sts_user');
+      localStorage.removeItem('sts_user_avatar');
+      localStorage.removeItem('sts_bills');
+      localStorage.removeItem('sts_goals');
+      localStorage.removeItem('sts_splits');
+      localStorage.removeItem('sts_bank_accounts');
+      localStorage.removeItem('sts_user_notes');
+      localStorage.removeItem('sts_live_worth_base');
+      localStorage.removeItem('sts_live_worth_rate');
+      localStorage.removeItem('sts_live_worth_mode');
+      localStorage.removeItem('sts_live_worth_yield_pct');
+      localStorage.removeItem('sts_live_worth_name');
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
+  // Verify backend session on startup
+  useEffect(() => {
+    let isMounted = true;
+
+    const verifySession = async () => {
+      try {
+        const res = await apiClient.get('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.success && data?.user) {
+            if (isMounted) {
+              const avatar = localStorage.getItem('sts_user_avatar');
+              const userObj = { ...data.user };
+              if (avatar) userObj.avatar = avatar;
+              setCurrentUser(userObj);
+              try {
+                localStorage.setItem('sts_user', JSON.stringify(userObj));
+              } catch (e) {}
+              apiClient.fetchCsrfToken();
+            }
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Session check failed:', err.message);
+      }
+
+      if (isMounted) {
+        clearUserStorage();
+        setCurrentUser(null);
+        const path = window.location.pathname;
+        if (
+          path === '/dashboard' ||
+          path === '/settings' ||
+          path === '/income-streams' ||
+          path === '/live-worth' ||
+          path === '/organisation-maintainer' ||
+          path === '/organisation_maintainer' ||
+          path === '/financial-intelligence' ||
+          path === '/financial_intelligence'
+        ) {
+          setCurrentRoute('auth');
+          setAuthMode('signin');
+          window.history.pushState(null, '', '/login');
+        }
+      }
+    };
+
+    verifySession().finally(() => {
+      if (isMounted) setIsSessionChecking(false);
+    });
+
+    const handleUnauthorized = () => {
+      clearUserStorage();
+      setCurrentUser(null);
+      setPayments([]);
+      setCurrentRoute('auth');
+      setAuthMode('signin');
+      window.history.pushState(null, '', '/login');
+    };
+
+    window.addEventListener('sts_unauthorized', handleUnauthorized);
+    apiClient.setUnauthorizedHandler(handleUnauthorized);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('sts_unauthorized', handleUnauthorized);
+    };
+  }, []);
+
   const handleAuthSuccess = (userData) => {
+    clearUserStorage();
     setCurrentUser(userData);
     try {
       localStorage.setItem('sts_user', JSON.stringify(userData));
@@ -168,17 +276,22 @@ export default function App() {
     }
     setActiveTab('dashboard');
     navigateTo('dashboard');
+    window.dispatchEvent(new Event('sts_data_updated'));
+    fetchPayments(true);
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     try {
-      localStorage.removeItem('sts_user');
-      localStorage.removeItem('sts_user_avatar');
+      await apiClient.post('/api/auth/logout');
     } catch (e) {
       console.warn(e);
     }
+    clearUserStorage();
     setCurrentUser(null);
+    setPayments([]);
+    apiClient.setCsrfToken(null);
     window.dispatchEvent(new Event('sts_avatar_changed'));
+    window.dispatchEvent(new Event('sts_data_updated'));
     navigateTo('auth', 'signin');
   };
 
@@ -214,6 +327,8 @@ export default function App() {
       if (window.location.pathname === '/settings') return 'settings';
       if (window.location.pathname === '/income-streams') return 'income-streams';
       if (window.location.pathname === '/live-worth') return 'live_worth';
+      if (window.location.pathname === '/financial-intelligence' || window.location.pathname === '/financial_intelligence') return 'financial_intelligence';
+      if (window.location.pathname === '/ai-financial-assistant' || window.location.pathname === '/ai_financial_assistant' || window.location.pathname === '/ai-chatbot') return 'ai_financial_assistant';
       if (window.location.pathname === '/organisation-maintainer' || window.location.pathname === '/organisation_maintainer') return 'organisation_maintainer';
     }
     return 'dashboard';
@@ -268,7 +383,7 @@ export default function App() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/payments`);
+      const res = await apiClient.get('/api/payments');
       if (!res.ok) {
         throw new Error(`Server returned HTTP ${res.status}: ${res.statusText}`);
       }
@@ -324,13 +439,7 @@ export default function App() {
         status,
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/payments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await apiClient.post('/api/payments', payload);
 
       const data = await res.json();
 
@@ -415,6 +524,26 @@ export default function App() {
   }
 
   // 3. Authenticated Dashboard Route (Unchanged Original Dashboard)
+  if (!currentUser) {
+    if (isSessionChecking) {
+      return (
+        <div className="h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-[#070b14] text-slate-400">
+          <div className="flex flex-col items-center space-y-3">
+            <RefreshCw className="w-6 h-6 animate-spin text-emerald-500" />
+            <span className="text-xs font-semibold">Verifying secure session...</span>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <Auth
+        initialMode="signin"
+        onAuthSuccess={handleAuthSuccess}
+        onBackToLanding={() => navigateTo('landing')}
+      />
+    );
+  }
+
   return (
     <div
       className="h-screen overflow-hidden bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white relative transition-colors duration-200"
@@ -510,6 +639,16 @@ export default function App() {
                   setActiveTab={setActiveTab}
                   onNavigateToSegregation={() => setActiveTab('segregation')}
                 />
+              )}
+
+              {/* TAB: FINANCIAL INTELLIGENCE */}
+              {(activeTab === 'financial_intelligence' || activeTab === 'financial-intelligence') && (
+                <FinancialIntelligenceView />
+              )}
+
+              {/* TAB: AI FINANCIAL ASSISTANT */}
+              {(activeTab === 'ai_financial_assistant' || activeTab === 'ai-financial-assistant' || activeTab === 'ai_chatbot' || activeTab === 'ai-chatbot') && (
+                <AIFinancialChatbot />
               )}
 
               {/* TAB 1: SEGREGATION */}

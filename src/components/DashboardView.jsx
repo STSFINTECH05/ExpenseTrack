@@ -23,8 +23,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import apiClient, { API_BASE_URL } from '../apiClient';
 
 const formatINR = (value) => {
   const num = Number(value) || 0;
@@ -186,36 +185,44 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
     // Also fetch initial data from backend APIs if available
     const fetchApiBacking = async () => {
       try {
-        const [billsRes, walletsRes] = await Promise.allSettled([
-          fetch(`${API_BASE_URL}/api/segregation?type=bill`),
-          fetch(`${API_BASE_URL}/api/wallets`),
+        const [billsRes, walletsRes, splitsRes] = await Promise.allSettled([
+          apiClient.get('/api/segregation?type=bill'),
+          apiClient.get('/api/wallets'),
+          apiClient.get('/api/splits/groups'),
         ]);
 
         if (billsRes.status === 'fulfilled' && billsRes.value.ok) {
           const json = await billsRes.value.json();
           const items = json.data || (Array.isArray(json) ? json : []);
-          if (Array.isArray(items) && items.length > 0) {
-            setBillsList(items);
-          }
+          setBillsList(Array.isArray(items) ? items : []);
         }
 
         if (walletsRes.status === 'fulfilled' && walletsRes.value.ok) {
           const json = await walletsRes.value.json();
           const items = json.data || (Array.isArray(json) ? json : []);
-          if (Array.isArray(items) && items.length > 0) {
-            setGoalsList(items);
-          }
+          setGoalsList(Array.isArray(items) ? items : []);
+        }
+
+        if (splitsRes.status === 'fulfilled' && splitsRes.value.ok) {
+          const json = await splitsRes.value.json();
+          const items = json.data || (Array.isArray(json) ? json : []);
+          setSplitsData(Array.isArray(items) ? items : []);
         }
       } catch (e) {}
     };
 
     fetchApiBacking();
 
-    window.addEventListener('storage', loadLocalData);
-    window.addEventListener('sts_data_updated', loadLocalData);
+    const handleUpdate = () => {
+      loadLocalData();
+      fetchApiBacking();
+    };
+
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('sts_data_updated', handleUpdate);
     return () => {
-      window.removeEventListener('storage', loadLocalData);
-      window.removeEventListener('sts_data_updated', loadLocalData);
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('sts_data_updated', handleUpdate);
     };
   }, []);
 

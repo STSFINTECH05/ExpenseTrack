@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, IndianRupee, Calendar, Clock, Tag, Wallet, FileText, CheckCircle2, AlertCircle, Sparkles, Repeat } from 'lucide-react';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import apiClient, { API_BASE_URL } from '../apiClient';
 
 const SCHEDULE_OPTIONS = [
   'One-time',
@@ -82,13 +81,7 @@ export default function EditIncomeModal({ isOpen, onClose, entry, onSuccess }) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/segregation/${entry.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await apiClient.put(`/api/segregation/${entry.id}`, payload);
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
@@ -100,6 +93,9 @@ export default function EditIncomeModal({ isOpen, onClose, entry, onSuccess }) {
         onSuccess(json.data);
       } else {
         onSuccess({ ...entry, ...payload });
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('sts_data_updated'));
       }
       onClose();
     } catch (err) {

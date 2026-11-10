@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Wallet,
   Plus,
@@ -29,6 +29,13 @@ import {
   Radio,
   Loader2,
 } from 'lucide-react';
+import apiClient from '../apiClient';
+import {
+  VOICE_LANGUAGES,
+  VoiceLanguageSelector,
+  VoiceMicButton,
+  VoiceStatusBanner,
+} from './VoiceMicControls';
 
 // Curated database of famous places for popular cities
 const FAMOUS_DESTINATIONS = {
@@ -193,11 +200,57 @@ const getSpeechRecognition = () => {
 
 export default function SplitAndCollectPlaceholder() {
   // =========================================================================
-  // Core Component State
+  // Core Component State & Backend Integration
   // =========================================================================
   const [ticketsList, setTicketsList] = useState([]);
   const [activeTicket, setActiveTicket] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  // Fetch detailed group data (members, expenses, settlements)
+  const fetchTicketDetails = useCallback(async (ticketId) => {
+    try {
+      const res = await apiClient.get(`/api/splits/groups/${ticketId}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          setActiveTicket(json.data);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to load group details:', err);
+    }
+  }, []);
+
+  // Fetch all split groups accessible to authenticated user
+  const fetchTickets = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    try {
+      const res = await apiClient.get('/api/splits/groups');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setTicketsList(json.data);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to load split groups:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTickets();
+    const handleUpdate = () => fetchTickets(true);
+    window.addEventListener('sts_data_updated', handleUpdate);
+    return () => window.removeEventListener('sts_data_updated', handleUpdate);
+  }, [fetchTickets]);
+
+  const handleOpenTicket = async (ticket) => {
+    setActiveTicket(ticket);
+    await fetchTicketDetails(ticket.id);
+  };
 
   // Modal State: Create Ticket
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -208,7 +261,7 @@ export default function SplitAndCollectPlaceholder() {
   const [participantName, setParticipantName] = useState('');
   const [participantEmail, setParticipantEmail] = useState('');
   const [participants, setParticipants] = useState([
-    { id: 'user-you', name: 'You', email: 'admin@stsfintech.com', isSelf: true },
+    { id: 'user-you', name: 'You', email: '', isSelf: true },
   ]);
 
   // Voice Assistant & AI Voice Recognition Bot States
@@ -222,12 +275,39 @@ export default function SplitAndCollectPlaceholder() {
   const [showAiBot, setShowAiBot] = useState(true);
   const [voiceError, setVoiceError] = useState('');
 
+  // Multilingual Voice Recognition States (en-IN | ta-IN | hi-IN)
+  const [voiceLang, setVoiceLang] = useState(() => {
+    try {
+      return localStorage.getItem('sts_voice_language') || 'en-IN';
+    } catch (e) {
+      return 'en-IN';
+    }
+  });
+  const [activeVoiceField, setActiveVoiceField] = useState(null);
+  const [voiceStatus, setVoiceStatus] = useState('idle'); // 'idle' | 'listening' | 'processing' | 'success' | 'error'
+  const [voiceStatusMessage, setVoiceStatusMessage] = useState('');
+  const activeRecognitionRef = useRef(null);
+  const voiceTimerRef = useRef(null);
+
+  const handleVoiceLangChange = (langCode) => {
+    setVoiceLang(langCode);
+    try {
+      localStorage.setItem('sts_voice_language', langCode);
+    } catch (e) {}
+  };
+
   const titleRecognitionRef = useRef(null);
   const botRecognitionRef = useRef(null);
   const transcriptRef = useRef('');
 
   // Stop all active voice operations (Recognition & SpeechSynthesis)
   const stopAllVoice = () => {
+    if (activeRecognitionRef.current) {
+      try {
+        activeRecognitionRef.current.stop();
+      } catch (e) {}
+      activeRecognitionRef.current = null;
+    }
     if (titleRecognitionRef.current) {
       try {
         titleRecognitionRef.current.stop();
@@ -245,10 +325,16 @@ export default function SplitAndCollectPlaceholder() {
         window.speechSynthesis.cancel();
       } catch (e) {}
     }
+    if (voiceTimerRef.current) {
+      clearTimeout(voiceTimerRef.current);
+      voiceTimerRef.current = null;
+    }
     setIsListeningTitle(false);
+    setActiveVoiceField(null);
     setIsBotListening(false);
     setIsBotSpeaking(false);
     setBotStatus('idle');
+    setVoiceStatus('idle');
   };
 
   // Cleanup on unmount
@@ -340,17 +426,26 @@ export default function SplitAndCollectPlaceholder() {
     speakBotResponse(responseMsg);
   };
 
-  // Toggle Direct Voice Recognition for Ticket Title
-  const handleToggleTitleVoice = () => {
+  // Multilingual Voice Recognition for Any Input Field (Milestone 1)
+  const toggleFieldVoice = (fieldId, setterFn) => {
     setVoiceError('');
-    if (isListeningTitle) {
+    if (voiceTimerRef.current) {
+      clearTimeout(voiceTimerRef.current);
+    }
+
+    // Toggle off if currently listening to this exact field
+    if (activeVoiceField === fieldId) {
       stopAllVoice();
       return;
     }
 
+    // Stop any existing voice sessions
     stopAllVoice();
+
     const SpeechRec = getSpeechRecognition();
     if (!SpeechRec) {
+      setVoiceStatus('error');
+      setVoiceStatusMessage('Speech recognition unavailable');
       setVoiceError(
         'Speech recognition is not supported in this browser. Please use Google Chrome, Microsoft Edge, or Safari.'
       );
@@ -361,47 +456,88 @@ export default function SplitAndCollectPlaceholder() {
       const recognition = new SpeechRec();
       recognition.continuous = false;
       recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      recognition.lang = voiceLang; // 'en-IN', 'ta-IN', or 'hi-IN'
 
       recognition.onstart = () => {
-        setIsListeningTitle(true);
+        setActiveVoiceField(fieldId);
+        if (fieldId === 'ticketTitle') setIsListeningTitle(true);
+        setVoiceStatus('listening');
+        const langObj = VOICE_LANGUAGES.find((l) => l.code === voiceLang) || VOICE_LANGUAGES[0];
+        setVoiceStatusMessage(`Listening in ${langObj.nativeLabel || langObj.label}... Speak now`);
       };
 
       recognition.onresult = (event) => {
+        setVoiceStatus('processing');
+        setVoiceStatusMessage('Processing speech...');
+
         const transcript = Array.from(event.results)
           .map((result) => result[0].transcript)
           .join('');
+
         if (transcript.trim()) {
-          const formatted = transcript
-            .trim()
-            .split(' ')
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(' ');
-          setTicketTitle(formatted);
+          let text = transcript.trim();
+          if (voiceLang === 'en-IN' || voiceLang === 'en-US') {
+            text = text
+              .split(' ')
+              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(' ');
+          }
+          // Preserve native Unicode for Tamil (ta-IN) & Hindi (hi-IN) without translation
+          setterFn(text);
         }
       };
 
       recognition.onerror = (event) => {
-        console.warn('Title voice error:', event.error);
-        if (event.error === 'not-allowed') {
-          setVoiceError('Microphone permission was denied. Please allow microphone access in your browser settings.');
-        } else if (event.error !== 'no-speech') {
-          setVoiceError(`Voice recognition error: ${event.error}`);
-        }
+        console.warn('Voice recognition error for', fieldId, event.error);
+        setActiveVoiceField(null);
         setIsListeningTitle(false);
+
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          setVoiceStatus('error');
+          setVoiceStatusMessage('Microphone permission required');
+          setVoiceError('Microphone permission required. Please allow microphone access in your browser or device settings.');
+        } else if (event.error === 'no-speech') {
+          setVoiceStatus('error');
+          setVoiceStatusMessage('Unable to recognize speech. Please try again.');
+          setVoiceError('Unable to recognize speech. Please try again.');
+        } else if (event.error === 'audio-capture') {
+          setVoiceStatus('error');
+          setVoiceStatusMessage('Microphone not detected');
+          setVoiceError('No microphone detected. Please check your audio input hardware.');
+        } else if (event.error !== 'aborted') {
+          setVoiceStatus('error');
+          setVoiceStatusMessage(`Voice error: ${event.error}`);
+          setVoiceError(`Voice error: ${event.error}`);
+        }
       };
 
       recognition.onend = () => {
+        setActiveVoiceField(null);
         setIsListeningTitle(false);
+        activeRecognitionRef.current = null;
+        setVoiceStatus('success');
+        setVoiceStatusMessage('Speech recognized successfully');
+        voiceTimerRef.current = setTimeout(() => {
+          setVoiceStatus('idle');
+          setVoiceStatusMessage('');
+        }, 3000);
       };
 
-      titleRecognitionRef.current = recognition;
+      activeRecognitionRef.current = recognition;
       recognition.start();
     } catch (err) {
-      console.warn('Failed to start title voice recognition:', err);
-      setVoiceError('Could not start microphone. Please check browser permissions.');
+      console.warn('Failed to start voice recognition on', fieldId, err);
+      setActiveVoiceField(null);
       setIsListeningTitle(false);
+      setVoiceStatus('error');
+      setVoiceStatusMessage('Microphone permission required');
+      setVoiceError('Could not start microphone. Please check browser permissions.');
     }
+  };
+
+  // Toggle Direct Voice Recognition for Ticket Title (Backwards compatibility)
+  const handleToggleTitleVoice = () => {
+    toggleFieldVoice('ticketTitle', setTicketTitle);
   };
 
   // Toggle AI Voice Recognition Bot
@@ -425,14 +561,15 @@ export default function SplitAndCollectPlaceholder() {
       const recognition = new SpeechRec();
       recognition.continuous = false;
       recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      recognition.lang = voiceLang; // Use selected voiceLang (en-IN, ta-IN, hi-IN)
       transcriptRef.current = '';
 
       recognition.onstart = () => {
         setIsBotListening(true);
         setBotStatus('listening');
         setBotTranscript('');
-        setBotResponse('Listening to your voice command... Speak now!');
+        const langObj = VOICE_LANGUAGES.find((l) => l.code === voiceLang) || VOICE_LANGUAGES[0];
+        setBotResponse(`Listening in ${langObj.nativeLabel || langObj.label}... Speak now!`);
       };
 
       recognition.onresult = (event) => {
@@ -515,92 +652,147 @@ export default function SplitAndCollectPlaceholder() {
     setParticipants(participants.filter((p) => p.id !== idToRemove || p.isSelf));
   };
 
-  const handleCreateTicket = (e) => {
+  const handleCreateTicket = async (e) => {
     e.preventDefault();
     if (!ticketTitle.trim()) return;
 
     stopAllVoice();
 
-    const newTicket = {
-      id: `ticket-${Date.now()}`,
-      title: ticketTitle.trim(),
-      location: ticketLocation.trim(),
-      currency: ticketCurrency,
-      description: ticketDescription.trim() || 'Team collaborative split ledger',
-      createdAt: new Date().toISOString(),
-      participants: [...participants],
-      expenses: [],
-    };
+    try {
+      const payload = {
+        title: ticketTitle.trim(),
+        location: ticketLocation.trim(),
+        currency: ticketCurrency,
+        description: ticketDescription.trim() || 'Team collaborative split ledger',
+        participants: participants
+          .filter((p) => !p.isSelf && p.name.toLowerCase() !== 'you')
+          .map((p) => ({
+            name: p.name,
+            email: p.email,
+          })),
+      };
 
-    setTicketsList([newTicket, ...ticketsList]);
-    setActiveTicket(newTicket);
-    setShowCreateModal(false);
+      const res = await apiClient.post('/api/splits/groups', payload);
+      const json = await res.json();
 
-    // Reset form
-    setTicketTitle('');
-    setTicketLocation('');
-    setTicketDescription('');
-    setTicketCurrency('INR (₹)');
-    setParticipants([{ id: 'user-you', name: 'You', email: 'admin@stsfintech.com', isSelf: true }]);
+      if (!res.ok || !json.success) {
+        alert(json.message || 'Failed to create split group.');
+        return;
+      }
+
+      const created = json.data;
+      setTicketsList((prev) => [created, ...prev]);
+      setActiveTicket(created);
+      setShowCreateModal(false);
+
+      // Reset form
+      setTicketTitle('');
+      setTicketLocation('');
+      setTicketDescription('');
+      setTicketCurrency('INR (₹)');
+      setParticipants([{ id: 'user-you', name: 'You', email: '', isSelf: true }]);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('sts_data_updated'));
+      }
+    } catch (err) {
+      console.error('Error creating ticket:', err);
+      alert('Unable to connect to split service.');
+    }
   };
 
   // =========================================================================
   // Handlers for Adding Expense to Active Ticket
   // =========================================================================
-  const handleAddExpense = (e) => {
+  const handleAddExpense = async (e) => {
     e.preventDefault();
     const amountNum = parseFloat(expenseAmount);
     if (!expenseTitle.trim() || isNaN(amountNum) || amountNum <= 0) return;
+    if (!activeTicket) return;
 
-    const newExpense = {
-      id: `exp-${Date.now()}`,
-      title: expenseTitle.trim(),
-      amount: amountNum,
-      paidBy: expensePaidBy,
-      createdAt: new Date().toISOString(),
-      splitWith: activeTicket.participants.map((p) => p.name),
-    };
+    try {
+      const payload = {
+        title: expenseTitle.trim(),
+        amount: amountNum,
+        paid_by_name: expensePaidBy,
+        split_with: activeTicket.participants.map((p) => p.name),
+      };
 
-    const updatedTicket = {
-      ...activeTicket,
-      expenses: [newExpense, ...activeTicket.expenses],
-    };
+      const res = await apiClient.post(`/api/splits/groups/${activeTicket.id}/expenses`, payload);
+      const json = await res.json();
 
-    setActiveTicket(updatedTicket);
-    setTicketsList(ticketsList.map((t) => (t.id === updatedTicket.id ? updatedTicket : t)));
+      if (!res.ok || !json.success) {
+        alert(json.message || 'Failed to save group expense.');
+        return;
+      }
 
-    setExpenseTitle('');
-    setExpenseAmount('');
-    setExpensePaidBy('You');
-    setShowAddExpenseModal(false);
+      await fetchTicketDetails(activeTicket.id);
+      await fetchTickets(true);
+
+      setExpenseTitle('');
+      setExpenseAmount('');
+      setExpensePaidBy('You');
+      setShowAddExpenseModal(false);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('sts_data_updated'));
+      }
+    } catch (err) {
+      console.error('Error saving group expense:', err);
+      alert('Error saving expense to group.');
+    }
   };
 
   // =========================================================================
   // Settlement Handler for Debts
   // =========================================================================
-  const handleSettleDebt = (debtId) => {
+  const handleSettleDebt = async (debtId) => {
     if (!activeTicket) return;
     const currentSettled = activeTicket.settledDebtIds || [];
     if (currentSettled.includes(debtId)) return;
 
-    const updatedSettled = [...currentSettled, debtId];
-    const updatedTicket = {
-      ...activeTicket,
-      settledDebtIds: updatedSettled,
-    };
+    const debts = calculateSimplifiedDebts(activeTicket);
+    const targetDebt = debts.find((d) => d.id === debtId);
 
-    setActiveTicket(updatedTicket);
-    setTicketsList((prev) =>
-      prev.map((t) => (t.id === updatedTicket.id ? updatedTicket : t))
-    );
+    try {
+      const payload = {
+        from_name: targetDebt ? targetDebt.from : debtId.split('-')[1]?.replace(/_/g, ' ') || 'Member',
+        to_name: targetDebt ? targetDebt.to : debtId.split('-')[2]?.replace(/_/g, ' ') || 'Member',
+        amount: targetDebt ? targetDebt.amount : parseFloat(debtId.split('-')[3]) || 0,
+        debt_key: debtId,
+        notes: 'Settled via Split & Collect',
+      };
+
+      const res = await apiClient.post(`/api/splits/groups/${activeTicket.id}/settlements`, payload);
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        alert(json.message || 'Failed to settle debt.');
+        return;
+      }
+
+      await fetchTicketDetails(activeTicket.id);
+      await fetchTickets(true);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('sts_data_updated'));
+      }
+    } catch (err) {
+      console.error('Error settling debt:', err);
+      alert('Error settling debt.');
+    }
   };
 
   // =========================================================================
   // Calculation Helpers
   // =========================================================================
   const calculateTotalOutlay = (ticket) => {
-    if (!ticket || !ticket.expenses) return 0;
-    return ticket.expenses.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+    if (!ticket) return 0;
+    if (ticket.total_outlay !== undefined) return Number(ticket.total_outlay) || 0;
+    if (ticket.expenses && Array.isArray(ticket.expenses)) {
+      return ticket.expenses.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+    }
+    return 0;
   };
 
   const formatCurrency = (val, currencyStr = 'INR (₹)') => {
@@ -843,14 +1035,22 @@ export default function SplitAndCollectPlaceholder() {
               {/* Action Icons */}
               <div className="flex items-center space-x-1.5 text-slate-400">
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   <input
                     type="text"
                     value={expenseSearchQuery}
                     onChange={(e) => setExpenseSearchQuery(e.target.value)}
                     placeholder="Filter..."
-                    className="pl-7 pr-2 py-1 text-xs rounded-lg border border-slate-200 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-[#0d5236] w-28 sm:w-32"
+                    className="pl-7 pr-7 py-1 text-xs rounded-lg border border-slate-200 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-[#0d5236] w-28 sm:w-36"
                   />
+                  <div className="absolute right-1 top-1/2 -translate-y-1/2">
+                    <VoiceMicButton
+                      size="sm"
+                      isListening={activeVoiceField === 'expenseSearchQuery'}
+                      onClick={() => toggleFieldVoice('expenseSearchQuery', setExpenseSearchQuery)}
+                      title="Voice search expenses"
+                    />
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -1184,18 +1384,49 @@ export default function SplitAndCollectPlaceholder() {
                 </button>
               </div>
 
+              {/* Multilingual Voice Recognition Language Selector */}
+              <VoiceLanguageSelector
+                selectedLang={voiceLang}
+                onSelectLang={handleVoiceLangChange}
+              />
+
               <form onSubmit={handleAddExpense} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
-                    Expense Title
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={expenseTitle}
-                    onChange={(e) => setExpenseTitle(e.target.value)}
-                    placeholder="e.g. Seafood Dinner, Airport Taxi"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white"
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold uppercase text-slate-600">
+                      Expense Title
+                    </label>
+                    <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                      <Mic className="w-3 h-3" /> Voice Dictation
+                    </span>
+                  </div>
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      required
+                      value={expenseTitle}
+                      onChange={(e) => setExpenseTitle(e.target.value)}
+                      placeholder="e.g. Seafood Dinner, Airport Taxi"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-12 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white"
+                    />
+                    <div className="absolute right-2 flex items-center">
+                      <VoiceMicButton
+                        isListening={activeVoiceField === 'expenseTitle'}
+                        onClick={() => toggleFieldVoice('expenseTitle', setExpenseTitle)}
+                        title="Voice dictation for Expense Title"
+                      />
+                    </div>
+                  </div>
+                  <VoiceStatusBanner
+                    activeField={activeVoiceField}
+                    targetField="expenseTitle"
+                    status={voiceStatus}
+                    message={voiceStatusMessage}
+                    onStop={stopAllVoice}
+                    onDismiss={() => {
+                      setVoiceStatus('idle');
+                      setVoiceStatusMessage('');
+                    }}
                   />
                 </div>
 
@@ -1287,15 +1518,36 @@ export default function SplitAndCollectPlaceholder() {
         </button>
       </div>
 
-      {/* Search Input Bar */}
-      <div className="relative max-w-md">
-        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search split tickets by title or location..."
-          className="w-full bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/30 focus:border-[#0d5236] transition shadow-sm"
+      {/* Search Input Bar with Voice Search */}
+      <div className="space-y-1.5 max-w-md">
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search split tickets by title or location..."
+            className="w-full bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/30 focus:border-[#0d5236] transition shadow-sm"
+          />
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            <VoiceMicButton
+              size="sm"
+              isListening={activeVoiceField === 'searchQuery'}
+              onClick={() => toggleFieldVoice('searchQuery', setSearchQuery)}
+              title="Voice search for split tickets"
+            />
+          </div>
+        </div>
+        <VoiceStatusBanner
+          activeField={activeVoiceField}
+          targetField="searchQuery"
+          status={voiceStatus}
+          message={voiceStatusMessage}
+          onStop={stopAllVoice}
+          onDismiss={() => {
+            setVoiceStatus('idle');
+            setVoiceStatusMessage('');
+          }}
         />
       </div>
 
@@ -1331,7 +1583,7 @@ export default function SplitAndCollectPlaceholder() {
             return (
               <div
                 key={ticket.id}
-                onClick={() => setActiveTicket(ticket)}
+                onClick={() => handleOpenTicket(ticket)}
                 className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-[#0d5236]/40 transition cursor-pointer space-y-3"
               >
                 <div className="flex items-start justify-between">
@@ -1357,7 +1609,7 @@ export default function SplitAndCollectPlaceholder() {
                 <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                   <div className="flex items-center space-x-1.5 text-slate-500 dark:text-slate-400">
                     <Users className="w-3.5 h-3.5" />
-                    <span>{ticket.participants.length} members</span>
+                    <span>{ticket.participants?.length || ticket.member_count || 1} members</span>
                   </div>
                   <div className="text-right">
                     <span className="font-mono font-bold text-sm text-[#0d5236] dark:text-emerald-400">
@@ -1603,8 +1855,14 @@ export default function SplitAndCollectPlaceholder() {
               )}
             </div>
 
+            {/* Multilingual Voice Recognition Language Selector (Milestone 1) */}
+            <VoiceLanguageSelector
+              selectedLang={voiceLang}
+              onSelectLang={handleVoiceLangChange}
+            />
+
             <form onSubmit={handleCreateTicket} className="space-y-4">
-              {/* Field 1: Ticket Title (with integrated Voice Recognition) */}
+              {/* Field 1: Ticket Title (with integrated Multilingual Voice Recognition) */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300">
@@ -1623,7 +1881,7 @@ export default function SplitAndCollectPlaceholder() {
                     onChange={(e) => setTicketTitle(e.target.value)}
                     placeholder="e.g. Goa Trip, Office lunch split"
                     className={`w-full bg-slate-50 dark:bg-[#080d19] border rounded-xl pl-4 pr-20 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
-                      isListeningTitle
+                      activeVoiceField === 'ticketTitle' || isListeningTitle
                         ? 'border-rose-500 ring-2 ring-rose-400/40 shadow-sm'
                         : 'border-slate-200 dark:border-slate-800 focus:ring-[#0d5236]/40 focus:bg-white dark:focus:bg-[#080d19]'
                     }`}
@@ -1641,56 +1899,81 @@ export default function SplitAndCollectPlaceholder() {
                         <X className="w-3.5 h-3.5" />
                       </button>
                     )}
-                    <button
-                      type="button"
+                    <VoiceMicButton
+                      isListening={activeVoiceField === 'ticketTitle' || isListeningTitle}
                       onClick={handleToggleTitleVoice}
-                      className={`relative p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer ${
-                        isListeningTitle
-                          ? 'bg-rose-500 text-white animate-pulse shadow-md shadow-rose-500/30'
-                          : 'bg-emerald-50 dark:bg-emerald-950/70 text-[#0d5236] dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50'
-                      }`}
-                      title={isListeningTitle ? 'Stop voice dictation' : 'Voice dictation for Ticket Title'}
-                    >
-                      {isListeningTitle ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                    </button>
+                      title="Voice dictation for Ticket Title"
+                    />
                   </div>
                 </div>
 
-                {/* Active listening banner for Ticket Title */}
-                {isListeningTitle && (
-                  <div className="mt-1.5 flex items-center justify-between px-3 py-1.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl text-xs text-rose-700 dark:text-rose-300 animate-fadeIn">
-                    <div className="flex items-center gap-2">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
-                      </span>
-                      <span className="font-medium">Listening... Speak your ticket title now</span>
-                    </div>
-                    <div className="flex items-center gap-1 h-3">
-                      <span className="w-0.5 bg-rose-500 rounded-full animate-voice-wave-1"></span>
-                      <span className="w-0.5 bg-rose-500 rounded-full animate-voice-wave-2"></span>
-                      <span className="w-0.5 bg-rose-500 rounded-full animate-voice-wave-3"></span>
-                    </div>
-                  </div>
-                )}
+                {/* Status banner for Ticket Title */}
+                <VoiceStatusBanner
+                  activeField={activeVoiceField || (isListeningTitle ? 'ticketTitle' : null)}
+                  targetField="ticketTitle"
+                  status={voiceStatus}
+                  message={voiceStatusMessage}
+                  onStop={stopAllVoice}
+                  onDismiss={() => {
+                    setVoiceStatus('idle');
+                    setVoiceStatusMessage('');
+                  }}
+                />
               </div>
 
               {/* Field 2: Location (Added directly below Ticket Title) */}
               <div>
-                <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-red-500" />
-                  <span>Trip / Venue Location</span>
-                </label>
-                <div className="relative">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-red-500" />
+                    <span>Trip / Venue Location</span>
+                  </label>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                    <Mic className="w-3 h-3" /> Voice Dictation
+                  </span>
+                </div>
+                <div className="relative flex items-center">
                   <input
                     type="text"
                     value={ticketLocation}
                     onChange={(e) => setTicketLocation(e.target.value)}
                     placeholder="e.g. Goa, Chennai, Bengaluru, Mumbai, Puducherry..."
-                    className="w-full bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white dark:focus:bg-[#080d19] transition"
+                    className={`w-full bg-slate-50 dark:bg-[#080d19] border rounded-xl pl-9 pr-20 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
+                      activeVoiceField === 'ticketLocation'
+                        ? 'border-rose-500 ring-2 ring-rose-400/40 shadow-sm'
+                        : 'border-slate-200 dark:border-slate-800 focus:ring-[#0d5236]/40 focus:bg-white dark:focus:bg-[#080d19]'
+                    }`}
                   />
                   <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <div className="absolute right-2 flex items-center gap-1">
+                    {ticketLocation && (
+                      <button
+                        type="button"
+                        onClick={() => setTicketLocation('')}
+                        className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition rounded-lg"
+                        title="Clear location"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <VoiceMicButton
+                      isListening={activeVoiceField === 'ticketLocation'}
+                      onClick={() => toggleFieldVoice('ticketLocation', setTicketLocation)}
+                      title="Voice dictation for Location"
+                    />
+                  </div>
                 </div>
+                <VoiceStatusBanner
+                  activeField={activeVoiceField}
+                  targetField="ticketLocation"
+                  status={voiceStatus}
+                  message={voiceStatusMessage}
+                  onStop={stopAllVoice}
+                  onDismiss={() => {
+                    setVoiceStatus('idle');
+                    setVoiceStatusMessage('');
+                  }}
+                />
                 <p className="text-[10px] text-slate-400 mt-1">
                   Enter a city name to automatically load famous tourist places and map navigation.
                 </p>
@@ -1715,34 +1998,80 @@ export default function SplitAndCollectPlaceholder() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-1">
-                    Description
-                  </label>
-                  <input
-                    type="text"
-                    value={ticketDescription}
-                    onChange={(e) => setTicketDescription(e.target.value)}
-                    placeholder="Optional details"
-                    className="w-full bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white transition"
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300">
+                      Description
+                    </label>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                      <Mic className="w-3 h-3" /> Voice
+                    </span>
+                  </div>
+                  <div className="relative flex items-center">
+                    <input
+                      type="text"
+                      value={ticketDescription}
+                      onChange={(e) => setTicketDescription(e.target.value)}
+                      placeholder="Optional details"
+                      className={`w-full bg-slate-50 dark:bg-[#080d19] border rounded-xl pl-4 pr-12 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 transition ${
+                        activeVoiceField === 'ticketDescription'
+                          ? 'border-rose-500 ring-2 ring-rose-400/40 shadow-sm'
+                          : 'border-slate-200 dark:border-slate-800 focus:ring-[#0d5236]/40 focus:bg-white transition'
+                      }`}
+                    />
+                    <div className="absolute right-2 flex items-center">
+                      <VoiceMicButton
+                        isListening={activeVoiceField === 'ticketDescription'}
+                        onClick={() => toggleFieldVoice('ticketDescription', setTicketDescription)}
+                        title="Voice dictation for Description"
+                      />
+                    </div>
+                  </div>
+                  <VoiceStatusBanner
+                    activeField={activeVoiceField}
+                    targetField="ticketDescription"
+                    status={voiceStatus}
+                    message={voiceStatusMessage}
+                    onStop={stopAllVoice}
+                    onDismiss={() => {
+                      setVoiceStatus('idle');
+                      setVoiceStatusMessage('');
+                    }}
                   />
                 </div>
               </div>
 
               {/* Field 4: Participants List */}
               <div className="space-y-2.5">
-                <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300">
-                  Participants List
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300">
+                    Participants List
+                  </label>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                    <Mic className="w-3 h-3" /> Voice Input
+                  </span>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                  <div className="sm:col-span-5">
+                  <div className="sm:col-span-5 relative flex items-center">
                     <input
                       type="text"
                       value={participantName}
                       onChange={(e) => setParticipantName(e.target.value)}
                       placeholder="Add participant name..."
-                      className="w-full bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white"
+                      className={`w-full bg-slate-50 dark:bg-[#080d19] border rounded-xl pl-3 pr-10 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 ${
+                        activeVoiceField === 'participantName'
+                          ? 'border-rose-500 ring-2 ring-rose-400/40'
+                          : 'border-slate-200 dark:border-slate-800 focus:ring-[#0d5236]/40 focus:bg-white'
+                      }`}
                     />
+                    <div className="absolute right-1.5 flex items-center">
+                      <VoiceMicButton
+                        size="sm"
+                        isListening={activeVoiceField === 'participantName'}
+                        onClick={() => toggleFieldVoice('participantName', setParticipantName)}
+                        title="Voice dictation for Participant Name"
+                      />
+                    </div>
                   </div>
                   <div className="sm:col-span-5">
                     <input
@@ -1763,6 +2092,18 @@ export default function SplitAndCollectPlaceholder() {
                     </button>
                   </div>
                 </div>
+
+                <VoiceStatusBanner
+                  activeField={activeVoiceField}
+                  targetField="participantName"
+                  status={voiceStatus}
+                  message={voiceStatusMessage}
+                  onStop={stopAllVoice}
+                  onDismiss={() => {
+                    setVoiceStatus('idle');
+                    setVoiceStatusMessage('');
+                  }}
+                />
 
                 <div className="flex flex-wrap gap-2 pt-2">
                   {participants.map((p) => (

@@ -55,6 +55,8 @@ export const TRANSLATIONS = {
   en: {
     // Sidebar
     dashboard: 'Dashboard',
+    financial_intelligence: 'Financial Intelligence',
+    ai_financial_assistant: 'AI Financial Assistant',
     segregation: 'Segregation',
     split_collect: 'Split & Collect',
     goal_target: 'Goal Target',
@@ -120,6 +122,8 @@ export const TRANSLATIONS = {
   ta: {
     // Sidebar
     dashboard: 'டாஷ்போர்டு',
+    financial_intelligence: 'நிதி நுண்ணறிவு',
+    ai_financial_assistant: 'AI நிதி உதவியாளர்',
     segregation: 'பிரித்தெடுத்தல்',
     split_collect: 'பகிர்ந்து வசூலி',
     goal_target: 'இலக்கு நோக்கம்',
@@ -185,6 +189,8 @@ export const TRANSLATIONS = {
   hi: {
     // Sidebar
     dashboard: 'डैशबोर्ड',
+    financial_intelligence: 'वित्तीय बुद्धिमत्ता',
+    ai_financial_assistant: 'एआई वित्तीय सहायक',
     segregation: 'व्यय पृथक्करण',
     split_collect: 'बांटें और वसूलें',
     goal_target: 'लक्ष्य निर्धारण',
@@ -250,6 +256,7 @@ export const TRANSLATIONS = {
   te: {
     // Sidebar
     dashboard: 'డాష్‌బోర్డ్',
+    financial_intelligence: 'ఫైనాన్షియల్ ఇంటెలిజెన్స్',
     segregation: 'విభజన',
     split_collect: 'స్ప్లిట్ & కలెక్ట్',
     goal_target: 'లక్ష్య టార్గెట్',
@@ -315,6 +322,7 @@ export const TRANSLATIONS = {
   kn: {
     // Sidebar
     dashboard: 'ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',
+    financial_intelligence: 'ಹಣಕಾಸು ಬುದ್ಧಿವಂತಿಕೆ',
     segregation: 'ವರ್ಗೀಕರಣ',
     split_collect: 'ವಿಭಜಿಸಿ & ಸಂಗ್ರಹಿಸಿ',
     goal_target: 'ಗುರಿ ಗುರಿ',
@@ -380,6 +388,7 @@ export const TRANSLATIONS = {
   ml: {
     // Sidebar
     dashboard: 'ഡാഷ്‌ബോർഡ്',
+    financial_intelligence: 'ഫിനാൻഷ്യൽ ഇന്റലിജൻസ്',
     segregation: 'തരംതിരിക്കൽ',
     split_collect: 'വിഭജിച്ചു ശേഖരിക്കുക',
     goal_target: 'ലക്ഷ്യസ്ഥാനം',

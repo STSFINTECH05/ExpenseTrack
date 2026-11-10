@@ -6,8 +6,7 @@ import {
   Bell,
   Receipt,
 } from 'lucide-react';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import apiClient, { API_BASE_URL } from '../apiClient';
 
 // Currency Formatter for Indian Rupees (₹)
 const formatINR = (value) => {
@@ -132,7 +131,7 @@ export default function CalendarModal({ isOpen, onClose }) {
     // Fetch fresh bills from backend API
     const fetchApiBills = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/segregation?type=bill`);
+        const res = await apiClient.get('/api/segregation?type=bill');
         if (res.ok) {
           const json = await res.json();
           let apiList = [];

@@ -18,7 +18,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import apiClient, { API_BASE_URL } from '../apiClient';
 
 // Format INR currency
 const formatINR = (value) => {
@@ -68,7 +68,7 @@ export default function GoalTargetView() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/wallets`);
+      const res = await apiClient.get('/api/wallets');
       if (!res.ok) {
         throw new Error(`Server returned HTTP ${res.status}`);
       }
@@ -91,6 +91,9 @@ export default function GoalTargetView() {
 
   useEffect(() => {
     fetchWallets();
+    const handleUpdate = () => fetchWallets(true);
+    window.addEventListener('sts_data_updated', handleUpdate);
+    return () => window.removeEventListener('sts_data_updated', handleUpdate);
   }, [fetchWallets]);
 
   // Handle Create Wallet Submit
@@ -124,17 +127,15 @@ export default function GoalTargetView() {
         category: 'goal',
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/wallets`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await apiClient.post('/api/wallets', payload);
 
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.message || data.error || 'Failed to create isolated container');
+      }
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('sts_data_updated'));
       }
 
       // Reset form state
@@ -187,13 +188,7 @@ export default function GoalTargetView() {
 
     setIsAddingCash(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/wallets/${selectedWallet.id}/add-cash`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ amount }),
-      });
+      const res = await apiClient.post(`/api/wallets/${selectedWallet.id}/add-cash`, { amount });
 
       const data = await res.json();
       if (!res.ok) {
@@ -203,6 +198,10 @@ export default function GoalTargetView() {
       setAddCashAmount('');
       setIsAddCashModalOpen(false);
       setSelectedWallet(null);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('sts_data_updated'));
+      }
 
       // Refresh list
       await fetchWallets(true);
@@ -243,12 +242,13 @@ export default function GoalTargetView() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/wallets/${walletId}`, {
-        method: 'DELETE',
-      });
+      const res = await apiClient.delete(`/api/wallets/${walletId}`);
       if (res.ok) {
         await fetchWallets(true);
         setActiveMenuId(null);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('sts_data_updated'));
+        }
       }
     } catch (err) {
       console.error('Delete wallet error:', err);

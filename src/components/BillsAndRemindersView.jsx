@@ -12,8 +12,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import AddIncomeModal from './AddIncomeModal';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import apiClient, { API_BASE_URL } from '../apiClient';
 
 // Currency Formatter for Indian Rupees (₹)
 const formatINR = (value) => {
@@ -54,7 +53,7 @@ export default function BillsAndRemindersView() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/segregation?type=bill`);
+      const res = await apiClient.get('/api/segregation?type=bill');
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
@@ -84,6 +83,9 @@ export default function BillsAndRemindersView() {
 
   useEffect(() => {
     fetchBills();
+    const handleUpdate = () => fetchBills(true);
+    window.addEventListener('sts_data_updated', handleUpdate);
+    return () => window.removeEventListener('sts_data_updated', handleUpdate);
   }, [fetchBills]);
 
   const handleModalSuccess = (newRecord) => {

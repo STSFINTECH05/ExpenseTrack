@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, IndianRupee, Calendar, Clock, Tag, Wallet, FileText, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import apiClient, { API_BASE_URL } from '../apiClient';
 
 const CATEGORY_OPTIONS = [
   'Consulting',
@@ -112,13 +111,7 @@ export default function AddIncomeModal({ isOpen, onClose, defaultType, onSuccess
         amount: numAmount,
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/segregation`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await apiClient.post('/api/segregation', payload);
 
       const data = await res.json();
       if (!res.ok) {
@@ -126,6 +119,9 @@ export default function AddIncomeModal({ isOpen, onClose, defaultType, onSuccess
       }
 
       onSuccess(data.data);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('sts_data_updated'));
+      }
       onClose();
     } catch (err) {
       console.error('AddIncomeModal submission error:', err);
