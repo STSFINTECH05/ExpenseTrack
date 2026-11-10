@@ -12,6 +12,8 @@ import {
   Wallet,
   Pencil,
   Trash2,
+  AlertTriangle,
+  X,
 } from 'lucide-react';
 import AddIncomeModal from './AddIncomeModal';
 import EditIncomeModal from './EditIncomeModal';
@@ -45,6 +47,13 @@ export default function BillsAndRemindersView() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [dismissedAlertDate, setDismissedAlertDate] = useState(() => {
+    try {
+      return localStorage.getItem('sts_bills_alert_dismissed') || null;
+    } catch (e) {
+      return null;
+    }
+  });
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -54,6 +63,25 @@ export default function BillsAndRemindersView() {
 
   const currentUser = getCurrentUser();
   const storageKey = currentUser?.email ? `sts_bills_${currentUser.email}` : 'sts_bills';
+
+  // Overdue / Urgent Bills Calculation
+  const todayStr = new Date().toISOString().split('T')[0];
+  const urgentBills = bills.filter((b) => {
+    if (!b.date) return false;
+    const isPaid = b.status?.toUpperCase() === 'PAID' || b.is_paid === true || b.isPaid === true;
+    if (isPaid) return false;
+    const dueDateStr = String(b.date).slice(0, 10);
+    return dueDateStr <= todayStr;
+  });
+
+  const isAlertDismissed = dismissedAlertDate === todayStr;
+
+  const handleDismissAlert = () => {
+    try {
+      localStorage.setItem('sts_bills_alert_dismissed', todayStr);
+    } catch (e) {}
+    setDismissedAlertDate(todayStr);
+  };
 
   const fetchBills = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
@@ -213,16 +241,44 @@ export default function BillsAndRemindersView() {
         {/* Status Box & Bills List */}
         <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/80 space-y-4">
           {/* Status Box */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-600 dark:text-slate-300 shadow-sm">
-            <div className="flex items-center space-x-2.5">
-              <Receipt className="w-5 h-5 text-slate-400 flex-shrink-0" />
-              <span>No urgent bill reminders due today. All active bills are synchronized.</span>
+          {urgentBills.length > 0 && !isAlertDismissed ? (
+            <div className="flex items-center justify-between p-4 rounded-xl bg-rose-50/90 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-xs sm:text-sm text-rose-800 dark:text-rose-200 shadow-sm animate-fadeIn">
+              <div className="flex items-center space-x-2.5 min-w-0">
+                <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 flex-shrink-0" />
+                <span className="font-medium truncate">
+                  You have <strong className="font-bold">{urgentBills.length}</strong> overdue or urgent bill{urgentBills.length > 1 ? 's' : ''} requiring action.
+                </span>
+              </div>
+              <div className="flex items-center space-x-2 pl-3 flex-shrink-0">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-200 dark:bg-rose-900/80 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-700 cursor-default">
+                  Action Required
+                </span>
+                <button
+                  type="button"
+                  onClick={handleDismissAlert}
+                  className="p-1 rounded-md text-rose-600 hover:text-rose-900 dark:text-rose-400 dark:hover:text-rose-100 hover:bg-rose-200/50 dark:hover:bg-rose-900/50 transition cursor-pointer"
+                  title="Dismiss alert"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            {/* Right side link/tag: "All clear" */}
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap pl-2">
-              All clear
-            </span>
-          </div>
+          ) : (
+            <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-600 dark:text-slate-300 shadow-sm">
+              <div className="flex items-center space-x-2.5">
+                <Receipt className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                <span>
+                  {urgentBills.length > 0
+                    ? `Active bills synchronized (${urgentBills.length} alert${urgentBills.length > 1 ? 's' : ''} reviewed).`
+                    : 'No urgent bill reminders due today. All active bills are synchronized.'}
+                </span>
+              </div>
+              {/* Right side static pill badge: "All clear" */}
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 cursor-default select-none whitespace-nowrap pl-2">
+                All clear
+              </span>
+            </div>
+          )}
 
           {/* Bills List / Grid */}
           {loading ? (
