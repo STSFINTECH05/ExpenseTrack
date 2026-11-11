@@ -32,9 +32,14 @@ import {
   ChevronRight,
   X,
   Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import apiClient from '../apiClient';
 import { useLanguage } from '../context/LanguageContext';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
+import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 
 // Currency Formatter for Indian Rupees (₹)
 const formatINR = (value) => {
@@ -89,6 +94,60 @@ export default function AIFinancialChatbot() {
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const recordingBaseTextRef = useRef('');
+
+  // Multilingual Speech Recognition (STT) Hook (Milestone 2 - Step 6)
+  const {
+    isListening,
+    interimTranscript,
+    error: speechError,
+    isSupported: isSpeechSupported,
+    startListening,
+    stopListening,
+    cancelListening,
+    clearError: clearSpeechError,
+  } = useSpeechRecognition({
+    onTranscriptChange: (recognizedText) => {
+      const base = recordingBaseTextRef.current ? recordingBaseTextRef.current.trim() : '';
+      const combined = base ? `${base} ${recognizedText.trim()}` : recognizedText.trim();
+      setInputText(combined);
+    },
+  });
+
+  // Multilingual Text-to-Speech (TTS) Hook (Milestone 2 - Step 6)
+  const {
+    isSpeaking,
+    speakingId,
+    autoSpeak,
+    voiceError,
+    isSupported: isTtsSupported,
+    speak,
+    stopSpeaking,
+    toggleAutoSpeak,
+    clearVoiceError,
+  } = useSpeechSynthesis();
+
+  // Voice Recording Toggle Handler
+  const handleToggleVoiceRecording = () => {
+    if (isListening) {
+      stopListening();
+      if (inputRef.current) inputRef.current.focus();
+    } else {
+      if (isSpeaking) {
+        stopSpeaking();
+      }
+      clearSpeechError();
+      clearVoiceError();
+      recordingBaseTextRef.current = inputText;
+      startListening(selectedLanguage);
+    }
+  };
+
+  const handleCancelVoiceRecording = () => {
+    cancelListening();
+    setInputText(recordingBaseTextRef.current);
+    if (inputRef.current) inputRef.current.focus();
+  };
 
   // Sync language if global app language changes and user hasn't explicitly customized
   useEffect(() => {
@@ -152,6 +211,8 @@ export default function AIFinancialChatbot() {
   // Load a Specific Conversation Thread
   const loadConversationMessages = async (convId) => {
     if (!convId) return;
+    stopSpeaking();
+    cancelListening();
     setIsLoading(true);
     setErrorMessage('');
     setActiveConversationId(convId);
@@ -185,6 +246,8 @@ export default function AIFinancialChatbot() {
 
   // Start a Brand New Conversation
   const handleNewConversation = () => {
+    stopSpeaking();
+    cancelListening();
     setActiveConversationId(null);
     setMessages([]);
     setErrorMessage('');
@@ -195,6 +258,11 @@ export default function AIFinancialChatbot() {
 
   // Send a Chat Message
   const handleSendMessage = async (textToSend = null) => {
+    if (isListening) {
+      stopListening();
+    }
+    stopSpeaking();
+
     const rawMessage = typeof textToSend === 'string' ? textToSend : inputText;
     const trimmed = rawMessage ? rawMessage.trim() : '';
     if (!trimmed || isLoading) return;
@@ -266,6 +334,15 @@ export default function AIFinancialChatbot() {
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
+
+      // If Auto Speak preference is enabled, speak the answer
+      if (autoSpeak) {
+        speak({
+          id: assistantMsg.id,
+          text: assistantMsg.content,
+          lang: selectedLanguage,
+        });
+      }
     } catch (err) {
       console.error('[STS FINTECH AI Chat] Send error:', err);
       setErrorMessage('Network error: Unable to reach STS Fintech AI server. Please verify your connection.');
@@ -319,8 +396,8 @@ export default function AIFinancialChatbot() {
           </div>
         </div>
 
-        {/* Header Actions: New Chat, Language & History Toggle */}
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+        {/* Header Actions: Language, Auto-Speak, New Chat & History Toggle */}
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap sm:flex-nowrap">
           {/* Language Selector Pills */}
           <div className="inline-flex items-center p-1 bg-slate-100 dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
             {CHAT_LANGUAGES.map((lang) => {
@@ -343,6 +420,26 @@ export default function AIFinancialChatbot() {
               );
             })}
           </div>
+
+          {/* Auto Voice Response Toggle (TTS) */}
+          <button
+            type="button"
+            onClick={toggleAutoSpeak}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+              autoSpeak
+                ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30 shadow-xs'
+                : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700/80 hover:text-slate-900 dark:hover:text-slate-200'
+            }`}
+            title={autoSpeak ? 'Auto Voice Response: Enabled' : 'Auto Voice Response: Disabled (Click to enable)'}
+            aria-label={autoSpeak ? 'Disable Auto Voice' : 'Enable Auto Voice'}
+          >
+            {autoSpeak ? (
+              <Volume2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            ) : (
+              <VolumeX className="w-3.5 h-3.5" />
+            )}
+            <span className="hidden sm:inline">Auto Voice: {autoSpeak ? 'ON' : 'OFF'}</span>
+          </button>
 
           {/* New Chat Button */}
           <button
@@ -659,7 +756,7 @@ export default function AIFinancialChatbot() {
                       )}
                     </div>
 
-                    {/* Timestamp & Provider Attribution */}
+                    {/* Timestamp, Attribution & TTS Speaker Control */}
                     <div
                       className={`flex items-center gap-2 px-1 text-[10px] text-slate-400 ${
                         isUser ? 'justify-end' : 'justify-start'
@@ -672,6 +769,44 @@ export default function AIFinancialChatbot() {
                           <span className="text-emerald-700 dark:text-emerald-400 font-medium">
                             Grounded in Ledger
                           </span>
+                          <span>•</span>
+                          {/* Text-to-Speech Playback Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (isSpeaking && speakingId === msg.id) {
+                                stopSpeaking();
+                              } else {
+                                if (isListening) cancelListening();
+                                speak({
+                                  id: msg.id,
+                                  text: msg.content,
+                                  lang: selectedLanguage,
+                                });
+                              }
+                            }}
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md transition cursor-pointer ${
+                              isSpeaking && speakingId === msg.id
+                                ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-bold animate-pulse'
+                                : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                            }`}
+                            title={isSpeaking && speakingId === msg.id ? 'Stop speaking' : 'Listen to answer'}
+                            aria-label={isSpeaking && speakingId === msg.id ? 'Stop speaking' : 'Listen to answer'}
+                          >
+                            {isSpeaking && speakingId === msg.id ? (
+                              <>
+                                <VolumeX className="w-3 h-3 text-rose-500" />
+                                <span className="text-[9px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400 font-bold">
+                                  Speaking...
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                                <span className="text-[9px] uppercase tracking-wide">Listen</span>
+                              </>
+                            )}
+                          </button>
                         </>
                       )}
                     </div>
@@ -745,6 +880,78 @@ export default function AIFinancialChatbot() {
               </div>
             )}
 
+            {/* Live Voice Listening Banner with Animated Waves & Interim Transcript */}
+            {isListening && (
+              <div className="flex items-center justify-between p-2.5 sm:p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl text-xs text-rose-700 dark:text-rose-300 animate-fadeIn">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-[11px] sm:text-xs">
+                        {selectedLanguage === 'ta-IN'
+                          ? 'தமிழில் பேசவும்... (Listening in Tamil)'
+                          : selectedLanguage === 'hi-IN'
+                          ? 'हिन्दी में बोलें... (Listening in Hindi)'
+                          : 'Listening in English (India)... Speak now'}
+                      </span>
+                      {/* Audio wave bars */}
+                      <div className="flex items-center gap-0.5 h-3">
+                        <span className="w-0.5 bg-rose-500 rounded-full animate-voice-wave-1"></span>
+                        <span className="w-0.5 bg-rose-500 rounded-full animate-voice-wave-2"></span>
+                        <span className="w-0.5 bg-rose-500 rounded-full animate-voice-wave-3"></span>
+                      </div>
+                    </div>
+                    {interimTranscript && (
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 italic truncate mt-0.5 font-medium">
+                        "{interimTranscript}"
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                  <button
+                    type="button"
+                    onClick={stopListening}
+                    className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-[10px] uppercase font-bold rounded-lg cursor-pointer transition shadow-xs"
+                    title="Finish speaking and edit text"
+                  >
+                    Done
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelVoiceRecording}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                    title="Cancel recording"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Speech or Voice Error Notification Banner */}
+            {(speechError || voiceError) && (
+              <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2 animate-fadeIn">
+                <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-medium">{speechError || voiceError}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearSpeechError();
+                    clearVoiceError();
+                  }}
+                  className="text-amber-500 hover:text-amber-700 dark:hover:text-amber-100 p-0.5"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             {/* Input Form */}
             <form
               onSubmit={(e) => {
@@ -753,16 +960,34 @@ export default function AIFinancialChatbot() {
               }}
               className="flex items-center gap-2"
             >
-              {/* Voice Placeholder Slot for Step 6 (Milestone 1 preservation) */}
+              {/* Dynamic Voice Recording Microphone Button (Milestone 2 - Step 6) */}
               <button
                 type="button"
-                className="p-2.5 rounded-xl bg-slate-200/70 dark:bg-slate-800/70 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 border border-slate-300/60 dark:border-slate-700/60 transition cursor-pointer flex-shrink-0"
-                title="Voice Recognition integration scheduled for Step 6"
-                onClick={() => {
-                  setErrorMessage('Voice Recognition for AI Financial Chatbot is scheduled for Milestone 2 Step 6.');
-                }}
+                onClick={handleToggleVoiceRecording}
+                disabled={isLoading}
+                className={`p-2.5 rounded-xl transition-all cursor-pointer flex-shrink-0 relative ${
+                  isListening
+                    ? 'bg-rose-500 text-white animate-pulse shadow-md shadow-rose-500/30'
+                    : 'bg-emerald-50 dark:bg-emerald-950/70 text-[#0d5236] dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-500/30'
+                }`}
+                title={
+                  isListening
+                    ? 'Stop voice recording'
+                    : `Ask with voice in ${
+                        selectedLanguage === 'ta-IN'
+                          ? 'Tamil (தமிழ்)'
+                          : selectedLanguage === 'hi-IN'
+                          ? 'Hindi (हिन्दी)'
+                          : 'English (India)'
+                      }`
+                }
+                aria-label={isListening ? 'Stop voice recording' : 'Start voice recording'}
               >
-                <Mic className="w-4 h-4" />
+                {isListening ? (
+                  <MicOff className="w-4 h-4" />
+                ) : (
+                  <Mic className="w-4 h-4" />
+                )}
               </button>
 
               {/* Text Input */}
@@ -775,10 +1000,10 @@ export default function AIFinancialChatbot() {
                 disabled={isLoading}
                 placeholder={
                   selectedLanguage === 'ta-IN'
-                    ? 'உங்கள் நிதி குறித்து கேள்விகள் கேட்கவும் (எ.கா. கடந்த 30 நாட்களில் நான் எவ்வளவு செலவு செய்தேன்?)...'
+                    ? 'உங்கள் நிதி குறித்து கேள்விகள் கேட்கவும் அல்லது பேசவும்...'
                     : selectedLanguage === 'hi-IN'
-                    ? 'अपने वित्तीय विवरण के बारे में पूछें (उदा. पिछले 30 दिनों में मैंने कितना खर्च किया?)...'
-                    : 'Ask about your income, expenses, or savings (e.g. How much did I spend this month?)...'
+                    ? 'अपने वित्तीय विवरण के बारे में पूछें या बोलें...'
+                    : 'Ask about your income, expenses, or savings (Type or use Mic)...'
                 }
                 className="flex-1 py-2.5 px-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300/80 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236] dark:focus:ring-emerald-500 transition disabled:opacity-60"
               />
@@ -805,7 +1030,7 @@ export default function AIFinancialChatbot() {
             <div className="flex items-center justify-between text-[10px] text-slate-400 px-1 pt-0.5">
               <span className="flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                GroqCloud Hosted AI · Financial Data Minimisation
+                GroqCloud Hosted AI · Financial Data Minimisation · Web Speech API
               </span>
               <span className="hidden sm:inline">Press Enter to send</span>
             </div>
