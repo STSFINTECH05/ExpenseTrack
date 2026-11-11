@@ -235,437 +235,440 @@ export default function SegregationView() {
       {/* ========================================================================= */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Income */}
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-md transition">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-md transition">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[11px] font-bold tracking-wider uppercase text-slate-500">{t('total_income', 'Total Income')}</p>
-              <h3 className="text-2xl font-black text-slate-900 mt-1 tracking-tight">
+              <p className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">{t('total_income', 'Total Income')}</p>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1 tracking-tight">
                 {formatINR(totals.totalIncome)}
               </h3>
             </div>
-            <div className="p-2.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 flex-shrink-0">
+            <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
               <TrendingUp className="w-5 h-5" />
             </div>
           </div>
-          <p className="mt-4 text-[11px] text-slate-500">
-            Fixed + Additional inflows combined
-          </p>
+          <div className="mt-4 flex items-center text-[11px] text-emerald-600 dark:text-emerald-400">
+            <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
+            <span>Fixed + Additional inflows combined</span>
+          </div>
         </div>
 
         {/* Total Expenses */}
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm relative overflow-hidden group hover:border-rose-500/40 hover:shadow-md transition">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-rose-500/40 hover:shadow-md transition">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[11px] font-bold tracking-wider uppercase text-slate-500">{t('total_expenses', 'Total Expenses')}</p>
-              <h3 className="text-2xl font-black text-slate-900 mt-1 tracking-tight">
+              <p className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">{t('total_expenses', 'Total Expenses')}</p>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 mt-1 tracking-tight">
                 {formatINR(totals.totalExpenses)}
               </h3>
             </div>
-            <div className="p-2.5 rounded-full bg-rose-50 text-rose-600 border border-rose-100 flex-shrink-0">
+            <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60">
               <TrendingDown className="w-5 h-5" />
             </div>
           </div>
-          <p className="mt-4 text-[11px] text-slate-500">
-            Total operating & capital outflow
-          </p>
+          <div className="mt-4 flex items-center text-[11px] text-rose-600 dark:text-rose-400">
+            <ArrowDownRight className="w-3.5 h-3.5 mr-1" />
+            <span>Total operating & capital outflow</span>
+          </div>
         </div>
 
         {/* Monthly Savings */}
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-md transition">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-md transition">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[11px] font-bold tracking-wider uppercase text-slate-500">{t('monthly_savings', 'Monthly Savings')}</p>
-              <h3 className={`text-2xl font-black mt-1 tracking-tight ${totals.monthlySavings < 0 ? 'text-slate-900' : 'text-emerald-600'}`}>
+              <p className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">{t('monthly_savings', 'Monthly Savings')}</p>
+              <h3 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1 tracking-tight">
                 {formatINR(totals.monthlySavings)}
               </h3>
             </div>
-            <div className="p-2.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 flex-shrink-0">
+            <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
               <PiggyBank className="w-5 h-5" />
             </div>
           </div>
-          <p className="mt-4 text-[11px] text-slate-500">
-            {totals.totalIncome > 0
-              ? `${((totals.monthlySavings / totals.totalIncome) * 100).toFixed(1)}% net retention rate`
-              : '0% net retention rate'}
-          </p>
+          <div className="mt-4 flex items-center text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold mr-1">
+              {totals.totalIncome > 0
+                ? `${((totals.monthlySavings / totals.totalIncome) * 100).toFixed(1)}%`
+                : '0%'}
+            </span>
+            <span>net retention rate</span>
+          </div>
         </div>
 
         {/* Net Worth */}
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-md transition">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-emerald-500/40 hover:shadow-md transition">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[11px] font-bold tracking-wider uppercase text-slate-500">{t('net_worth', 'Net Worth')}</p>
-              <h3 className="text-2xl font-black text-slate-900 mt-1 tracking-tight">
+              <p className="text-xs font-semibold tracking-wider uppercase text-slate-500 dark:text-slate-400">{t('net_worth', 'Net Worth')}</p>
+              <h3 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1 tracking-tight">
                 {formatINR(totals.netWorth)}
               </h3>
             </div>
-            <div className="p-2.5 rounded-full bg-teal-50 text-teal-600 border border-teal-100 flex-shrink-0">
+            <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
               <Briefcase className="w-5 h-5" />
             </div>
           </div>
-          <p className="mt-4 text-[11px] text-slate-500">
-            Verified corporate asset standing
-          </p>
+          <div className="mt-4 flex items-center text-[11px] text-slate-500 dark:text-slate-400">
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold mr-1">Verified</span>
+            <span>corporate asset standing</span>
+          </div>
         </div>
       </section>
 
       {/* ========================================================================= */}
       {/* 2. ADDITIONAL SOURCE SECTION (Side-by-side tables)                         */}
       {/* ========================================================================= */}
-      <section className="rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 p-5 sm:p-7 shadow-sm space-y-6">
-        <div>
-          <h3 className="text-lg font-bold text-slate-900 tracking-tight">
-            {t('additional_source', 'Additional Source')}
-          </h3>
-          <p className="text-xs text-slate-500 mt-0.5">Unscheduled or variable income bonuses and project expenses</p>
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              {t('additional_source', 'Additional Source')}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Unscheduled or variable income bonuses and project expenses</p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Table: Additional Income */}
-          <div className="rounded-2xl border border-slate-200/80 p-5 bg-white flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-3">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" />
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wide">
-                    {t('additional_income', 'Additional Income')}
-                  </h4>
-                  <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 font-semibold">
-                    {additionalIncome.length} entries
-                  </span>
-                </div>
-                <button
-                  onClick={() => openAddModal('additional_income')}
-                  className="flex items-center space-x-1 px-3 py-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-xs active:scale-95 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>{t('add', 'Add')}</span>
-                </button>
+          <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-200 dark:border-slate-800 mb-3">
+              <div className="flex items-center space-x-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide">
+                  {t('additional_income', 'Additional Income')}
+                </h4>
+                <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60 font-semibold">
+                  {additionalIncome.length} entries
+                </span>
               </div>
+              <button
+                onClick={() => openAddModal('additional_income')}
+                className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-sm active:scale-95 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                <span>{t('add', 'Add')}</span>
+              </button>
+            </div>
 
-              <div className="overflow-x-auto w-full">
-                <table className="w-full text-left text-xs min-w-[500px]">
-                  <thead>
-                    <tr className="text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
-                      <th className="py-2.5 px-2 font-bold">{t('name', 'Name')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('description', 'Description')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('date', 'Date')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('time', 'Time')}</th>
-                      <th className="py-2.5 px-2 font-bold text-right">{t('amount', 'Amount')}</th>
-                      <th className="py-2.5 px-2 font-bold text-right">{t('actions', 'Actions')}</th>
+            <div className="overflow-x-auto w-full flex-1">
+              <table className="w-full text-left text-xs min-w-[520px]">
+                <thead>
+                  <tr className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                    <th className="py-2.5 px-2 font-semibold">{t('name', 'Name')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('description', 'Description')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('date', 'Date')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('time', 'Time')}</th>
+                    <th className="py-2.5 px-2 font-semibold text-right">{t('amount', 'Amount')}</th>
+                    <th className="py-2.5 px-2 font-semibold text-right">{t('actions', 'Actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                  {additionalIncome.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
+                        No additional income entries recorded. Click + Add to record one.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium">
-                    {additionalIncome.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="py-12 text-center text-slate-400 text-xs">
-                          No entries recorded. Click + Add to record one.
+                  ) : (
+                    additionalIncome.map((item) => (
+                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                        <td className="py-3 px-2 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">{item.name}</td>
+                        <td className="py-3 px-2 text-slate-500 dark:text-slate-400 max-w-[160px] truncate" title={item.description}>
+                          {item.description || '-'}
+                        </td>
+                        <td className="py-3 px-2 text-slate-500 dark:text-slate-400 whitespace-nowrap">{formatDate(item.date)}</td>
+                        <td className="py-3 px-2 text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">{item.time || '-'}</td>
+                        <td className="py-3 px-2 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                          {formatINR(item.amount)}
+                        </td>
+                        <td className="py-3 px-2 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end space-x-1">
+                            <button
+                              onClick={() => openEditModal(item)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition cursor-pointer"
+                              title={t('edit', 'Edit')}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(item)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition cursor-pointer"
+                              title={t('delete', 'Delete')}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
-                    ) : (
-                      additionalIncome.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-50 transition">
-                          <td className="py-3 px-2 font-semibold text-slate-900 whitespace-nowrap">{item.name}</td>
-                          <td className="py-3 px-2 text-slate-500 max-w-[150px] truncate" title={item.description}>
-                            {item.description || '-'}
-                          </td>
-                          <td className="py-3 px-2 text-slate-500 whitespace-nowrap">{formatDate(item.date)}</td>
-                          <td className="py-3 px-2 text-slate-500 font-mono whitespace-nowrap">{item.time || '-'}</td>
-                          <td className="py-3 px-2 text-right font-mono font-bold text-emerald-600 whitespace-nowrap">
-                            {formatINR(item.amount)}
-                          </td>
-                          <td className="py-3 px-2 text-right whitespace-nowrap">
-                            <div className="flex items-center justify-end space-x-1">
-                              <button
-                                onClick={() => openEditModal(item)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
-                                title={t('edit', 'Edit')}
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(item)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-                                title={t('delete', 'Delete')}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
           {/* Table: Additional Expense */}
-          <div className="rounded-2xl border border-slate-200/80 p-5 bg-white flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-3">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 flex-shrink-0" />
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wide">
-                    {t('additional_expense', 'Additional Expense')}
-                  </h4>
-                  <span className="text-[11px] font-mono text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200 font-semibold">
-                    {additionalExpense.length} entries
-                  </span>
-                </div>
-                <button
-                  onClick={() => openAddModal('additional_expense')}
-                  className="flex items-center space-x-1 px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition shadow-xs active:scale-95 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>{t('add', 'Add')}</span>
-                </button>
+          <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-200 dark:border-slate-800 mb-3">
+              <div className="flex items-center space-x-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide">
+                  {t('additional_expense', 'Additional Expense')}
+                </h4>
+                <span className="text-[11px] font-mono text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800/60 font-semibold">
+                  {additionalExpense.length} entries
+                </span>
               </div>
+              <button
+                onClick={() => openAddModal('additional_expense')}
+                className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition shadow-sm active:scale-95 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                <span>{t('add', 'Add')}</span>
+              </button>
+            </div>
 
-              <div className="overflow-x-auto w-full">
-                <table className="w-full text-left text-xs min-w-[500px]">
-                  <thead>
-                    <tr className="text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
-                      <th className="py-2.5 px-2 font-bold">{t('name', 'Name')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('description', 'Description')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('date', 'Date')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('time', 'Time')}</th>
-                      <th className="py-2.5 px-2 font-bold text-right">{t('amount', 'Amount')}</th>
-                      <th className="py-2.5 px-2 font-bold text-right">{t('actions', 'Actions')}</th>
+            <div className="overflow-x-auto w-full flex-1">
+              <table className="w-full text-left text-xs min-w-[520px]">
+                <thead>
+                  <tr className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                    <th className="py-2.5 px-2 font-semibold">{t('name', 'Name')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('description', 'Description')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('date', 'Date')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('time', 'Time')}</th>
+                    <th className="py-2.5 px-2 font-semibold text-right">{t('amount', 'Amount')}</th>
+                    <th className="py-2.5 px-2 font-semibold text-right">{t('actions', 'Actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                  {additionalExpense.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
+                        No additional expense entries recorded. Click + Add to record one.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium">
-                    {additionalExpense.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="py-12 text-center text-slate-400 text-xs">
-                          No entries recorded. Click + Add to record one.
+                  ) : (
+                    additionalExpense.map((item) => (
+                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                        <td className="py-3 px-2 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">{item.name}</td>
+                        <td className="py-3 px-2 text-slate-500 dark:text-slate-400 max-w-[160px] truncate" title={item.description}>
+                          {item.description || '-'}
+                        </td>
+                        <td className="py-3 px-2 text-slate-500 dark:text-slate-400 whitespace-nowrap">{formatDate(item.date)}</td>
+                        <td className="py-3 px-2 text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">{item.time || '-'}</td>
+                        <td className="py-3 px-2 text-right font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                          {formatINR(item.amount)}
+                        </td>
+                        <td className="py-3 px-2 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end space-x-1">
+                            <button
+                              onClick={() => openEditModal(item)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition cursor-pointer"
+                              title={t('edit', 'Edit')}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(item)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition cursor-pointer"
+                              title={t('delete', 'Delete')}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
-                    ) : (
-                      additionalExpense.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-50 transition">
-                          <td className="py-3 px-2 font-semibold text-slate-900 whitespace-nowrap">{item.name}</td>
-                          <td className="py-3 px-2 text-slate-500 max-w-[150px] truncate" title={item.description}>
-                            {item.description || '-'}
-                          </td>
-                          <td className="py-3 px-2 text-slate-500 whitespace-nowrap">{formatDate(item.date)}</td>
-                          <td className="py-3 px-2 text-slate-500 font-mono whitespace-nowrap">{item.time || '-'}</td>
-                          <td className="py-3 px-2 text-right font-mono font-bold text-rose-600 whitespace-nowrap">
-                            {formatINR(item.amount)}
-                          </td>
-                          <td className="py-3 px-2 text-right whitespace-nowrap">
-                            <div className="flex items-center justify-end space-x-1">
-                              <button
-                                onClick={() => openEditModal(item)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
-                                title={t('edit', 'Edit')}
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(item)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-                                title={t('delete', 'Delete')}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       </section>
 
       {/* ========================================================================= */}
-      {/* 3. FIXED SOURCE SECTION (Side-by-side tables)                             */}
+      {/* 4. FIXED SOURCE SECTION (Side-by-side tables)                             */}
       {/* ========================================================================= */}
-      <section className="rounded-2xl sm:rounded-3xl bg-white border border-slate-200/90 p-5 sm:p-7 shadow-sm space-y-6">
-        <div>
-          <h3 className="text-lg font-bold text-slate-900 tracking-tight">
-            {t('fixed_source', 'Fixed Source')}
-          </h3>
-          <p className="text-xs text-slate-500 mt-0.5">Scheduled retainers, office rent, infrastructure, and core payroll</p>
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              {t('fixed_source', 'Fixed Source')}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Scheduled retainers, office rent, infrastructure, and core payroll</p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Table: Fixed Income */}
-          <div className="rounded-2xl border border-slate-200/80 p-5 bg-white flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-3">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0" />
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wide">
-                    {t('fixed_income', 'Fixed Income')}
-                  </h4>
-                  <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 font-semibold">
-                    {fixedIncome.length} entries
-                  </span>
-                </div>
-                <button
-                  onClick={() => openAddModal('fixed_income')}
-                  className="flex items-center space-x-1 px-3 py-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-xs active:scale-95 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>{t('add', 'Add')}</span>
-                </button>
+          <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-200 dark:border-slate-800 mb-3">
+              <div className="flex items-center space-x-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide">
+                  {t('fixed_income', 'Fixed Income')}
+                </h4>
+                <span className="text-[11px] font-mono text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60 font-semibold">
+                  {fixedIncome.length} entries
+                </span>
               </div>
+              <button
+                onClick={() => openAddModal('fixed_income')}
+                className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-sm active:scale-95 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                <span>{t('add', 'Add')}</span>
+              </button>
+            </div>
 
-              <div className="overflow-x-auto w-full">
-                <table className="w-full text-left text-xs min-w-[500px]">
-                  <thead>
-                    <tr className="text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
-                      <th className="py-2.5 px-2 font-bold">{t('name', 'Name')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('description', 'Description')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('date', 'Date')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('time', 'Time')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('schedule', 'Schedule')}</th>
-                      <th className="py-2.5 px-2 font-bold text-right">{t('actions', 'Actions')}</th>
+            <div className="overflow-x-auto w-full flex-1">
+              <table className="w-full text-left text-xs min-w-[520px]">
+                <thead>
+                  <tr className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                    <th className="py-2.5 px-2 font-semibold">{t('name', 'Name')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('description', 'Description')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('date', 'Date')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('time', 'Time')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('schedule', 'Schedule')}</th>
+                    <th className="py-2.5 px-2 font-semibold text-right">{t('actions', 'Actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                  {fixedIncome.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
+                        No fixed income entries recorded. Click + Add to record one.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium">
-                    {fixedIncome.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="py-12 text-center text-slate-400 text-xs">
-                          No entries recorded. Click + Add to record one.
+                  ) : (
+                    fixedIncome.map((item) => (
+                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                        <td className="py-3 px-2 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                          <div>{item.name}</div>
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">{formatINR(item.amount)}</span>
+                        </td>
+                        <td className="py-3 px-2 text-slate-500 dark:text-slate-400 max-w-[150px] truncate" title={item.description}>
+                          {item.description || '-'}
+                        </td>
+                        <td className="py-3 px-2 text-slate-500 dark:text-slate-400 whitespace-nowrap">{formatDate(item.date)}</td>
+                        <td className="py-3 px-2 text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">{item.time || '-'}</td>
+                        <td className="py-3 px-2 whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/60">
+                            {item.schedule || 'Monthly'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end space-x-1">
+                            <button
+                              onClick={() => openEditModal(item)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition cursor-pointer"
+                              title={t('edit', 'Edit')}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(item)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition cursor-pointer"
+                              title={t('delete', 'Delete')}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
-                    ) : (
-                      fixedIncome.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-50 transition">
-                          <td className="py-3 px-2 font-semibold text-slate-900 whitespace-nowrap">
-                            <div>{item.name}</div>
-                            <span className="text-[10px] text-emerald-600 font-mono font-bold">{formatINR(item.amount)}</span>
-                          </td>
-                          <td className="py-3 px-2 text-slate-500 max-w-[150px] truncate" title={item.description}>
-                            {item.description || '-'}
-                          </td>
-                          <td className="py-3 px-2 text-slate-500 whitespace-nowrap">{formatDate(item.date)}</td>
-                          <td className="py-3 px-2 text-slate-500 font-mono whitespace-nowrap">{item.time || '-'}</td>
-                          <td className="py-3 px-2 whitespace-nowrap">
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                              {item.schedule || 'Monthly'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-2 text-right whitespace-nowrap">
-                            <div className="flex items-center justify-end space-x-1">
-                              <button
-                                onClick={() => openEditModal(item)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
-                                title={t('edit', 'Edit')}
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(item)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-                                title={t('delete', 'Delete')}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
           {/* Table: Fixed Expense */}
-          <div className="rounded-2xl border border-slate-200/80 p-5 bg-white flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-3">
-                <div className="flex items-center space-x-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 flex-shrink-0" />
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wide">
-                    {t('fixed_expense', 'Fixed Expense')}
-                  </h4>
-                  <span className="text-[11px] font-mono text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200 font-semibold">
-                    {fixedExpense.length} entries
-                  </span>
-                </div>
-                <button
-                  onClick={() => openAddModal('fixed_expense')}
-                  className="flex items-center space-x-1 px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition shadow-xs active:scale-95 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>{t('add', 'Add')}</span>
-                </button>
+          <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-200 dark:border-slate-800 mb-3">
+              <div className="flex items-center space-x-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide">
+                  {t('fixed_expense', 'Fixed Expense')}
+                </h4>
+                <span className="text-[11px] font-mono text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800/60 font-semibold">
+                  {fixedExpense.length} entries
+                </span>
               </div>
+              <button
+                onClick={() => openAddModal('fixed_expense')}
+                className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition shadow-sm active:scale-95 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                <span>{t('add', 'Add')}</span>
+              </button>
+            </div>
 
-              <div className="overflow-x-auto w-full">
-                <table className="w-full text-left text-xs min-w-[500px]">
-                  <thead>
-                    <tr className="text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
-                      <th className="py-2.5 px-2 font-bold">{t('name', 'Name')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('description', 'Description')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('date', 'Date')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('time', 'Time')}</th>
-                      <th className="py-2.5 px-2 font-bold">{t('schedule', 'Schedule')}</th>
-                      <th className="py-2.5 px-2 font-bold text-right">{t('actions', 'Actions')}</th>
+            <div className="overflow-x-auto w-full flex-1">
+              <table className="w-full text-left text-xs min-w-[520px]">
+                <thead>
+                  <tr className="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                    <th className="py-2.5 px-2 font-semibold">{t('name', 'Name')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('description', 'Description')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('date', 'Date')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('time', 'Time')}</th>
+                    <th className="py-2.5 px-2 font-semibold">{t('schedule', 'Schedule')}</th>
+                    <th className="py-2.5 px-2 font-semibold text-right">{t('actions', 'Actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
+                  {fixedExpense.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
+                        No fixed expense entries recorded. Click + Add to record one.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium">
-                    {fixedExpense.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="py-12 text-center text-slate-400 text-xs">
-                          No entries recorded. Click + Add to record one.
+                  ) : (
+                    fixedExpense.map((item) => (
+                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                        <td className="py-3 px-2 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                          <div>{item.name}</div>
+                          <span className="text-[10px] text-rose-600 dark:text-rose-400 font-mono font-bold">{formatINR(item.amount)}</span>
+                        </td>
+                        <td className="py-3 px-2 text-slate-500 dark:text-slate-400 max-w-[150px] truncate" title={item.description}>
+                          {item.description || '-'}
+                        </td>
+                        <td className="py-3 px-2 text-slate-500 dark:text-slate-400 whitespace-nowrap">{formatDate(item.date)}</td>
+                        <td className="py-3 px-2 text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">{item.time || '-'}</td>
+                        <td className="py-3 px-2 whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60">
+                            {item.schedule || 'Monthly'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end space-x-1">
+                            <button
+                              onClick={() => openEditModal(item)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition cursor-pointer"
+                              title={t('edit', 'Edit')}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(item)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition cursor-pointer"
+                              title={t('delete', 'Delete')}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
-                    ) : (
-                      fixedExpense.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-50 transition">
-                          <td className="py-3 px-2 font-semibold text-slate-900 whitespace-nowrap">
-                            <div>{item.name}</div>
-                            <span className="text-[10px] text-rose-600 font-mono font-bold">{formatINR(item.amount)}</span>
-                          </td>
-                          <td className="py-3 px-2 text-slate-500 max-w-[150px] truncate" title={item.description}>
-                            {item.description || '-'}
-                          </td>
-                          <td className="py-3 px-2 text-slate-500 whitespace-nowrap">{formatDate(item.date)}</td>
-                          <td className="py-3 px-2 text-slate-500 font-mono whitespace-nowrap">{item.time || '-'}</td>
-                          <td className="py-3 px-2 whitespace-nowrap">
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-800 border border-rose-200">
-                              {item.schedule || 'Monthly'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-2 text-right whitespace-nowrap">
-                            <div className="flex items-center justify-end space-x-1">
-                              <button
-                                onClick={() => openEditModal(item)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
-                                title={t('edit', 'Edit')}
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(item)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-                                title={t('delete', 'Delete')}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       </section>
+
       {/* Add Entry Modal */}
       <AddIncomeModal
         isOpen={isModalOpen}
