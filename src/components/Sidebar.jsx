@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   LayoutDashboard,
+  FileText,
   Layers,
   Users2,
   Target,
@@ -10,8 +11,6 @@ import {
   TrendingUp,
   Activity,
   Building2,
-  Sparkles,
-  Bot,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -33,14 +32,9 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
       icon: LayoutDashboard,
     },
     {
-      id: 'financial_intelligence',
-      label: t('financial_intelligence', 'Financial Intelligence'),
-      icon: Sparkles,
-    },
-    {
-      id: 'ai_financial_assistant',
-      label: t('ai_financial_assistant', 'AI Financial Assistant'),
-      icon: Bot,
+      id: 'document',
+      label: t('document', 'Document'),
+      icon: FileText,
     },
     {
       id: 'segregation',
@@ -90,8 +84,7 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
           const Icon = item.icon;
           const isActive =
             activeTab === item.id ||
-            (item.id === 'financial_intelligence' && (activeTab === 'financial_intelligence' || activeTab === 'financial-intelligence')) ||
-            (item.id === 'ai_financial_assistant' && (activeTab === 'ai_financial_assistant' || activeTab === 'ai-financial-assistant' || activeTab === 'ai_chatbot' || activeTab === 'ai-chatbot')) ||
+            (item.id === 'document' && (activeTab === 'document' || activeTab === 'documents')) ||
             (item.id === 'live_worth' && (activeTab === 'live_worth' || activeTab === 'live-worth')) ||
             (item.id === 'income-streams' && (activeTab === 'income-streams' || activeTab === 'income_streams')) ||
             (item.id === 'goal_target' && (activeTab === 'goal-target' || activeTab === 'goal_target')) ||
@@ -99,38 +92,29 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
             (item.id === 'split_collect' && (activeTab === 'split-collect' || activeTab === 'split_collect')) ||
             (item.id === 'organisation_maintainer' && (activeTab === 'organisation_maintainer' || activeTab === 'organisation-maintainer'));
 
-          const isStrategicAlert = item.id === 'bills_reminders' || item.id === 'live_worth';
-
           return (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full text-left px-3.5 py-3 rounded-xl transition flex items-center justify-between group cursor-pointer ${
+              className={`w-full text-left px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between group cursor-pointer ${
                 isActive
-                  ? 'bg-[#0a2f1d] text-emerald-300 border border-emerald-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-emerald-300 hover:bg-[#071f14]/70 border border-transparent hover:border-emerald-500/20'
+                  ? 'bg-emerald-600 text-white font-bold shadow-sm shadow-emerald-900/30'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
               }`}
             >
               <div className="flex items-center space-x-3 min-w-0">
-                <div
-                  className={`p-2 rounded-lg transition ${
-                    isActive
-                      ? 'bg-emerald-500/25 text-emerald-400 ring-1 ring-emerald-400/40'
-                      : 'bg-slate-900 text-slate-400 group-hover:text-emerald-400 group-hover:bg-emerald-950/60'
+                <Icon
+                  className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
                   }`}
-                >
-                  <Icon className="w-4 h-4" />
-                </div>
-                <span className={`text-xs font-semibold truncate ${isActive ? 'text-emerald-300 font-bold' : 'text-slate-300 group-hover:text-slate-100'}`}>
+                />
+                <span className={`text-xs truncate ${isActive ? 'text-white font-bold' : 'text-slate-300 font-medium'}`}>
                   {item.label}
                 </span>
               </div>
 
-              {/* Strategic markers in muted red or crimson */}
               {isActive ? (
-                <span className="w-1.5 h-4 rounded-full bg-gradient-to-b from-emerald-400 via-rose-500 to-red-500 shadow-xs shadow-red-500/40 flex-shrink-0" />
-              ) : isStrategicAlert ? (
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500/80 shadow-xs shadow-red-500/50 flex-shrink-0" />
+                <span className="w-2 h-2 rounded-full bg-white shadow-xs flex-shrink-0" />
               ) : null}
             </button>
           );
@@ -142,64 +126,56 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
         <button
           type="button"
           onClick={() => setActiveTab('contact_us')}
-          className={`w-full text-left px-3.5 py-3 rounded-xl transition flex items-center justify-between group cursor-pointer ${
+          className={`w-full text-left px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between group cursor-pointer ${
             activeTab === 'contact_us' || activeTab === 'contact'
-              ? 'bg-[#0a2f1d] text-emerald-300 border border-emerald-500/40 shadow-sm'
-              : 'text-slate-400 hover:text-emerald-300 hover:bg-[#071f14]/70 border border-transparent hover:border-emerald-500/20'
+              ? 'bg-emerald-600 text-white font-bold shadow-sm shadow-emerald-900/30'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
           }`}
         >
           <div className="flex items-center space-x-3 min-w-0">
-            <div
-              className={`p-2 rounded-lg transition ${
-                activeTab === 'contact_us' || activeTab === 'contact'
-                  ? 'bg-emerald-500/25 text-emerald-400 ring-1 ring-emerald-400/40'
-                  : 'bg-slate-900 text-slate-400 group-hover:text-emerald-400 group-hover:bg-emerald-950/60'
+            <Headset
+              className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                activeTab === 'contact_us' || activeTab === 'contact' ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
               }`}
-            >
-              <Headset className="w-4 h-4" />
-            </div>
+            />
             <span
-              className={`text-xs font-semibold ${
-                activeTab === 'contact_us' || activeTab === 'contact' ? 'text-emerald-300 font-bold' : 'text-slate-300 group-hover:text-slate-100'
+              className={`text-xs truncate ${
+                activeTab === 'contact_us' || activeTab === 'contact' ? 'text-white font-bold' : 'text-slate-300 font-medium'
               }`}
             >
               {t('contact_us', 'Contact Us')}
             </span>
           </div>
           {(activeTab === 'contact_us' || activeTab === 'contact') && (
-            <span className="w-1.5 h-4 rounded-full bg-gradient-to-b from-emerald-400 via-rose-500 to-red-500 shadow-xs shadow-red-500/40 flex-shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-white shadow-xs flex-shrink-0" />
           )}
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('settings')}
-          className={`w-full text-left px-3.5 py-3 rounded-xl transition flex items-center justify-between group cursor-pointer ${
+          className={`w-full text-left px-3.5 py-2.5 rounded-xl transition-all flex items-center justify-between group cursor-pointer ${
             activeTab === 'settings'
-              ? 'bg-[#0a2f1d] text-emerald-300 border border-emerald-500/40 shadow-sm'
-              : 'text-slate-400 hover:text-emerald-300 hover:bg-[#071f14]/70 border border-transparent hover:border-emerald-500/20'
+              ? 'bg-emerald-600 text-white font-bold shadow-sm shadow-emerald-900/30'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
           }`}
         >
           <div className="flex items-center space-x-3 min-w-0">
-            <div
-              className={`p-2 rounded-lg transition ${
-                activeTab === 'settings'
-                  ? 'bg-emerald-500/25 text-emerald-400 ring-1 ring-emerald-400/40'
-                  : 'bg-slate-900 text-slate-400 group-hover:text-emerald-400 group-hover:bg-emerald-950/60'
+            <SettingsIcon
+              className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                activeTab === 'settings' ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
               }`}
-            >
-              <SettingsIcon className="w-4 h-4" />
-            </div>
+            />
             <span
-              className={`text-xs font-semibold ${
-                activeTab === 'settings' ? 'text-emerald-300 font-bold' : 'text-slate-300 group-hover:text-slate-100'
+              className={`text-xs truncate ${
+                activeTab === 'settings' ? 'text-white font-bold' : 'text-slate-300 font-medium'
               }`}
             >
               {t('settings', 'Settings')}
             </span>
           </div>
           {activeTab === 'settings' && (
-            <span className="w-1.5 h-4 rounded-full bg-gradient-to-b from-emerald-400 via-rose-500 to-red-500 shadow-xs shadow-red-500/40 flex-shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-white shadow-xs flex-shrink-0" />
           )}
         </button>
       </div>
