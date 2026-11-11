@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   LayoutDashboard,
-  FileText,
   Layers,
   Users2,
   Target,
@@ -11,6 +10,8 @@ import {
   TrendingUp,
   Activity,
   Building2,
+  Sparkles,
+  Bot,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -32,9 +33,14 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
       icon: LayoutDashboard,
     },
     {
-      id: 'document',
-      label: t('document', 'Document'),
-      icon: FileText,
+      id: 'financial_intelligence',
+      label: t('financial_intelligence', 'Financial Intelligence'),
+      icon: Sparkles,
+    },
+    {
+      id: 'ai_financial_assistant',
+      label: t('ai_financial_assistant', 'AI Financial Assistant'),
+      icon: Bot,
     },
     {
       id: 'segregation',
@@ -84,6 +90,8 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
           const Icon = item.icon;
           const isActive =
             activeTab === item.id ||
+            (item.id === 'financial_intelligence' && (activeTab === 'financial_intelligence' || activeTab === 'financial-intelligence')) ||
+            (item.id === 'ai_financial_assistant' && (activeTab === 'ai_financial_assistant' || activeTab === 'ai-financial-assistant' || activeTab === 'ai_chatbot' || activeTab === 'ai-chatbot')) ||
             (item.id === 'live_worth' && (activeTab === 'live_worth' || activeTab === 'live-worth')) ||
             (item.id === 'income-streams' && (activeTab === 'income-streams' || activeTab === 'income_streams')) ||
             (item.id === 'goal_target' && (activeTab === 'goal-target' || activeTab === 'goal_target')) ||

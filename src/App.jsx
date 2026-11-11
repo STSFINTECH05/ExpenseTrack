@@ -20,7 +20,6 @@ import {
   X,
 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
-import MainDashboardView from './components/MainDashboardView';
 import DashboardView from './components/DashboardView';
 import SegregationView from './components/SegregationView';
 import SplitAndCollectPlaceholder from './components/SplitAndCollectPlaceholder';
@@ -34,12 +33,13 @@ import Header from './components/Header';
 import LandingPage from './components/LandingPage';
 import Auth from './components/Auth';
 import Settings from './components/Settings';
-import AboutView from './components/AboutView';
 import IncomeStreamsView from './components/IncomeStreamsView';
 import LiveWorthView from './components/LiveWorthView';
+import FinancialIntelligenceView from './components/FinancialIntelligenceView';
+import AIFinancialChatbot from './components/AIFinancialChatbot';
 import { useLanguage } from './context/LanguageContext';
 import OrganisationMaintainer from './components/OrganisationMaintainer';
-import { getAuthHeaders, apiFetch, API_BASE_URL } from './utils/api';
+import apiClient, { API_BASE_URL } from './apiClient';
 
 // Currency Formatter for Indian Rupees (₹)
 const formatINR = (value) => {
@@ -68,12 +68,23 @@ const formatDate = (dateString) => {
 };
 
 export default function App() {
-  // Primary Route State: 'landing' (/) | 'auth' (/login) | 'dashboard' (/dashboard) | 'about' (/about) | '/settings' | '/income-streams'
+  // Primary Route State: 'landing' (/) | 'auth' (/login) | 'dashboard' (/dashboard) | '/settings' | '/income-streams'
   const getInitialRoute = () => {
     const path = window.location.pathname;
-    if (path === '/about') return 'about';
     if (path === '/login' || path === '/auth' || path === '/signin' || path === '/signup') return 'auth';
-    if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth' || path === '/organisation-maintainer' || path === '/organisation_maintainer') return 'dashboard';
+    if (
+      path === '/dashboard' ||
+      path === '/settings' ||
+      path === '/income-streams' ||
+      path === '/live-worth' ||
+      path === '/organisation-maintainer' ||
+      path === '/organisation_maintainer' ||
+      path === '/financial-intelligence' ||
+      path === '/financial_intelligence' ||
+      path === '/ai-financial-assistant' ||
+      path === '/ai_financial_assistant' ||
+      path === '/ai-chatbot'
+    ) return 'dashboard';
     return 'landing';
   };
 
@@ -121,7 +132,6 @@ export default function App() {
     let targetPath = '/';
     if (route === 'auth') targetPath = mode === 'signup' ? '/signup' : '/login';
     else if (route === 'dashboard') targetPath = '/dashboard';
-    else if (route === 'about') targetPath = '/about';
     else targetPath = '/';
 
     if (window.location.pathname !== targetPath) {
@@ -133,18 +143,19 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname;
-      if (path === '/about') {
-        setCurrentRoute('about');
-      } else if (path === '/login' || path === '/auth' || path === '/signin') {
+      if (path === '/login' || path === '/auth' || path === '/signin') {
         setCurrentRoute('auth');
         setAuthMode('signin');
       } else if (path === '/signup') {
         setCurrentRoute('auth');
         setAuthMode('signup');
-      } else if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth' || path === '/organisation-maintainer' || path === '/organisation_maintainer') {
+      } else if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth' || path === '/organisation-maintainer' || path === '/organisation_maintainer' || path === '/financial-intelligence' || path === '/financial_intelligence') {
         setCurrentRoute('dashboard');
         if (path === '/settings') {
           setActiveTab('settings');
+          setMainNavTab('Expense');
+        } else if (path === '/financial-intelligence' || path === '/financial_intelligence') {
+          setActiveTab('financial_intelligence');
           setMainNavTab('Expense');
         } else if (path === '/income-streams') {
           setActiveTab('income-streams');
@@ -164,72 +175,125 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const handleAuthSuccess = (userData) => {
+  const [isSessionChecking, setIsSessionChecking] = useState(true);
+
+  const clearUserStorage = () => {
     try {
-      const prevStored = localStorage.getItem('sts_user');
-      const prevUser = prevStored ? JSON.parse(prevStored) : null;
-      if (!prevUser || prevUser.email !== userData.email) {
-        localStorage.removeItem('sts_bills');
-        localStorage.removeItem('sts_goals');
-        localStorage.removeItem('sts_splits');
-        localStorage.removeItem('sts_bank_accounts');
-        localStorage.removeItem('sts_org_members');
-        localStorage.removeItem('sts_token');
-      }
-    } catch (e) {}
-    if (userData.token) {
-      localStorage.setItem('sts_token', userData.token);
+      localStorage.removeItem('sts_user');
+      localStorage.removeItem('sts_user_avatar');
+      localStorage.removeItem('sts_bills');
+      localStorage.removeItem('sts_goals');
+      localStorage.removeItem('sts_splits');
+      localStorage.removeItem('sts_bank_accounts');
+      localStorage.removeItem('sts_user_notes');
+      localStorage.removeItem('sts_live_worth_base');
+      localStorage.removeItem('sts_live_worth_rate');
+      localStorage.removeItem('sts_live_worth_mode');
+      localStorage.removeItem('sts_live_worth_yield_pct');
+      localStorage.removeItem('sts_live_worth_name');
+    } catch (e) {
+      console.warn(e);
     }
+  };
+
+  // Verify backend session on startup
+  useEffect(() => {
+    let isMounted = true;
+
+    const verifySession = async () => {
+      try {
+        const res = await apiClient.get('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.success && data?.user) {
+            if (isMounted) {
+              const avatar = localStorage.getItem('sts_user_avatar');
+              const userObj = { ...data.user };
+              if (avatar) userObj.avatar = avatar;
+              setCurrentUser(userObj);
+              try {
+                localStorage.setItem('sts_user', JSON.stringify(userObj));
+              } catch (e) {}
+              apiClient.fetchCsrfToken();
+            }
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Session check failed:', err.message);
+      }
+
+      if (isMounted) {
+        clearUserStorage();
+        setCurrentUser(null);
+        const path = window.location.pathname;
+        if (
+          path === '/dashboard' ||
+          path === '/settings' ||
+          path === '/income-streams' ||
+          path === '/live-worth' ||
+          path === '/organisation-maintainer' ||
+          path === '/organisation_maintainer' ||
+          path === '/financial-intelligence' ||
+          path === '/financial_intelligence'
+        ) {
+          setCurrentRoute('auth');
+          setAuthMode('signin');
+          window.history.pushState(null, '', '/login');
+        }
+      }
+    };
+
+    verifySession().finally(() => {
+      if (isMounted) setIsSessionChecking(false);
+    });
+
+    const handleUnauthorized = () => {
+      clearUserStorage();
+      setCurrentUser(null);
+      setPayments([]);
+      setCurrentRoute('auth');
+      setAuthMode('signin');
+      window.history.pushState(null, '', '/login');
+    };
+
+    window.addEventListener('sts_unauthorized', handleUnauthorized);
+    apiClient.setUnauthorizedHandler(handleUnauthorized);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('sts_unauthorized', handleUnauthorized);
+    };
+  }, []);
+
+  const handleAuthSuccess = (userData) => {
+    clearUserStorage();
     setCurrentUser(userData);
     try {
       localStorage.setItem('sts_user', JSON.stringify(userData));
     } catch (e) {
       console.warn(e);
     }
-    window.dispatchEvent(new Event('sts_data_updated'));
-    window.dispatchEvent(new Event('sts_bank_accounts_updated'));
     setActiveTab('dashboard');
     navigateTo('dashboard');
+    window.dispatchEvent(new Event('sts_data_updated'));
+    fetchPayments(true);
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     try {
-      localStorage.removeItem('sts_user');
-      localStorage.removeItem('sts_user_avatar');
-      localStorage.removeItem('sts_token');
-      localStorage.removeItem('sts_bills');
-      localStorage.removeItem('sts_goals');
-      localStorage.removeItem('sts_splits');
-      localStorage.removeItem('sts_bank_accounts');
-      localStorage.removeItem('sts_org_members');
+      await apiClient.post('/api/auth/logout');
     } catch (e) {
       console.warn(e);
     }
+    clearUserStorage();
     setCurrentUser(null);
+    setPayments([]);
+    apiClient.setCsrfToken(null);
     window.dispatchEvent(new Event('sts_avatar_changed'));
     window.dispatchEvent(new Event('sts_data_updated'));
-    window.dispatchEvent(new Event('sts_bank_accounts_updated'));
     navigateTo('auth', 'signin');
   };
-
-  // Ensure active user always has a valid JWT token stored
-  useEffect(() => {
-    if (currentUser?.email && !localStorage.getItem('sts_token')) {
-      fetch(`${API_BASE_URL}/api/auth/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: currentUser.email, name: currentUser.name }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.token) {
-            localStorage.setItem('sts_token', data.token);
-            setCurrentUser((prev) => ({ ...prev, token: data.token }));
-          }
-        })
-        .catch(() => {});
-    }
-  }, [currentUser]);
 
   let t = (key, fallback) => fallback || key;
   try {
@@ -263,6 +327,8 @@ export default function App() {
       if (window.location.pathname === '/settings') return 'settings';
       if (window.location.pathname === '/income-streams') return 'income-streams';
       if (window.location.pathname === '/live-worth') return 'live_worth';
+      if (window.location.pathname === '/financial-intelligence' || window.location.pathname === '/financial_intelligence') return 'financial_intelligence';
+      if (window.location.pathname === '/ai-financial-assistant' || window.location.pathname === '/ai_financial_assistant' || window.location.pathname === '/ai-chatbot') return 'ai_financial_assistant';
       if (window.location.pathname === '/organisation-maintainer' || window.location.pathname === '/organisation_maintainer') return 'organisation_maintainer';
     }
     return 'dashboard';
@@ -317,9 +383,7 @@ export default function App() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/payments`, {
-        headers: getAuthHeaders(),
-      });
+      const res = await apiClient.get('/api/payments');
       if (!res.ok) {
         throw new Error(`Server returned HTTP ${res.status}: ${res.statusText}`);
       }
@@ -375,13 +439,7 @@ export default function App() {
         status,
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/payments`, {
-        method: 'POST',
-        headers: getAuthHeaders({
-          'Content-Type': 'application/json',
-        }),
-        body: JSON.stringify(payload),
-      });
+      const res = await apiClient.post('/api/payments', payload);
 
       const data = await res.json();
 
@@ -450,73 +508,7 @@ export default function App() {
       <LandingPage
         onNavigateToAuth={(mode) => navigateTo('auth', mode)}
         onLaunchDashboard={() => navigateTo('dashboard')}
-        onNavigateToAbout={() => navigateTo('about')}
       />
-    );
-  }
-
-  // 1.5. Standalone About Page Route (Public & Authenticated)
-  if (currentRoute === 'about') {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 flex flex-col font-sans">
-        <header className="sticky top-0 left-0 right-0 z-50 w-full bg-white/80 dark:bg-[#0c1322]/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 shadow-xs">
-          <div className="w-full px-6 sm:px-8 h-20 flex items-center justify-between">
-            <div
-              onClick={() => navigateTo(currentUser ? 'dashboard' : 'landing')}
-              className="flex items-center space-x-3 cursor-pointer group"
-            >
-              <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl overflow-hidden shadow-xs border border-emerald-500/40 bg-white p-0.5 group-hover:scale-105 group-hover:border-emerald-500 transition-all flex items-center justify-center">
-                <img
-                  src={stsLogo}
-                  alt="STS FINTECH Logo"
-                  className="h-full w-full object-cover rounded-lg"
-                />
-              </div>
-              <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
-                STS FINTECH
-              </span>
-            </div>
-            <div className="flex items-center space-x-2.5 sm:space-x-3.5">
-              <button
-                onClick={() => navigateTo(currentUser ? 'dashboard' : 'landing')}
-                className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-              >
-                {currentUser ? 'Workspace' : 'Home'}
-              </button>
-              {!currentUser ? (
-                <>
-                  <button
-                    onClick={() => navigateTo('auth', 'signin')}
-                    className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-emerald-600 px-3 py-1.5 rounded-lg transition cursor-pointer"
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    onClick={() => navigateTo('auth', 'signup')}
-                    className="px-4 py-2 text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition cursor-pointer"
-                  >
-                    Get Started
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => navigateTo('dashboard')}
-                  className="px-4 py-2 text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md transition cursor-pointer"
-                >
-                  Dashboard
-                </button>
-              )}
-            </div>
-          </div>
-        </header>
-        <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <AboutView
-            onBackToDashboard={currentUser ? () => navigateTo('dashboard') : null}
-            onNavigateToAuth={(mode) => navigateTo('auth', mode)}
-            currentUser={currentUser}
-          />
-        </main>
-      </div>
     );
   }
 
@@ -532,6 +524,26 @@ export default function App() {
   }
 
   // 3. Authenticated Dashboard Route (Unchanged Original Dashboard)
+  if (!currentUser) {
+    if (isSessionChecking) {
+      return (
+        <div className="h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-[#070b14] text-slate-400">
+          <div className="flex flex-col items-center space-y-3">
+            <RefreshCw className="w-6 h-6 animate-spin text-emerald-500" />
+            <span className="text-xs font-semibold">Verifying secure session...</span>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <Auth
+        initialMode="signin"
+        onAuthSuccess={handleAuthSuccess}
+        onBackToLanding={() => navigateTo('landing')}
+      />
+    );
+  }
+
   return (
     <div
       className="h-screen overflow-hidden bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white relative transition-colors duration-200"
@@ -557,10 +569,6 @@ export default function App() {
         onOpenSubscription={() => {
           setMainNavTab('Expense');
           setActiveTab('subscription');
-        }}
-        onOpenAbout={() => {
-          setMainNavTab('Expense');
-          setActiveTab('about');
         }}
         onSignOut={handleSignOut}
       />
@@ -625,17 +633,22 @@ export default function App() {
             <SubscriptionPlansView currentUser={currentUser} />
           ) : (
             <>
-              {/* TAB 0: NEW DASHBOARD (Active Default Overview) */}
+              {/* TAB 0: DASHBOARD (Active Default) */}
               {activeTab === 'dashboard' && (
-                <MainDashboardView />
-              )}
-
-              {/* TAB: DOCUMENT / BANK STATEMENT & MODULES (Renamed from Dashboard) */}
-              {(activeTab === 'document' || activeTab === 'documents') && (
                 <DashboardView
                   setActiveTab={setActiveTab}
                   onNavigateToSegregation={() => setActiveTab('segregation')}
                 />
+              )}
+
+              {/* TAB: FINANCIAL INTELLIGENCE */}
+              {(activeTab === 'financial_intelligence' || activeTab === 'financial-intelligence') && (
+                <FinancialIntelligenceView />
+              )}
+
+              {/* TAB: AI FINANCIAL ASSISTANT */}
+              {(activeTab === 'ai_financial_assistant' || activeTab === 'ai-financial-assistant' || activeTab === 'ai_chatbot' || activeTab === 'ai-chatbot') && (
+                <AIFinancialChatbot />
               )}
 
               {/* TAB 1: SEGREGATION */}
@@ -686,14 +699,6 @@ export default function App() {
               {/* TAB 8: SUBSCRIPTION PLANS */}
               {activeTab === 'subscription' && (
                 <SubscriptionPlansView currentUser={currentUser} />
-              )}
-
-              {/* TAB: ABOUT US (Header Navbar View) */}
-              {activeTab === 'about' && (
-                <AboutView
-                  onBackToDashboard={() => setActiveTab('dashboard')}
-                  currentUser={currentUser}
-                />
               )}
 
               {/* TAB 6: DIRECT PAYMENTS (Preserved feature) */}

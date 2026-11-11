@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, IndianRupee, Calendar, Clock, Tag, Wallet, FileText, CheckCircle2, AlertCircle, Sparkles, Repeat } from 'lucide-react';
-
-import { getAuthHeaders, API_BASE_URL } from '../utils/api';
+import apiClient, { API_BASE_URL } from '../apiClient';
 
 const SCHEDULE_OPTIONS = [
   'One-time',
@@ -41,13 +40,10 @@ export default function EditIncomeModal({ isOpen, onClose, entry, onSuccess }) {
 
   if (!isOpen || !entry) return null;
 
-  const isBill = entry.type === 'bill';
   const isIncome = entry.type?.includes('income');
   const isFixed = entry.type?.startsWith('fixed_');
 
-  const modalTitle = isBill
-    ? 'Edit Bill & Reminder'
-    : isIncome
+  const modalTitle = isIncome
     ? isFixed
       ? 'Edit Fixed Income'
       : 'Edit Additional Income'
@@ -85,13 +81,7 @@ export default function EditIncomeModal({ isOpen, onClose, entry, onSuccess }) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/segregation/${entry.id}`, {
-        method: 'PUT',
-        headers: getAuthHeaders({
-          'Content-Type': 'application/json',
-        }),
-        body: JSON.stringify(payload),
-      });
+      const res = await apiClient.put(`/api/segregation/${entry.id}`, payload);
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
@@ -103,6 +93,9 @@ export default function EditIncomeModal({ isOpen, onClose, entry, onSuccess }) {
         onSuccess(json.data);
       } else {
         onSuccess({ ...entry, ...payload });
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('sts_data_updated'));
       }
       onClose();
     } catch (err) {

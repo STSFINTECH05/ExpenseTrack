@@ -12,7 +12,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import stsLogo from '../assets/sts-fintech-logo.png';
-import { API_BASE_URL } from '../utils/api';
+import apiClient from '../apiClient';
 
 export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLanding }) {
   const [mode, setMode] = useState(initialMode); // 'signin' | 'signup'
@@ -33,6 +33,7 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
   const [agreeTerms, setAgreeTerms] = useState(false);
 
   // Status & Notifications
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -49,7 +50,9 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
   // Handle Sign In submission
   const handleSignInSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setErrorMsg(null);
+    setSuccessMsg(null);
 
     const email = signInEmail.trim();
     if (!email) {
@@ -61,60 +64,41 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
       return;
     }
 
+    setIsSubmitting(true);
     setSuccessMsg('Signing in to STS FINTECH Ledger...');
 
     try {
-      let token = null;
-      let userData = {
-        id: email,
-        name: email.split('@')[0] || 'User',
-        email: email,
-        role: 'Finance Member',
-      };
+      const res = await apiClient.post('/api/auth/login', {
+        email,
+        password: signInPassword,
+      });
 
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password: signInPassword }),
-        });
-        const data = await res.json();
-        if (res.ok && data.token) {
-          token = data.token;
-          if (data.user) userData = { ...userData, ...data.user };
-        }
-      } catch (e) {}
-
-      if (!token) {
-        try {
-          const res = await fetch(`${API_BASE_URL}/api/auth/token`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, name: email.split('@')[0] }),
-          });
-          const data = await res.json();
-          if (data.token) {
-            token = data.token;
-            if (data.user) userData = { ...userData, ...data.user };
-          }
-        } catch (e) {}
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setSuccessMsg(null);
+        setErrorMsg(data.message || 'Invalid email or password.');
+        return;
       }
 
-      if (token) {
-        localStorage.setItem('sts_token', token);
-        userData.token = token;
+      if (data.csrfToken) {
+        apiClient.setCsrfToken(data.csrfToken);
       }
 
-      onAuthSuccess(userData);
+      onAuthSuccess(data.user);
     } catch (err) {
-      setErrorMsg(err.message || 'Login failed.');
+      setSuccessMsg(null);
+      setErrorMsg(err.message || 'Unable to connect to authentication server.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Handle Sign Up submission
   const handleSignUpSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setErrorMsg(null);
+    setSuccessMsg(null);
 
     const name = signUpName.trim();
     const email = signUpEmail.trim();
@@ -127,8 +111,8 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
       setErrorMsg('Please enter a valid work or personal email.');
       return;
     }
-    if (!signUpPassword || signUpPassword.length < 6) {
-      setErrorMsg('Password must be at least 6 characters long.');
+    if (!signUpPassword || signUpPassword.length < 12) {
+      setErrorMsg('Password must be at least 12 characters long.');
       return;
     }
     if (signUpPassword !== signUpConfirmPassword) {
@@ -140,81 +124,68 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
       return;
     }
 
+    setIsSubmitting(true);
     setSuccessMsg('Account created successfully! Launching your ledger...');
 
     try {
-      let token = null;
-      let userData = {
-        id: email,
-        name: name,
-        email: email,
-        role: 'Account Owner',
-      };
+      const res = await apiClient.post('/api/auth/register', {
+        name,
+        email,
+        password: signUpPassword,
+      });
 
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password: signUpPassword }),
-        });
-        const data = await res.json();
-        if (res.ok && data.token) {
-          token = data.token;
-          if (data.user) userData = { ...userData, ...data.user };
-        }
-      } catch (e) {}
-
-      if (!token) {
-        try {
-          const res = await fetch(`${API_BASE_URL}/api/auth/token`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, name }),
-          });
-          const data = await res.json();
-          if (data.token) {
-            token = data.token;
-            if (data.user) userData = { ...userData, ...data.user };
-          }
-        } catch (e) {}
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setSuccessMsg(null);
+        const fieldError = data.errors && data.errors.length > 0 ? data.errors[0].message : null;
+        setErrorMsg(fieldError || data.message || 'Failed to create account.');
+        return;
       }
 
-      if (token) {
-        localStorage.setItem('sts_token', token);
-        userData.token = token;
+      if (data.csrfToken) {
+        apiClient.setCsrfToken(data.csrfToken);
       }
 
-      onAuthSuccess(userData);
+      onAuthSuccess(data.user);
     } catch (err) {
-      setErrorMsg(err.message || 'Registration failed.');
+      setSuccessMsg(null);
+      setErrorMsg(err.message || 'Unable to connect to registration server.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Handle Quick Demo Login
   const handleQuickDemo = async () => {
-    const email = 'demo@stsfintech.com';
-    let token = null;
-    let userData = {
-      id: email,
-      name: 'Admin STS',
-      email: email,
-      role: 'Finance Lead (Demo)',
-    };
+    if (isSubmitting) return;
+    setErrorMsg(null);
+    setSuccessMsg('Launching demo account...');
+    setIsSubmitting(true);
+
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name: 'Admin STS' }),
+      const res = await apiClient.post('/api/auth/login', {
+        email: 'demo@stsfintech.com',
+        password: 'demo-password',
       });
+
       const data = await res.json();
-      if (data.token) {
-        token = data.token;
-        if (data.user) userData = { ...userData, ...data.user };
-        localStorage.setItem('sts_token', token);
-        userData.token = token;
+      if (!res.ok || !data.success) {
+        setSuccessMsg(null);
+        setErrorMsg(data.message || 'Unable to log into demo account.');
+        return;
       }
-    } catch (e) {}
-    onAuthSuccess(userData);
+
+      if (data.csrfToken) {
+        apiClient.setCsrfToken(data.csrfToken);
+      }
+
+      onAuthSuccess(data.user);
+    } catch (err) {
+      setSuccessMsg(null);
+      setErrorMsg(err.message || 'Failed to connect to authentication server.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -458,7 +429,7 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
                         type={showSignUpPassword ? 'text' : 'password'}
                         value={signUpPassword}
                         onChange={(e) => setSignUpPassword(e.target.value)}
-                        placeholder="At least 6 characters"
+                        placeholder="At least 12 characters"
                         className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-10 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-500 transition shadow-xs"
                       />
                       <button

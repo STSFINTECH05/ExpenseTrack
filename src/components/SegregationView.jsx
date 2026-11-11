@@ -23,7 +23,7 @@ import {
 import AddIncomeModal from './AddIncomeModal';
 import EditIncomeModal from './EditIncomeModal';
 import { useLanguage } from '../context/LanguageContext';
-import { getAuthHeaders, API_BASE_URL } from '../utils/api';
+import apiClient, { API_BASE_URL } from '../apiClient';
 
 const formatINR = (value) => {
   const num = Number(value) || 0;
@@ -65,9 +65,7 @@ export default function SegregationView() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/segregation`, {
-        headers: getAuthHeaders(),
-      });
+      const res = await apiClient.get('/api/segregation');
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
@@ -88,6 +86,9 @@ export default function SegregationView() {
 
   useEffect(() => {
     fetchRecords();
+    const handleUpdate = () => fetchRecords(true);
+    window.addEventListener('sts_data_updated', handleUpdate);
+    return () => window.removeEventListener('sts_data_updated', handleUpdate);
   }, [fetchRecords]);
 
   const openAddModal = (type) => {
@@ -130,10 +131,7 @@ export default function SegregationView() {
     setTimeout(() => setToastMessage(null), 4000);
 
     try {
-      await fetch(`${API_BASE_URL}/api/segregation/${item.id}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-      });
+      await apiClient.delete(`/api/segregation/${item.id}`);
     } catch (err) {
       console.warn('API error deleting record:', err);
     }

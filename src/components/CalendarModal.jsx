@@ -6,7 +6,7 @@ import {
   Bell,
   Receipt,
 } from 'lucide-react';
-import { getAuthHeaders, API_BASE_URL, getCurrentUser } from '../utils/api';
+import apiClient, { API_BASE_URL } from '../apiClient';
 
 // Currency Formatter for Indian Rupees (₹)
 const formatINR = (value) => {
@@ -19,6 +19,83 @@ const formatINR = (value) => {
   }).format(num);
 };
 
+// Seed scheduled bills including Nov 10, 11, 15, 22 as requested
+const DEFAULT_BILLS = [
+  {
+    id: 'slice-bill-1',
+    name: 'Slice Bill',
+    title: 'Slice Bill',
+    amount: 600,
+    date: '2026-11-10', // Nov 10
+    schedule: 'Monthly',
+    category: 'Credit Card',
+  },
+  {
+    id: 'slice-bill-2',
+    name: 'Slice Bill',
+    title: 'Slice Bill',
+    amount: 600,
+    date: '2026-11-11', // Nov 11
+    schedule: 'Monthly',
+    category: 'Card Settlement',
+  },
+  {
+    id: 'aws-cloud-1',
+    name: 'AWS Cloud Services',
+    title: 'AWS Cloud Services',
+    amount: 2400,
+    date: '2026-11-15', // Nov 15
+    schedule: 'Monthly',
+    category: 'Infrastructure',
+  },
+  {
+    id: 'airtel-wifi-1',
+    name: 'Airtel Fiber Broadband',
+    title: 'Airtel Fiber Broadband',
+    amount: 999,
+    date: '2026-11-22', // Nov 22
+    schedule: 'Monthly',
+    category: 'Utilities',
+  },
+  // Cross-month audit entries for October
+  {
+    id: 'slice-oct-1',
+    name: 'Slice Bill',
+    title: 'Slice Bill',
+    amount: 600,
+    date: '2026-10-10',
+    schedule: 'Monthly',
+    category: 'Credit Card',
+  },
+  {
+    id: 'slice-oct-2',
+    name: 'Slice Bill',
+    title: 'Slice Bill',
+    amount: 600,
+    date: '2026-10-11',
+    schedule: 'Monthly',
+    category: 'Card Settlement',
+  },
+  {
+    id: 'aws-oct-1',
+    name: 'AWS Cloud Services',
+    title: 'AWS Cloud Services',
+    amount: 2400,
+    date: '2026-10-15',
+    schedule: 'Monthly',
+    category: 'Infrastructure',
+  },
+  {
+    id: 'airtel-oct-1',
+    name: 'Airtel Fiber Broadband',
+    title: 'Airtel Fiber Broadband',
+    amount: 999,
+    date: '2026-10-22',
+    schedule: 'Monthly',
+    category: 'Utilities',
+  },
+];
+
 export default function CalendarModal({ isOpen, onClose }) {
   // Default view: November 2026 (Month index 10 in JS Date)
   const [currentDate, setCurrentDate] = useState(() => new Date(2026, 10, 1));
@@ -30,12 +107,9 @@ export default function CalendarModal({ isOpen, onClose }) {
   useEffect(() => {
     if (!isOpen) return;
 
-    const user = getCurrentUser();
-    const storageKey = user?.email ? `sts_bills_${user.email}` : 'sts_bills';
-
     let loadedBills = [];
     try {
-      const stored = localStorage.getItem(storageKey) || localStorage.getItem('sts_bills');
+      const stored = localStorage.getItem('sts_bills');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -43,17 +117,21 @@ export default function CalendarModal({ isOpen, onClose }) {
         }
       }
     } catch (e) {
-      console.warn('Error reading bills from localStorage:', e);
+      console.warn('Error reading sts_bills from localStorage:', e);
     }
 
+    if (loadedBills.length === 0) {
+      loadedBills = DEFAULT_BILLS;
+      try {
+        localStorage.setItem('sts_bills', JSON.stringify(DEFAULT_BILLS));
+      } catch (e) {}
+    }
     setBills(loadedBills);
 
     // Fetch fresh bills from backend API
     const fetchApiBills = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/segregation?type=bill`, {
-          headers: getAuthHeaders(),
-        });
+        const res = await apiClient.get('/api/segregation?type=bill');
         if (res.ok) {
           const json = await res.json();
           let apiList = [];
@@ -63,12 +141,13 @@ export default function CalendarModal({ isOpen, onClose }) {
             apiList = json.filter((r) => r.type === 'bill');
           }
           if (apiList.length > 0) {
+            const combined = [...apiList, ...DEFAULT_BILLS];
             const unique = Array.from(
-              new Map(apiList.map((item) => [item.id || item.name, item])).values()
+              new Map(combined.map((item) => [item.id || item.name, item])).values()
             );
             setBills(unique);
             try {
-              localStorage.setItem(storageKey, JSON.stringify(unique));
+              localStorage.setItem('sts_bills', JSON.stringify(unique));
             } catch (e) {}
           }
         }

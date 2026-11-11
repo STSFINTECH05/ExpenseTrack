@@ -17,7 +17,8 @@ import {
   RefreshCw,
   ArrowUpRight,
 } from 'lucide-react';
-import { getAuthHeaders, API_BASE_URL } from '../utils/api';
+
+import apiClient, { API_BASE_URL } from '../apiClient';
 
 // Format INR currency
 const formatINR = (value) => {
@@ -67,9 +68,7 @@ export default function GoalTargetView() {
     setError(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/wallets`, {
-        headers: getAuthHeaders(),
-      });
+      const res = await apiClient.get('/api/wallets');
       if (!res.ok) {
         throw new Error(`Server returned HTTP ${res.status}`);
       }
@@ -92,6 +91,9 @@ export default function GoalTargetView() {
 
   useEffect(() => {
     fetchWallets();
+    const handleUpdate = () => fetchWallets(true);
+    window.addEventListener('sts_data_updated', handleUpdate);
+    return () => window.removeEventListener('sts_data_updated', handleUpdate);
   }, [fetchWallets]);
 
   // Handle Create Wallet Submit
@@ -125,17 +127,15 @@ export default function GoalTargetView() {
         category: 'goal',
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/wallets`, {
-        method: 'POST',
-        headers: getAuthHeaders({
-          'Content-Type': 'application/json',
-        }),
-        body: JSON.stringify(payload),
-      });
+      const res = await apiClient.post('/api/wallets', payload);
 
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.message || data.error || 'Failed to create isolated container');
+      }
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('sts_data_updated'));
       }
 
       // Reset form state
@@ -188,13 +188,7 @@ export default function GoalTargetView() {
 
     setIsAddingCash(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/wallets/${selectedWallet.id}/add-cash`, {
-        method: 'POST',
-        headers: getAuthHeaders({
-          'Content-Type': 'application/json',
-        }),
-        body: JSON.stringify({ amount }),
-      });
+      const res = await apiClient.post(`/api/wallets/${selectedWallet.id}/add-cash`, { amount });
 
       const data = await res.json();
       if (!res.ok) {
@@ -204,6 +198,10 @@ export default function GoalTargetView() {
       setAddCashAmount('');
       setIsAddCashModalOpen(false);
       setSelectedWallet(null);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('sts_data_updated'));
+      }
 
       // Refresh list
       await fetchWallets(true);
@@ -244,13 +242,13 @@ export default function GoalTargetView() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/wallets/${walletId}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders(),
-      });
+      const res = await apiClient.delete(`/api/wallets/${walletId}`);
       if (res.ok) {
         await fetchWallets(true);
         setActiveMenuId(null);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('sts_data_updated'));
+        }
       }
     } catch (err) {
       console.error('Delete wallet error:', err);
@@ -563,8 +561,8 @@ export default function GoalTargetView() {
           </button>
         </div>
       ) : (
-        /* Active Cards Stack */
-        <div className="flex flex-col gap-4 w-full">
+        /* Active Cards Grid */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredWallets.map((wallet) => {
             const saved = Number(wallet.saved_amount) || 0;
             const target = Number(wallet.target_amount) || 0;
