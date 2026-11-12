@@ -330,7 +330,7 @@ export default function SegregationView() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Table: Additional Income */}
-          <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col">
+          <div className="rounded-2xl bg-[#dcfce7]/75 dark:bg-[#0c1322] border border-[#86efac] dark:border-slate-800 p-5 shadow-sm flex flex-col">
             <div className="flex items-center justify-between pb-3.5 border-b border-slate-200 dark:border-slate-800 mb-3">
               <div className="flex items-center space-x-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
@@ -408,7 +408,7 @@ export default function SegregationView() {
           </div>
 
           {/* Table: Additional Expense */}
-          <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col">
+          <div className="rounded-2xl bg-[#fee2e2]/75 dark:bg-[#0c1322] border border-[#fca5a5] dark:border-slate-800 p-5 shadow-sm flex flex-col">
             <div className="flex items-center justify-between pb-3.5 border-b border-slate-200 dark:border-slate-800 mb-3">
               <div className="flex items-center space-x-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
@@ -502,7 +502,7 @@ export default function SegregationView() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Table: Fixed Income */}
-          <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col">
+          <div className="rounded-2xl bg-[#dcfce7]/75 dark:bg-[#0c1322] border border-[#86efac] dark:border-slate-800 p-5 shadow-sm flex flex-col">
             <div className="flex items-center justify-between pb-3.5 border-b border-slate-200 dark:border-slate-800 mb-3">
               <div className="flex items-center space-x-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
@@ -585,7 +585,7 @@ export default function SegregationView() {
           </div>
 
           {/* Table: Fixed Expense */}
-          <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col">
+          <div className="rounded-2xl bg-[#fee2e2]/75 dark:bg-[#0c1322] border border-[#fca5a5] dark:border-slate-800 p-5 shadow-sm flex flex-col">
             <div className="flex items-center justify-between pb-3.5 border-b border-slate-200 dark:border-slate-800 mb-3">
               <div className="flex items-center space-x-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
