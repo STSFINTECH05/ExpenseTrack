@@ -1446,8 +1446,8 @@ export default function IncomeStreamsView() {
                 </span>
                 <input
                   type="number"
-                  min="1"
-                  step="500"
+                  min="0"
+                  step="any"
                   value={invAmount}
                   onChange={(e) => setInvAmount(e.target.value)}
                   placeholder="35000"
@@ -1468,7 +1468,7 @@ export default function IncomeStreamsView() {
                 <input
                   type="number"
                   min="0"
-                  step="100"
+                  step="any"
                   value={targetProfit}
                   onChange={(e) => setTargetProfit(e.target.value)}
                   placeholder="1000"
