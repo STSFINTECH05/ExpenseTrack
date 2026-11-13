@@ -228,21 +228,25 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
 
   // Compute: Earliest Bill to Pay
   const earliestBill = useMemo(() => {
-    // Fallback seed bills if localStorage is empty
-    const pool =
-      billsList && billsList.length > 0
-        ? billsList
-        : [
-            { id: 'sb-1', name: 'Slice Bill', amount: 600, date: '2026-10-11' },
-            { id: 'sb-2', name: 'AWS Cloud Hosting', amount: 2400, date: '2026-11-15' },
-            { id: 'sb-3', name: 'Airtel Fiber Broadband', amount: 999, date: '2026-11-22' },
-          ];
+    if (!Array.isArray(billsList) || billsList.length === 0) {
+      return null;
+    }
 
-    const parsed = pool.map((b) => {
-      const rawDate = b.date || b.dueDate || b.due_date || '2026-10-11';
-      let d = new Date(rawDate);
-      if (isNaN(d.getTime())) {
-        d = new Date('2026-10-11');
+    // Filter unpaid bills
+    const unpaidBills = billsList.filter((b) => {
+      const status = (b.status || '').toUpperCase();
+      return status !== 'PAID';
+    });
+
+    if (unpaidBills.length === 0) {
+      return null;
+    }
+
+    const parsed = unpaidBills.map((b) => {
+      const rawDate = b.date || b.dueDate || b.due_date || '';
+      let d = rawDate ? new Date(rawDate) : null;
+      if (!d || isNaN(d.getTime())) {
+        d = null;
       }
       return {
         name: b.name || b.title || 'Scheduled Bill',
@@ -252,25 +256,24 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
       };
     });
 
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-
-    // Closest upcoming or nearest date
-    const upcoming = parsed.filter((b) => b.dateObj >= now);
-    const candidateList = upcoming.length > 0 ? upcoming : parsed;
-    candidateList.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
-
-    const item = candidateList[0] || {
-      name: 'Slice Bill',
-      amount: 600,
-      dateObj: new Date('2026-10-11'),
-    };
-
-    const dateStr = item.dateObj.toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
+    // Sort by due date (earliest first, null dates at the end)
+    parsed.sort((a, b) => {
+      if (!a.dateObj && !b.dateObj) return 0;
+      if (!a.dateObj) return 1;
+      if (!b.dateObj) return -1;
+      return a.dateObj.getTime() - b.dateObj.getTime();
     });
+
+    const item = parsed[0];
+    if (!item) return null;
+
+    const dateStr = item.dateObj
+      ? item.dateObj.toLocaleDateString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })
+      : 'No date';
 
     return {
       name: item.name,
@@ -283,10 +286,8 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
   const settlementBalances = useMemo(() => {
     let owedToYou = 0;
     let youOwe = 0;
-    let hasCustomData = false;
 
     if (Array.isArray(splitsData) && splitsData.length > 0) {
-      hasCustomData = true;
       splitsData.forEach((item) => {
         if (typeof item.owedToYou === 'number') owedToYou += item.owedToYou;
         if (typeof item.youOwe === 'number') youOwe += item.youOwe;
@@ -315,18 +316,10 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
     } else if (splitsData && typeof splitsData === 'object') {
       if (typeof splitsData.owedToYou === 'number') {
         owedToYou = splitsData.owedToYou;
-        hasCustomData = true;
       }
       if (typeof splitsData.youOwe === 'number') {
         youOwe = splitsData.youOwe;
-        hasCustomData = true;
       }
-    }
-
-    // Default realistic settlement figures if no custom record is stored yet
-    if (!hasCustomData || (owedToYou === 0 && youOwe === 0)) {
-      owedToYou = 4250;
-      youOwe = 850;
     }
 
     return {
@@ -337,21 +330,16 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
 
   // Compute: Highest Progress Goal (Goal Target)
   const highestProgressGoal = useMemo(() => {
-    const pool =
-      goalsList && goalsList.length > 0
-        ? goalsList
-        : [
-            { name: 'Emergency Fund', saved: 85000, target: 100000 },
-            { name: 'MacBook Pro M3 Max', saved: 42000, target: 120000 },
-            { name: 'Mutual Fund SIP Pool', saved: 60000, target: 100000 },
-          ];
+    if (!Array.isArray(goalsList) || goalsList.length === 0) {
+      return null;
+    }
 
-    const computed = pool.map((g) => {
+    const computed = goalsList.map((g) => {
       const saved = Number(g.saved || g.saved_amount || g.currentAmount || 0);
-      const target = Number(g.target || g.target_amount || g.targetCap || 1);
+      const target = Number(g.target || g.target_amount || g.targetCap || 0);
       const percentage = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
       return {
-        name: g.name || g.purpose || g.title || 'Emergency Fund',
+        name: g.name || g.purpose || g.title || 'Goal',
         saved,
         target,
         percentage,
@@ -360,14 +348,7 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
 
     computed.sort((a, b) => b.percentage - a.percentage);
 
-    return (
-      computed[0] || {
-        name: 'Emergency Fund',
-        percentage: 85,
-        saved: 85000,
-        target: 100000,
-      }
-    );
+    return computed[0] || null;
   }, [goalsList]);
 
   // Quick Action Modules definition (Red & Green Visual Identity)
@@ -640,18 +621,26 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
               >
                 <div className="flex items-center space-x-2.5 min-w-0 pr-2">
                   <span className="flex h-2.5 w-2.5 relative flex-shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                    {earliestBill && (
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    )}
+                    <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${earliestBill ? 'bg-rose-500' : 'bg-slate-400'}`}></span>
                   </span>
                   <p className="text-xs font-semibold text-rose-800 dark:text-rose-200 truncate">
                     <span className="font-black text-rose-700 dark:text-rose-300">Earliest Due:</span>{' '}
-                    {earliestBill.name} ({formatINR(earliestBill.amount)}) • Due {earliestBill.dateStr}
+                    {earliestBill ? (
+                      `${earliestBill.name} (${formatINR(earliestBill.amount)}) • Due ${earliestBill.dateStr}`
+                    ) : (
+                      'No upcoming bills'
+                    )}
                   </p>
                 </div>
-                <div className="flex items-center space-x-1 flex-shrink-0 text-[10px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300 bg-rose-500/15 group-hover:bg-rose-500/25 px-2 py-0.5 rounded transition">
-                  <span>Pay</span>
-                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                </div>
+                {earliestBill && (
+                  <div className="flex items-center space-x-1 flex-shrink-0 text-[10px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-300 bg-rose-500/15 group-hover:bg-rose-500/25 px-2 py-0.5 rounded transition">
+                    <span>Pay</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                )}
               </div>
 
               {/* Highlight 2: Settlement Balances (Split & Collect) */}
@@ -700,11 +689,11 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
                   <div className="flex items-center space-x-2 min-w-0">
                     <span className="text-sm">🏆</span>
                     <span className="font-bold text-slate-900 dark:text-slate-100 truncate">
-                      Leading Goal: {highestProgressGoal.name}
+                      Leading Goal: {highestProgressGoal ? highestProgressGoal.name : 'No active goals'}
                     </span>
                   </div>
                   <span className="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/25 flex-shrink-0">
-                    {highestProgressGoal.percentage}% completed
+                    {highestProgressGoal ? highestProgressGoal.percentage : 0}% completed
                   </span>
                 </div>
 
@@ -712,13 +701,13 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
                 <div className="w-full bg-slate-200 dark:bg-slate-800/80 rounded-full h-2 overflow-hidden">
                   <div
                     className="bg-gradient-to-r from-emerald-500 to-green-600 h-2 rounded-full transition-all duration-500 group-hover:brightness-110"
-                    style={{ width: `${Math.min(100, Math.max(0, highestProgressGoal.percentage))}%` }}
+                    style={{ width: `${Math.min(100, Math.max(0, highestProgressGoal ? highestProgressGoal.percentage : 0))}%` }}
                   />
                 </div>
 
                 <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                  <span>Saved: {formatINR(highestProgressGoal.saved)}</span>
-                  <span>Target: {formatINR(highestProgressGoal.target)}</span>
+                  <span>Saved: {formatINR(highestProgressGoal ? highestProgressGoal.saved : 0)}</span>
+                  <span>Target: {formatINR(highestProgressGoal ? highestProgressGoal.target : 0)}</span>
                 </div>
               </div>
             </div>
