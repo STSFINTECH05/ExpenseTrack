@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import stsLogo from '../assets/sts-fintech-logo.png';
+import stsLogo from '../assets/sts-fintech-logofinal-removebg-preview.png';
 import {
   Search,
   Bell,
@@ -165,31 +165,14 @@ export default function Header({
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="flex items-center space-x-3 text-left focus:outline-none group cursor-pointer select-none"
+            className="flex items-center text-left focus:outline-none group cursor-pointer select-none"
             title="Toggle Sidebar"
           >
-            {/* Company Logo Icon with distinct Red and Green Logo Mark */}
-            <div className="relative p-0.5 rounded-xl bg-gradient-to-tr from-red-500 via-rose-500 to-emerald-500 shadow-xs group-hover:scale-105 group-hover:shadow-[0_0_12px_rgba(16,185,129,0.35)] transition-all flex-shrink-0">
-              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-[10px] overflow-hidden bg-white flex items-center justify-center p-0.5">
-                <img
-                  src={stsLogo}
-                  alt="STS FINTECH Logo"
-                  className="h-full w-full object-cover rounded-md"
-                />
-              </div>
-              {/* Distinct dual red & green strategic pip/indicator */}
-              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-white" />
-              </span>
-            </div>
-
-            {/* Company Name with Red & Green Strategic Identity */}
-            <div className="flex items-center space-x-1.5">
-              <span className="text-sm sm:text-base font-black tracking-tight text-slate-900 group-hover:text-emerald-700 transition-colors whitespace-nowrap">
-                STS <span className="text-emerald-700 font-black">FIN</span><span className="text-red-600 font-black">TECH</span>
-              </span>
-            </div>
+            <img
+              src={stsLogo}
+              alt="STS FINTECH PVT LTD"
+              className="h-10 w-auto object-contain group-hover:scale-105 transition-all"
+            />
           </button>
         </div>
 
