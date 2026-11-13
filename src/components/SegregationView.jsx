@@ -19,6 +19,8 @@ import {
   IndianRupee,
   Receipt,
   ShieldAlert,
+  PieChart,
+  BarChart3,
 } from 'lucide-react';
 import AddIncomeModal from './AddIncomeModal';
 import EditIncomeModal from './EditIncomeModal';
@@ -58,6 +60,12 @@ export default function SegregationView() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Individual Analytics Filter States ('all' | 'income' | 'expense')
+  const [fixedAnalyticsFilter, setFixedAnalyticsFilter] = useState('all');
+  const [additionalAnalyticsFilter, setAdditionalAnalyticsFilter] = useState('all');
+  const [overallAnalyticsFilter, setOverallAnalyticsFilter] = useState('all');
+  const [graphAnalyticsFilter, setGraphAnalyticsFilter] = useState('all');
 
   const fetchRecords = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
@@ -666,6 +674,561 @@ export default function SegregationView() {
               </table>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 4. LEDGER ANALYTICS OVERVIEW SECTION                                      */}
+      {/* ========================================================================= */}
+      <section className="mt-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center space-x-2">
+              <PieChart className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <span>{t('ledger_analytics_overview', 'Ledger Analytics Overview')}</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Interactive visual breakdown of income streams, operational expenditures, and overall financial proportions
+            </p>
+          </div>
+        </div>
+
+        {/* 4-Card Responsive Analytics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          {/* --------------------------------------------------------------------- */}
+          {/* Card 1: Fixed Source (Pie Chart)                                      */}
+          {/* --------------------------------------------------------------------- */}
+          {(() => {
+            const rawIncome = fixedIncome.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+            const rawExpense = fixedExpense.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+            const inc = fixedAnalyticsFilter === 'expense' ? 0 : rawIncome;
+            const exp = fixedAnalyticsFilter === 'income' ? 0 : rawExpense;
+            const sum = inc + exp;
+            const incPct = sum > 0 ? (inc / sum) * 100 : 0;
+            const expPct = sum > 0 ? (exp / sum) * 100 : 0;
+            const radius = 38;
+            const circumference = 2 * Math.PI * radius; // ~238.76
+            const incDash = (incPct / 100) * circumference;
+            const expDash = (expPct / 100) * circumference;
+
+            return (
+              <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-4 shadow-sm flex flex-col justify-between">
+                <div>
+                  {/* Card Header & Filter */}
+                  <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800 mb-3 gap-2">
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide truncate">
+                      Fixed Source
+                    </h4>
+                    <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800/80 p-0.5 text-[10px] font-semibold">
+                      {['all', 'income', 'expense'].map((f) => (
+                        <button
+                          key={f}
+                          type="button"
+                          onClick={() => setFixedAnalyticsFilter(f)}
+                          className={`px-2 py-0.5 rounded-md capitalize transition-all cursor-pointer ${
+                            fixedAnalyticsFilter === f
+                              ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs font-bold'
+                              : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                          }`}
+                        >
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* SVG Pie / Donut Chart */}
+                  <div className="relative flex items-center justify-center my-3">
+                    <svg className="w-32 h-32 -rotate-90 transform" viewBox="0 0 100 100">
+                      {sum === 0 ? (
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r={radius}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="11"
+                          className="text-slate-200 dark:text-slate-800"
+                        />
+                      ) : (
+                        <>
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r={radius}
+                            fill="none"
+                            stroke="#e2e8f0"
+                            strokeWidth="11"
+                            className="dark:stroke-slate-800/60"
+                          />
+                          {incDash > 0 && (
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r={radius}
+                              fill="none"
+                              stroke="#10b981"
+                              strokeWidth="11"
+                              strokeDasharray={`${incDash} ${circumference}`}
+                              strokeDashoffset="0"
+                              strokeLinecap="round"
+                            />
+                          )}
+                          {expDash > 0 && (
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r={radius}
+                              fill="none"
+                              stroke="#ef4444"
+                              strokeWidth="11"
+                              strokeDasharray={`${expDash} ${circumference}`}
+                              strokeDashoffset={-incDash}
+                              strokeLinecap="round"
+                            />
+                          )}
+                        </>
+                      )}
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                      <span className="text-[10px] uppercase font-bold text-slate-400">Total</span>
+                      <span className="text-xs font-mono font-bold text-slate-900 dark:text-slate-100 px-1 truncate max-w-[90px]">
+                        {formatINR(sum)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Legend & Breakdown */}
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5 text-xs font-medium">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300">
+                      <span className="w-2 h-2 rounded-full bg-[#10b981]" />
+                      <span>Income</span>
+                    </span>
+                    <span className="font-mono text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                      {formatINR(inc)} ({incPct.toFixed(1)}%)
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300">
+                      <span className="w-2 h-2 rounded-full bg-[#ef4444]" />
+                      <span>Expense</span>
+                    </span>
+                    <span className="font-mono text-[11px] font-bold text-rose-600 dark:text-rose-400">
+                      {formatINR(exp)} ({expPct.toFixed(1)}%)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* --------------------------------------------------------------------- */}
+          {/* Card 2: Additional Source (Pie Chart)                                 */}
+          {/* --------------------------------------------------------------------- */}
+          {(() => {
+            const rawIncome = additionalIncome.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+            const rawExpense = additionalExpense.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+            const inc = additionalAnalyticsFilter === 'expense' ? 0 : rawIncome;
+            const exp = additionalAnalyticsFilter === 'income' ? 0 : rawExpense;
+            const sum = inc + exp;
+            const incPct = sum > 0 ? (inc / sum) * 100 : 0;
+            const expPct = sum > 0 ? (exp / sum) * 100 : 0;
+            const radius = 38;
+            const circumference = 2 * Math.PI * radius;
+            const incDash = (incPct / 100) * circumference;
+            const expDash = (expPct / 100) * circumference;
+
+            return (
+              <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-4 shadow-sm flex flex-col justify-between">
+                <div>
+                  {/* Card Header & Filter */}
+                  <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800 mb-3 gap-2">
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide truncate">
+                      Additional Source
+                    </h4>
+                    <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800/80 p-0.5 text-[10px] font-semibold">
+                      {['all', 'income', 'expense'].map((f) => (
+                        <button
+                          key={f}
+                          type="button"
+                          onClick={() => setAdditionalAnalyticsFilter(f)}
+                          className={`px-2 py-0.5 rounded-md capitalize transition-all cursor-pointer ${
+                            additionalAnalyticsFilter === f
+                              ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs font-bold'
+                              : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                          }`}
+                        >
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* SVG Pie / Donut Chart */}
+                  <div className="relative flex items-center justify-center my-3">
+                    <svg className="w-32 h-32 -rotate-90 transform" viewBox="0 0 100 100">
+                      {sum === 0 ? (
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r={radius}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="11"
+                          className="text-slate-200 dark:text-slate-800"
+                        />
+                      ) : (
+                        <>
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r={radius}
+                            fill="none"
+                            stroke="#e2e8f0"
+                            strokeWidth="11"
+                            className="dark:stroke-slate-800/60"
+                          />
+                          {incDash > 0 && (
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r={radius}
+                              fill="none"
+                              stroke="#10b981"
+                              strokeWidth="11"
+                              strokeDasharray={`${incDash} ${circumference}`}
+                              strokeDashoffset="0"
+                              strokeLinecap="round"
+                            />
+                          )}
+                          {expDash > 0 && (
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r={radius}
+                              fill="none"
+                              stroke="#ef4444"
+                              strokeWidth="11"
+                              strokeDasharray={`${expDash} ${circumference}`}
+                              strokeDashoffset={-incDash}
+                              strokeLinecap="round"
+                            />
+                          )}
+                        </>
+                      )}
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                      <span className="text-[10px] uppercase font-bold text-slate-400">Total</span>
+                      <span className="text-xs font-mono font-bold text-slate-900 dark:text-slate-100 px-1 truncate max-w-[90px]">
+                        {formatINR(sum)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Legend & Breakdown */}
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5 text-xs font-medium">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300">
+                      <span className="w-2 h-2 rounded-full bg-[#10b981]" />
+                      <span>Income</span>
+                    </span>
+                    <span className="font-mono text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                      {formatINR(inc)} ({incPct.toFixed(1)}%)
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300">
+                      <span className="w-2 h-2 rounded-full bg-[#ef4444]" />
+                      <span>Expense</span>
+                    </span>
+                    <span className="font-mono text-[11px] font-bold text-rose-600 dark:text-rose-400">
+                      {formatINR(exp)} ({expPct.toFixed(1)}%)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* --------------------------------------------------------------------- */}
+          {/* Card 3: Overall Proportion (Pie Chart)                                */}
+          {/* --------------------------------------------------------------------- */}
+          {(() => {
+            const rawIncome =
+              fixedIncome.reduce((s, r) => s + (Number(r.amount) || 0), 0) +
+              additionalIncome.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+            const rawExpense =
+              fixedExpense.reduce((s, r) => s + (Number(r.amount) || 0), 0) +
+              additionalExpense.reduce((s, r) => s + (Number(r.amount) || 0), 0) +
+              bills.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+            const inc = overallAnalyticsFilter === 'expense' ? 0 : rawIncome;
+            const exp = overallAnalyticsFilter === 'income' ? 0 : rawExpense;
+            const sum = inc + exp;
+            const incPct = sum > 0 ? (inc / sum) * 100 : 0;
+            const expPct = sum > 0 ? (exp / sum) * 100 : 0;
+            const radius = 38;
+            const circumference = 2 * Math.PI * radius;
+            const incDash = (incPct / 100) * circumference;
+            const expDash = (expPct / 100) * circumference;
+
+            return (
+              <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-4 shadow-sm flex flex-col justify-between">
+                <div>
+                  {/* Card Header & Filter */}
+                  <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800 mb-3 gap-2">
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide truncate">
+                      Overall Proportion
+                    </h4>
+                    <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800/80 p-0.5 text-[10px] font-semibold">
+                      {['all', 'income', 'expense'].map((f) => (
+                        <button
+                          key={f}
+                          type="button"
+                          onClick={() => setOverallAnalyticsFilter(f)}
+                          className={`px-2 py-0.5 rounded-md capitalize transition-all cursor-pointer ${
+                            overallAnalyticsFilter === f
+                              ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs font-bold'
+                              : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                          }`}
+                        >
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* SVG Pie / Donut Chart */}
+                  <div className="relative flex items-center justify-center my-3">
+                    <svg className="w-32 h-32 -rotate-90 transform" viewBox="0 0 100 100">
+                      {sum === 0 ? (
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r={radius}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="11"
+                          className="text-slate-200 dark:text-slate-800"
+                        />
+                      ) : (
+                        <>
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r={radius}
+                            fill="none"
+                            stroke="#e2e8f0"
+                            strokeWidth="11"
+                            className="dark:stroke-slate-800/60"
+                          />
+                          {incDash > 0 && (
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r={radius}
+                              fill="none"
+                              stroke="#10b981"
+                              strokeWidth="11"
+                              strokeDasharray={`${incDash} ${circumference}`}
+                              strokeDashoffset="0"
+                              strokeLinecap="round"
+                            />
+                          )}
+                          {expDash > 0 && (
+                            <circle
+                              cx="50"
+                              cy="50"
+                              r={radius}
+                              fill="none"
+                              stroke="#ef4444"
+                              strokeWidth="11"
+                              strokeDasharray={`${expDash} ${circumference}`}
+                              strokeDashoffset={-incDash}
+                              strokeLinecap="round"
+                            />
+                          )}
+                        </>
+                      )}
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                      <span className="text-[10px] uppercase font-bold text-slate-400">Total</span>
+                      <span className="text-xs font-mono font-bold text-slate-900 dark:text-slate-100 px-1 truncate max-w-[90px]">
+                        {formatINR(sum)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Legend & Breakdown */}
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5 text-xs font-medium">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300">
+                      <span className="w-2 h-2 rounded-full bg-[#10b981]" />
+                      <span>Total Income</span>
+                    </span>
+                    <span className="font-mono text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                      {formatINR(inc)} ({incPct.toFixed(1)}%)
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300">
+                      <span className="w-2 h-2 rounded-full bg-[#ef4444]" />
+                      <span>Total Expense</span>
+                    </span>
+                    <span className="font-mono text-[11px] font-bold text-rose-600 dark:text-rose-400">
+                      {formatINR(exp)} ({expPct.toFixed(1)}%)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* --------------------------------------------------------------------- */}
+          {/* Card 4: Income vs Expense Graph (Bar Chart)                           */}
+          {/* --------------------------------------------------------------------- */}
+          {(() => {
+            const fixedInc = fixedIncome.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+            const fixedExp = fixedExpense.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+            const addInc = additionalIncome.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+            const addExp = additionalExpense.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+
+            const showInc = graphAnalyticsFilter !== 'expense';
+            const showExp = graphAnalyticsFilter !== 'income';
+
+            const valuesToCompare = [];
+            if (showInc) valuesToCompare.push(fixedInc, addInc);
+            if (showExp) valuesToCompare.push(fixedExp, addExp);
+            const maxVal = Math.max(...valuesToCompare, 1);
+
+            const fixedIncHeight = showInc ? Math.max(4, Math.round((fixedInc / maxVal) * 88)) : 0;
+            const fixedExpHeight = showExp ? Math.max(4, Math.round((fixedExp / maxVal) * 88)) : 0;
+            const addIncHeight = showInc ? Math.max(4, Math.round((addInc / maxVal) * 88)) : 0;
+            const addExpHeight = showExp ? Math.max(4, Math.round((addExp / maxVal) * 88)) : 0;
+
+            return (
+              <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-4 shadow-sm flex flex-col justify-between">
+                <div>
+                  {/* Card Header & Filter */}
+                  <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800 mb-3 gap-2">
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wide truncate">
+                      Income vs Expense
+                    </h4>
+                    <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800/80 p-0.5 text-[10px] font-semibold">
+                      {['all', 'income', 'expense'].map((f) => (
+                        <button
+                          key={f}
+                          type="button"
+                          onClick={() => setGraphAnalyticsFilter(f)}
+                          className={`px-2 py-0.5 rounded-md capitalize transition-all cursor-pointer ${
+                            graphAnalyticsFilter === f
+                              ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs font-bold'
+                              : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                          }`}
+                        >
+                          {f}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Side-by-Side SVG Bar Chart */}
+                  <div className="h-36 flex items-end justify-around px-2 pt-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+                    {/* Fixed Source Group */}
+                    <div className="flex flex-col items-center w-1/2">
+                      <div className="flex items-end space-x-1.5 h-24">
+                        {showInc && (
+                          <div
+                            className="w-5 bg-[#10b981] rounded-t-md transition-all duration-500 relative group"
+                            style={{ height: `${fixedInc > 0 ? fixedIncHeight : 2}px` }}
+                            title={`Fixed Income: ${formatINR(fixedInc)}`}
+                          >
+                            <span className="opacity-0 group-hover:opacity-100 absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-mono font-bold bg-slate-900 text-white px-1 py-0.5 rounded pointer-events-none transition-opacity whitespace-nowrap z-10">
+                              {formatINR(fixedInc)}
+                            </span>
+                          </div>
+                        )}
+                        {showExp && (
+                          <div
+                            className="w-5 bg-[#ef4444] rounded-t-md transition-all duration-500 relative group"
+                            style={{ height: `${fixedExp > 0 ? fixedExpHeight : 2}px` }}
+                            title={`Fixed Expense: ${formatINR(fixedExp)}`}
+                          >
+                            <span className="opacity-0 group-hover:opacity-100 absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-mono font-bold bg-slate-900 text-white px-1 py-0.5 rounded pointer-events-none transition-opacity whitespace-nowrap z-10">
+                              {formatINR(fixedExp)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 mt-2 truncate max-w-full">
+                        Fixed
+                      </span>
+                    </div>
+
+                    {/* Additional Source Group */}
+                    <div className="flex flex-col items-center w-1/2">
+                      <div className="flex items-end space-x-1.5 h-24">
+                        {showInc && (
+                          <div
+                            className="w-5 bg-[#10b981] rounded-t-md transition-all duration-500 relative group"
+                            style={{ height: `${addInc > 0 ? addIncHeight : 2}px` }}
+                            title={`Addl Income: ${formatINR(addInc)}`}
+                          >
+                            <span className="opacity-0 group-hover:opacity-100 absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-mono font-bold bg-slate-900 text-white px-1 py-0.5 rounded pointer-events-none transition-opacity whitespace-nowrap z-10">
+                              {formatINR(addInc)}
+                            </span>
+                          </div>
+                        )}
+                        {showExp && (
+                          <div
+                            className="w-5 bg-[#ef4444] rounded-t-md transition-all duration-500 relative group"
+                            style={{ height: `${addExp > 0 ? addExpHeight : 2}px` }}
+                            title={`Addl Expense: ${formatINR(addExp)}`}
+                          >
+                            <span className="opacity-0 group-hover:opacity-100 absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-mono font-bold bg-slate-900 text-white px-1 py-0.5 rounded pointer-events-none transition-opacity whitespace-nowrap z-10">
+                              {formatINR(addExp)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 mt-2 truncate max-w-full">
+                        Additional
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Legend & Summary Values */}
+                <div className="pt-2 space-y-1 text-[11px] font-medium">
+                  {showInc && (
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300">
+                        <span className="w-2 h-2 rounded-full bg-[#10b981]" />
+                        <span>Income</span>
+                      </span>
+                      <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                        {formatINR(fixedInc + addInc)}
+                      </span>
+                    </div>
+                  )}
+                  {showExp && (
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300">
+                        <span className="w-2 h-2 rounded-full bg-[#ef4444]" />
+                        <span>Expense</span>
+                      </span>
+                      <span className="font-mono font-bold text-rose-600 dark:text-rose-400">
+                        {formatINR(fixedExp + addExp)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </section>
 
