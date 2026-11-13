@@ -128,10 +128,10 @@ export default function Header({
 
   return (
     <header
-      className="sticky top-0 z-40 bg-[#DCFCE7] backdrop-blur-xl border-b border-emerald-200/80 shadow-xs w-full max-w-full"
+      className="sticky top-0 z-40 bg-[#18181B] backdrop-blur-xl border-b border-zinc-800 shadow-xs w-full max-w-full"
       style={{
-        backgroundColor: '#DCFCE7',
-        borderColor: 'rgba(167, 243, 208, 0.8)',
+        backgroundColor: '#18181B',
+        borderColor: '#27272A',
         width: '100%',
         maxWidth: '100%',
       }}
@@ -155,10 +155,10 @@ export default function Header({
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl text-slate-700 hover:text-slate-900 hover:bg-emerald-100/80 border border-emerald-200/80 hover:border-emerald-300 transition cursor-pointer flex-shrink-0"
+            className="md:hidden p-2 rounded-xl text-zinc-300 hover:text-white hover:bg-zinc-800 border border-zinc-700/80 hover:border-zinc-600 transition cursor-pointer flex-shrink-0"
             aria-label="Toggle Navigation Menu"
           >
-            {isMobileMenuOpen ? <X className="w-5 h-5 text-emerald-600" /> : <Menu className="w-5 h-5" />}
+            {isMobileMenuOpen ? <X className="w-5 h-5 text-emerald-400" /> : <Menu className="w-5 h-5" />}
           </button>
 
           {/* Clickable Logo & Branding that toggles the sidebar */}
@@ -181,7 +181,7 @@ export default function Header({
         {/* ========================================================= */}
         <div className="flex items-center justify-center mx-2 sm:mx-4">
           <nav
-            className="flex items-center space-x-1 bg-yellow-100/70 p-1 rounded-xl border border-yellow-200 shadow-inner"
+            className="flex items-center space-x-1 bg-zinc-800/80 p-1 rounded-xl border border-zinc-700/80 shadow-inner"
             aria-label="Primary Navigation"
           >
             {/* Expense Tab */}
@@ -191,7 +191,7 @@ export default function Header({
               className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Expense'
                   ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500/50'
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-yellow-200/60'
+                  : 'text-zinc-300 hover:text-white hover:bg-zinc-700/60'
               }`}
             >
               Expense
@@ -204,7 +204,7 @@ export default function Header({
               className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Wallet'
                   ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500/50'
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-yellow-200/60'
+                  : 'text-zinc-300 hover:text-white hover:bg-zinc-700/60'
               }`}
             >
               Wallet
@@ -217,7 +217,7 @@ export default function Header({
               className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Social'
                   ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500/50'
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-yellow-200/60'
+                  : 'text-zinc-300 hover:text-white hover:bg-zinc-700/60'
               }`}
             >
               Social
@@ -231,29 +231,29 @@ export default function Header({
         <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
           {/* 1. Search Bar */}
           <div className="relative hidden md:block">
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
               placeholder="Search transactions..."
-              className="w-36 lg:w-48 bg-white/90 border border-yellow-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600/40 focus:border-emerald-600 focus:bg-white transition-all shadow-inner"
+              className="w-36 lg:w-48 bg-zinc-800/80 border border-zinc-700 rounded-xl pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-zinc-800 transition-all shadow-inner"
             />
           </div>
 
           {/* Global Language Selector Dropdown [ 🌐 English ▾ ] */}
-          <LanguageDropdown variant="light" />
+          <LanguageDropdown variant="dark" />
 
           {/* 2. Notification Icon Button */}
           <div className="relative" ref={notificationRef}>
             <button
               type="button"
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 rounded-xl text-slate-700 hover:text-slate-900 bg-white/80 hover:bg-yellow-100/80 border border-yellow-200/80 hover:border-yellow-300 transition shadow-xs"
+              className="relative p-2 rounded-xl text-zinc-200 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700 hover:border-zinc-600 transition shadow-xs"
               title="Notifications"
               aria-label="View notifications"
             >
-              <Bell className="w-4 h-4 text-slate-700" />
+              <Bell className="w-4 h-4 text-zinc-200" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 shadow-xs shadow-red-500 animate-pulse" />
             </button>
 
@@ -296,44 +296,44 @@ export default function Header({
             }}
             className={`relative p-2 rounded-xl border transition-all duration-200 cursor-pointer group shadow-xs ${
               activeTab === 'subscription'
-                ? 'text-emerald-700 bg-emerald-100/80 border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
-                : 'text-slate-700 hover:text-emerald-700 bg-white/80 hover:bg-yellow-100/80 border-yellow-200/80 hover:border-emerald-500/50'
+                ? 'text-emerald-400 bg-emerald-950/60 border-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+                : 'text-zinc-200 hover:text-emerald-400 bg-zinc-800/80 hover:bg-zinc-700/80 border-zinc-700 hover:border-emerald-500/50'
             }`}
             title="Subscription Plans"
             aria-label="Subscription Plans"
           >
-            <Crown className="w-4 h-4 transition-transform group-hover:scale-110 text-slate-700 group-hover:text-emerald-700" />
+            <Crown className="w-4 h-4 transition-transform group-hover:scale-110 text-zinc-200 group-hover:text-emerald-400" />
           </button>
 
           {/* 3. Login Details / User Profile with Floating Dropdown Menu */}
-          <div className="relative pl-1 sm:pl-2 border-l border-yellow-200" ref={profileMenuRef}>
+          <div className="relative pl-1 sm:pl-2 border-l border-zinc-700" ref={profileMenuRef}>
             <button
               type="button"
               onClick={() => setShowProfileMenu((prev) => !prev)}
-              className="flex items-center space-x-2.5 p-1 rounded-xl hover:bg-yellow-100/80 transition group cursor-pointer text-left"
+              className="flex items-center space-x-2.5 p-1 rounded-xl hover:bg-zinc-800 transition group cursor-pointer text-left"
               aria-label="User account menu"
             >
               {userAvatar ? (
                 <img
                   src={userAvatar}
                   alt={userName}
-                  className="w-8 h-8 rounded-full object-cover border border-emerald-600/50 shadow-sm flex-shrink-0"
+                  className="w-8 h-8 rounded-full object-cover border border-emerald-500/50 shadow-sm flex-shrink-0"
                 />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-red-500 p-[1.5px] shadow-sm flex-shrink-0">
-                  <div className="w-full h-full rounded-full bg-white flex items-center justify-center font-bold text-[11px] text-emerald-700">
+                  <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center font-bold text-[11px] text-emerald-400">
                     {userInitials}
                   </div>
                 </div>
               )}
               <div className="hidden xl:block text-left">
-                <p className="text-xs font-semibold text-slate-800 leading-tight" title={userEmail}>
+                <p className="text-xs font-semibold text-zinc-200 leading-tight" title={userEmail}>
                   {displayEmail}
                 </p>
               </div>
               <ChevronDown
-                className={`w-3.5 h-3.5 text-slate-500 transition-transform hidden sm:block ${
-                  showProfileMenu ? 'rotate-180 text-emerald-600' : 'group-hover:text-slate-900'
+                className={`w-3.5 h-3.5 text-zinc-400 transition-transform hidden sm:block ${
+                  showProfileMenu ? 'rotate-180 text-emerald-400' : 'group-hover:text-white'
                 }`}
               />
             </button>
