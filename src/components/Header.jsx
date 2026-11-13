@@ -128,10 +128,10 @@ export default function Header({
 
   return (
     <header
-      className="sticky top-0 z-40 bg-yellow-50/95 backdrop-blur-xl border-b border-yellow-200 shadow-xs w-full max-w-full"
+      className="sticky top-0 z-40 bg-[#DCFCE7] backdrop-blur-xl border-b border-emerald-200/80 shadow-xs w-full max-w-full"
       style={{
-        backgroundColor: '#FEFCE8',
-        borderColor: '#FEF08A',
+        backgroundColor: '#DCFCE7',
+        borderColor: 'rgba(167, 243, 208, 0.8)',
         width: '100%',
         maxWidth: '100%',
       }}
