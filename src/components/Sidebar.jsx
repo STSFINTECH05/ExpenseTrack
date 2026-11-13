@@ -74,8 +74,6 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
             (item.id === 'split_collect' && (activeTab === 'split-collect' || activeTab === 'split_collect')) ||
             (item.id === 'organisation_maintainer' && (activeTab === 'organisation_maintainer' || activeTab === 'organisation-maintainer'));
 
-          const isStrategicAlert = item.id === 'bills_reminders' || item.id === 'live_worth';
-
           return (
             <button
               key={item.id}
@@ -91,13 +89,6 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
                   {item.label}
                 </span>
               </div>
-
-              {/* Strategic markers in muted red or crimson */}
-              {isActive ? (
-                <span className="w-1.5 h-4 rounded-full bg-gradient-to-b from-emerald-400 via-rose-500 to-red-500 shadow-xs shadow-red-500/40 flex-shrink-0" />
-              ) : isStrategicAlert ? (
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500/80 shadow-xs shadow-red-500/50 flex-shrink-0" />
-              ) : null}
             </button>
           );
         })}
@@ -123,9 +114,6 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
               {t('contact_us', 'Contact Us')}
             </span>
           </div>
-          {(activeTab === 'contact_us' || activeTab === 'contact') && (
-            <span className="w-1.5 h-4 rounded-full bg-gradient-to-b from-emerald-400 via-rose-500 to-red-500 shadow-xs shadow-red-500/40 flex-shrink-0" />
-          )}
         </button>
 
         <button
@@ -146,9 +134,6 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
               {t('settings', 'Settings')}
             </span>
           </div>
-          {activeTab === 'settings' && (
-            <span className="w-1.5 h-4 rounded-full bg-gradient-to-b from-emerald-400 via-rose-500 to-red-500 shadow-xs shadow-red-500/40 flex-shrink-0" />
-          )}
         </button>
       </div>
     </aside>

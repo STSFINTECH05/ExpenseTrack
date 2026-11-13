@@ -189,10 +189,6 @@ export default function Header({
               <span className="text-sm sm:text-base font-black tracking-tight text-slate-900 group-hover:text-emerald-700 transition-colors whitespace-nowrap">
                 STS <span className="text-emerald-700 font-black">FIN</span><span className="text-red-600 font-black">TECH</span>
               </span>
-              <span className="inline-flex items-center space-x-0.5 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[9px] font-extrabold text-emerald-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 ml-0.5" />
-              </span>
             </div>
           </button>
         </div>
