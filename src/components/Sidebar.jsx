@@ -57,7 +57,7 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
 
   return (
     <aside
-      className="w-64 flex-shrink-0 bg-[#04070d] border-r border-slate-800/80 flex flex-col justify-between overflow-y-auto"
+      className="w-64 flex-shrink-0 bg-[#18181B] border-r border-zinc-800 flex flex-col justify-between overflow-y-auto"
       style={{ height: 'calc(100vh - 64px)' }}
     >
       {/* Primary Navigation Links Grouped at Top */}
@@ -95,7 +95,7 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
       </div>
 
       {/* Bottom Pinned Links: Contact Us & Settings */}
-      <div className="p-3.5 mt-auto pb-6 space-y-1.5 border-t border-white/10">
+      <div className="p-3.5 mt-auto pb-6 space-y-1.5 border-t border-zinc-800">
         <button
           type="button"
           onClick={() => setActiveTab('contact_us')}

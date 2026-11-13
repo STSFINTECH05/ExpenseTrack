@@ -602,7 +602,7 @@ export default function App() {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
               onClick={() => setIsMobileMenuOpen(false)}
             />
-            <div className="relative z-10 w-64 max-w-[80vw] bg-[#04070d] h-full shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-in-out">
+            <div className="relative z-10 w-64 max-w-[80vw] bg-[#18181B] h-full shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-in-out">
               <Sidebar
                 activeTab={activeTab}
                 setActiveTab={(tab) => {
