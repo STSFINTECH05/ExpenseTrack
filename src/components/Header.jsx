@@ -150,12 +150,12 @@ export default function Header({
         {/* ========================================================= */}
         {/* LEFT SECTION: Company Logo & Branding                     */}
         {/* ========================================================= */}
-        <div className="flex items-center space-x-3 min-w-0">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-shrink-0">
           {/* Mobile Menu Toggle Button */}
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl text-slate-700 hover:text-slate-900 hover:bg-yellow-100/80 border border-yellow-200/80 hover:border-yellow-300 transition cursor-pointer flex-shrink-0"
+            className="md:hidden p-2 rounded-xl text-slate-700 hover:text-slate-900 hover:bg-emerald-100/80 border border-emerald-200/80 hover:border-emerald-300 transition cursor-pointer flex-shrink-0"
             aria-label="Toggle Navigation Menu"
           >
             {isMobileMenuOpen ? <X className="w-5 h-5 text-emerald-600" /> : <Menu className="w-5 h-5" />}
@@ -165,13 +165,13 @@ export default function Header({
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="flex items-center text-left focus:outline-none group cursor-pointer select-none"
+            className="flex items-center text-left focus:outline-none group cursor-pointer select-none overflow-visible py-1"
             title="Toggle Sidebar"
           >
             <img
               src={stsLogo}
               alt="STS FINTECH PVT LTD"
-              className="h-10 w-auto object-contain group-hover:scale-105 transition-all"
+              className="h-14 sm:h-16 w-auto max-w-[210px] object-contain scale-105 origin-left group-hover:scale-110 transition-all drop-shadow-xs"
             />
           </button>
         </div>
