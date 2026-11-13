@@ -1,18 +1,4 @@
 import React from 'react';
-import {
-  LayoutDashboard,
-  Layers,
-  Users2,
-  Target,
-  Bell,
-  Headset,
-  Settings as SettingsIcon,
-  TrendingUp,
-  Activity,
-  Building2,
-  Sparkles,
-  Bot,
-} from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
@@ -30,52 +16,42 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
     {
       id: 'dashboard',
       label: t('dashboard', 'Dashboard'),
-      icon: LayoutDashboard,
     },
     {
       id: 'financial_intelligence',
       label: t('financial_intelligence', 'Financial Intelligence'),
-      icon: Sparkles,
     },
     {
       id: 'ai_financial_assistant',
       label: t('ai_financial_assistant', 'AI Financial Assistant'),
-      icon: Bot,
     },
     {
       id: 'segregation',
       label: t('expenses', 'Expenses'),
-      icon: Layers,
     },
     {
       id: 'split_collect',
       label: t('split_collect', 'Split & Collect'),
-      icon: Users2,
     },
     {
       id: 'goal_target',
       label: t('goal_target', 'Goal Target'),
-      icon: Target,
     },
     {
       id: 'bills_reminders',
       label: t('bills_reminders', 'Bill & Reminder'),
-      icon: Bell,
     },
     {
       id: 'income-streams',
       label: t('income_streams', 'Income Streams'),
-      icon: TrendingUp,
     },
     {
       id: 'live_worth',
       label: t('live_worth', 'Live Worth'),
-      icon: Activity,
     },
     {
       id: 'organisation_maintainer',
       label: t('organisation_maintainer', 'Organisation Maintainer'),
-      icon: Building2,
     },
   ];
 
@@ -87,7 +63,6 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
       {/* Primary Navigation Links Grouped at Top */}
       <div className="p-3.5 space-y-1.5 flex-1">
         {primaryNavItems.map((item) => {
-          const Icon = item.icon;
           const isActive =
             activeTab === item.id ||
             (item.id === 'financial_intelligence' && (activeTab === 'financial_intelligence' || activeTab === 'financial-intelligence')) ||
@@ -111,16 +86,7 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
                   : 'text-slate-400 hover:text-emerald-300 hover:bg-[#071f14]/70 border border-transparent hover:border-emerald-500/20'
               }`}
             >
-              <div className="flex items-center space-x-3 min-w-0">
-                <div
-                  className={`p-2 rounded-lg transition ${
-                    isActive
-                      ? 'bg-emerald-500/25 text-emerald-400 ring-1 ring-emerald-400/40'
-                      : 'bg-slate-900 text-slate-400 group-hover:text-emerald-400 group-hover:bg-emerald-950/60'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                </div>
+              <div className="flex items-center min-w-0">
                 <span className={`text-xs font-semibold truncate ${isActive ? 'text-emerald-300 font-bold' : 'text-slate-300 group-hover:text-slate-100'}`}>
                   {item.label}
                 </span>
@@ -148,16 +114,7 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
               : 'text-slate-400 hover:text-emerald-300 hover:bg-[#071f14]/70 border border-transparent hover:border-emerald-500/20'
           }`}
         >
-          <div className="flex items-center space-x-3 min-w-0">
-            <div
-              className={`p-2 rounded-lg transition ${
-                activeTab === 'contact_us' || activeTab === 'contact'
-                  ? 'bg-emerald-500/25 text-emerald-400 ring-1 ring-emerald-400/40'
-                  : 'bg-slate-900 text-slate-400 group-hover:text-emerald-400 group-hover:bg-emerald-950/60'
-              }`}
-            >
-              <Headset className="w-4 h-4" />
-            </div>
+          <div className="flex items-center min-w-0">
             <span
               className={`text-xs font-semibold ${
                 activeTab === 'contact_us' || activeTab === 'contact' ? 'text-emerald-300 font-bold' : 'text-slate-300 group-hover:text-slate-100'
@@ -180,16 +137,7 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
               : 'text-slate-400 hover:text-emerald-300 hover:bg-[#071f14]/70 border border-transparent hover:border-emerald-500/20'
           }`}
         >
-          <div className="flex items-center space-x-3 min-w-0">
-            <div
-              className={`p-2 rounded-lg transition ${
-                activeTab === 'settings'
-                  ? 'bg-emerald-500/25 text-emerald-400 ring-1 ring-emerald-400/40'
-                  : 'bg-slate-900 text-slate-400 group-hover:text-emerald-400 group-hover:bg-emerald-950/60'
-              }`}
-            >
-              <SettingsIcon className="w-4 h-4" />
-            </div>
+          <div className="flex items-center min-w-0">
             <span
               className={`text-xs font-semibold ${
                 activeTab === 'settings' ? 'text-emerald-300 font-bold' : 'text-slate-300 group-hover:text-slate-100'
