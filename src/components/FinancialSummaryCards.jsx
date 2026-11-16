@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -13,6 +13,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from 'lucide-react';
+import apiClient from '../apiClient';
 
 export const formatINR = (value) => {
   const num = Number(value) || 0;
@@ -24,7 +25,62 @@ export const formatINR = (value) => {
   }).format(num);
 };
 
-export default function FinancialSummaryCards({ summary, dateRange, comparisons, isLoading }) {
+export default function FinancialSummaryCards({ summary, dateRange, comparisons, isLoading, fixedIncomeAmount }) {
+  const [fixedIncomeTotal, setFixedIncomeTotal] = useState(() => {
+    if (typeof fixedIncomeAmount === 'number' && fixedIncomeAmount >= 0) {
+      return fixedIncomeAmount;
+    }
+    // Check cached records in localStorage if available
+    try {
+      const cached = localStorage.getItem('sts_segregation_records');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .filter((r) => r.type === 'fixed_income')
+            .reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+        }
+      }
+    } catch (_) {}
+    return 0;
+  });
+
+  useEffect(() => {
+    if (typeof fixedIncomeAmount === 'number' && fixedIncomeAmount >= 0) {
+      setFixedIncomeTotal(fixedIncomeAmount);
+      return;
+    }
+
+    let isMounted = true;
+    const fetchFixedIncome = async () => {
+      try {
+        const res = await apiClient.get('/api/segregation');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data) && isMounted) {
+            const fixedTotal = json.data
+              .filter((r) => r.type === 'fixed_income')
+              .reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+            setFixedIncomeTotal(fixedTotal);
+            try {
+              localStorage.setItem('sts_segregation_records', JSON.stringify(json.data));
+            } catch (_) {}
+          }
+        }
+      } catch (err) {
+        // Fallback or ignore
+      }
+    };
+
+    fetchFixedIncome();
+    const handleUpdate = () => fetchFixedIncome();
+    window.addEventListener('sts_data_updated', handleUpdate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('sts_data_updated', handleUpdate);
+    };
+  }, [fixedIncomeAmount]);
+
   const totalIncome = summary?.totalIncome || 0;
   const totalExpenses = summary?.totalExpenses || 0;
   const totalSavings = summary?.totalSavings !== undefined ? summary.totalSavings : (totalIncome - totalExpenses);
@@ -183,39 +239,67 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
         </div>
 
         <div className="mt-3">
-          <div className="flex items-baseline space-x-1.5">
-            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              {savingsRate}%
-            </h3>
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">of income</span>
-          </div>
+          {fixedIncomeTotal > 0 ? (
+            <div>
+              <div className="flex items-baseline space-x-1.5 flex-wrap">
+                <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                  15%
+                </h3>
+                <span className="text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400">
+                  ({formatINR(fixedIncomeTotal * 0.15)})
+                </span>
+              </div>
+              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                of Fixed Income ({formatINR(fixedIncomeTotal)})
+              </p>
+            </div>
+          ) : (
+            <div className="flex items-baseline space-x-1.5">
+              <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                {savingsRate}%
+              </h3>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">of income</span>
+            </div>
+          )}
 
           {/* Mini Progress Bar */}
           <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                savingsRate >= 20
+                fixedIncomeTotal > 0
+                  ? 'bg-emerald-500'
+                  : savingsRate >= 20
                   ? 'bg-emerald-500'
                   : savingsRate > 0
                   ? 'bg-amber-500'
                   : 'bg-rose-500'
               }`}
-              style={{ width: `${Math.min(100, Math.max(0, savingsRate))}%` }}
+              style={{
+                width: fixedIncomeTotal > 0 ? '15%' : `${Math.min(100, Math.max(0, savingsRate))}%`,
+              }}
             />
           </div>
 
           <div className="flex items-center justify-between text-xs mt-2 text-slate-500 dark:text-slate-400">
-            <span>Benchmark: 20%</span>
+            <span>{fixedIncomeTotal > 0 ? 'Target: 15% Allocation' : 'Benchmark: 20%'}</span>
             <span
               className={`font-bold ${
-                savingsRate >= 20
+                fixedIncomeTotal > 0
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : savingsRate >= 20
                   ? 'text-emerald-600 dark:text-emerald-400'
                   : savingsRate > 0
                   ? 'text-amber-500'
                   : 'text-rose-500'
               }`}
             >
-              {savingsRate >= 20 ? 'Optimal' : savingsRate > 0 ? 'Sub-optimal' : 'No Savings'}
+              {fixedIncomeTotal > 0
+                ? '15% Fixed Allocation'
+                : savingsRate >= 20
+                ? 'Optimal'
+                : savingsRate > 0
+                ? 'Sub-optimal'
+                : 'No Savings'}
             </span>
           </div>
         </div>
