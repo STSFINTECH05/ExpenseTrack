@@ -241,7 +241,20 @@ export default function CalculatorModal({ isOpen, onClose }) {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         onClose();
-      } else if (e.key >= '0' && e.key <= '9') {
+        return;
+      }
+
+      // If user is typing inside an input/textarea, ignore global keypad calculator shortcut to prevent duplicate keystrokes
+      if (
+        e.target &&
+        (e.target.tagName === 'INPUT' ||
+          e.target.tagName === 'TEXTAREA' ||
+          e.target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (e.key >= '0' && e.key <= '9') {
         handleInput(e.key);
       } else if (e.key === '.') {
         handleInput('.');
