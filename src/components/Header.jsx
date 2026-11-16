@@ -20,7 +20,12 @@ import {
   Calendar as CalendarIcon,
   Crown,
   StickyNote,
+  ArrowRight,
+  TrendingUp,
+  TrendingDown,
+  Compass,
 } from 'lucide-react';
+import apiClient from '../apiClient';
 import CalculatorModal from './CalculatorModal';
 import CalendarModal from './CalendarModal';
 import NotesModal from './NotesModal';
@@ -58,9 +63,118 @@ export default function Header({
   const [showCalculator, setShowCalculator] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [transactions, setTransactions] = useState([]);
   const moreMenuRef = useRef(null);
   const notificationRef = useRef(null);
   const profileMenuRef = useRef(null);
+  const searchContainerRef = useRef(null);
+
+  // Fetch segregation records and payments to populate global transaction search
+  useEffect(() => {
+    let isMounted = true;
+    const loadSearchData = async () => {
+      try {
+        const [segRes, payRes] = await Promise.all([
+          apiClient.get('/api/segregation').catch(() => null),
+          apiClient.get('/api/payments').catch(() => null),
+        ]);
+
+        const items = [];
+        if (segRes && segRes.ok) {
+          const segJson = await segRes.json().catch(() => null);
+          if (segJson && segJson.success && Array.isArray(segJson.data)) {
+            segJson.data.forEach((r) => {
+              items.push({
+                id: `seg-${r.id || r.name}`,
+                title: r.name || 'Untitled Entry',
+                amount: Number(r.amount) || 0,
+                category: (r.type || 'entry').replace('_', ' '),
+                date: r.date || '',
+                type: r.type?.includes('income') ? 'income' : 'expense',
+                targetTab: 'segregation',
+              });
+            });
+          }
+        }
+
+        if (payRes && payRes.ok) {
+          const payJson = await payRes.json().catch(() => null);
+          const payList = payJson?.success && Array.isArray(payJson?.data)
+            ? payJson.data
+            : Array.isArray(payJson)
+            ? payJson
+            : [];
+          payList.forEach((p) => {
+            items.push({
+              id: `pay-${p.id || p.title}`,
+              title: p.title || 'Payment',
+              amount: Number(p.amount) || 0,
+              category: p.category || 'Direct Payment',
+              date: p.created_at ? p.created_at.split('T')[0] : '',
+              type: 'expense',
+              targetTab: 'dashboard',
+            });
+          });
+        }
+
+        if (isMounted && items.length > 0) {
+          setTransactions(items);
+        }
+      } catch (err) {
+        console.warn('Failed to load search data:', err);
+      }
+    };
+
+    loadSearchData();
+    const handleUpdate = () => loadSearchData();
+    window.addEventListener('sts_data_updated', handleUpdate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('sts_data_updated', handleUpdate);
+    };
+  }, []);
+
+  // Defined quick navigation modules
+  const navigationModules = useMemo(
+    () => [
+      { id: 'dashboard', label: 'Dashboard', keywords: ['dashboard', 'home', 'overview', 'summary', 'metrics'] },
+      { id: 'financial_intelligence', label: 'Financial Intelligence', keywords: ['intelligence', 'analytics', 'savings rate', 'kpi', 'reports'] },
+      { id: 'ai_financial_assistant', label: 'AI Financial Assistant', keywords: ['ai', 'assistant', 'chatbot', 'bot', 'advisor'] },
+      { id: 'segregation', label: 'Expenses', keywords: ['expenses', 'segregation', 'fixed income', 'fixed expense', 'additional', 'ledger'] },
+      { id: 'split_collect', label: 'Split & Collect', keywords: ['split', 'collect', 'shared', 'group', 'tickets'] },
+      { id: 'goal_target', label: 'Goal Target', keywords: ['goal', 'target', 'savings', 'milestone', 'vault'] },
+      { id: 'bills_reminders', label: 'Bill & Reminder', keywords: ['bill', 'bills', 'reminder', 'reminders', 'due', 'utility'] },
+      { id: 'income-streams', label: 'Income Streams', keywords: ['income', 'streams', 'revenue', 'freelance', 'salary'] },
+      { id: 'live_worth', label: 'Live Worth', keywords: ['live worth', 'net worth', 'assets', 'investments', 'stocks', 'gold'] },
+      { id: 'organisation_maintainer', label: 'Organisation Maintainer', keywords: ['organisation', 'organization', 'staff', 'maintainer', 'payroll', 'employee'] },
+      { id: 'contact_us', label: 'Contact Us', keywords: ['contact', 'help', 'support', 'email', 'phone'] },
+      { id: 'settings', label: 'Settings', keywords: ['settings', 'preferences', 'profile', 'security', 'account'] },
+    ],
+    []
+  );
+
+  // Filter matching navigation sections and transactions
+  const searchResults = useMemo(() => {
+    const q = (searchQuery || '').trim().toLowerCase();
+    if (!q) return { modules: [], transactions: [] };
+
+    const matchingModules = navigationModules.filter((m) =>
+      m.label.toLowerCase().includes(q) || m.keywords.some((kw) => kw.includes(q))
+    );
+
+    const matchingTransactions = transactions.filter((t) =>
+      t.title.toLowerCase().includes(q) ||
+      t.category.toLowerCase().includes(q) ||
+      (t.date && t.date.toLowerCase().includes(q)) ||
+      String(t.amount).includes(q)
+    );
+
+    return {
+      modules: matchingModules.slice(0, 4),
+      transactions: matchingTransactions.slice(0, 6),
+    };
+  }, [searchQuery, navigationModules, transactions]);
 
   // Compute initials and identity dynamically based on currentUser
   const userEmail = currentUser?.email || 'admin@stsfintech.com';
@@ -109,7 +223,7 @@ export default function Header({
     };
   }, [currentUser]);
 
-  // Close dropdowns on outside click
+  // Close dropdowns on outside click or Escape key
   useEffect(() => {
     function handleClickOutside(event) {
       if (moreMenuRef.current && !moreMenuRef.current.contains(event.target)) {
@@ -121,10 +235,54 @@ export default function Header({
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
         setShowProfileMenu(false);
       }
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setIsSearchOpen(false);
+      }
     }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setIsSearchOpen(false);
+        setShowMoreMenu(false);
+        setShowNotifications(false);
+        setShowProfileMenu(false);
+      }
+    }
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
+
+  const handleNavigateToModule = (moduleId) => {
+    if (setActiveMainTab) setActiveMainTab('Expense');
+    if (setActiveTab) setActiveTab(moduleId);
+    setIsSearchOpen(false);
+  };
+
+  const handleSelectTransaction = (item) => {
+    if (setActiveMainTab) setActiveMainTab('Expense');
+    if (setActiveTab) setActiveTab(item.targetTab || 'segregation');
+    setIsSearchOpen(false);
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      if (searchResults.modules.length > 0) {
+        handleNavigateToModule(searchResults.modules[0].id);
+      } else if (searchResults.transactions.length > 0) {
+        handleSelectTransaction(searchResults.transactions[0]);
+      } else {
+        // Default to Expenses / Segregation
+        if (setActiveMainTab) setActiveMainTab('Expense');
+        if (setActiveTab) setActiveTab('segregation');
+        setIsSearchOpen(false);
+      }
+    }
+  };
 
   return (
     <header
@@ -230,15 +388,108 @@ export default function Header({
         {/* ========================================================= */}
         <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
           {/* 1. Search Bar */}
-          <div className="relative hidden md:block">
+          <div className="relative hidden md:block" ref={searchContainerRef}>
             <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                if (setSearchQuery) setSearchQuery(e.target.value);
+                setIsSearchOpen(true);
+              }}
+              onFocus={() => {
+                if (searchQuery && searchQuery.trim()) {
+                  setIsSearchOpen(true);
+                }
+              }}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Search transactions..."
               className="w-36 lg:w-48 bg-zinc-800/80 border border-zinc-700 rounded-xl pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-zinc-800 transition-all shadow-inner"
             />
+
+            {/* Search Results Dropdown Popover */}
+            {isSearchOpen && searchQuery && searchQuery.trim() && (
+              <div className="absolute right-0 sm:left-0 sm:right-auto mt-2 w-80 max-w-[90vw] rounded-2xl bg-[#18181B] border border-zinc-700 shadow-2xl py-3 px-3 z-50 animate-fadeIn divide-y divide-zinc-800">
+                {/* Navigation Modules Section */}
+                {searchResults.modules.length > 0 && (
+                  <div className="pb-2.5">
+                    <div className="flex items-center space-x-1.5 px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                      <Compass className="w-3 h-3 text-emerald-400" />
+                      <span>Navigation Modules</span>
+                    </div>
+                    <div className="space-y-1">
+                      {searchResults.modules.map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => handleNavigateToModule(m.id)}
+                          className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-zinc-800/90 text-zinc-200 hover:text-white transition flex items-center justify-between group cursor-pointer"
+                        >
+                          <span className="text-xs font-semibold group-hover:text-emerald-400 transition-colors">
+                            {m.label}
+                          </span>
+                          <ArrowRight className="w-3 h-3 text-zinc-500 group-hover:text-emerald-400 transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Transactions Section */}
+                {searchResults.transactions.length > 0 && (
+                  <div className={searchResults.modules.length > 0 ? 'pt-2.5 pb-1' : 'pb-1'}>
+                    <div className="flex items-center justify-between px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                      <span>Matching Transactions</span>
+                      <span className="text-[9px] text-zinc-500 font-normal">
+                        {searchResults.transactions.length} found
+                      </span>
+                    </div>
+                    <div className="space-y-1 max-h-56 overflow-y-auto">
+                      {searchResults.transactions.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => handleSelectTransaction(item)}
+                          className="w-full text-left p-2 rounded-lg hover:bg-zinc-800/90 transition flex items-center justify-between group cursor-pointer border border-transparent hover:border-zinc-700/60"
+                        >
+                          <div className="min-w-0 pr-2">
+                            <p className="text-xs font-bold text-zinc-100 group-hover:text-emerald-400 transition-colors truncate">
+                              {item.title}
+                            </p>
+                            <div className="flex items-center space-x-2 text-[10px] text-zinc-400 mt-0.5">
+                              <span className="capitalize">{item.category}</span>
+                              {item.date && <span>• {item.date}</span>}
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <span
+                              className={`text-xs font-mono font-bold ${
+                                item.type === 'income' ? 'text-emerald-400' : 'text-zinc-200'
+                              }`}
+                            >
+                              ₹{Number(item.amount).toLocaleString('en-IN', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {searchResults.modules.length === 0 && searchResults.transactions.length === 0 && (
+                  <div className="py-4 text-center text-xs text-zinc-400">
+                    <p className="font-semibold text-zinc-300">No matching transactions found</p>
+                    <p className="text-[11px] text-zinc-500 mt-1">
+                      Try searching with a title, category, or module name
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Global Language Selector Dropdown [ 🌐 English ▾ ] */}
