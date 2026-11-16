@@ -12,6 +12,8 @@ import {
   Activity,
   ArrowUpRight,
   ArrowDownRight,
+  Bell,
+  Wallet,
 } from 'lucide-react';
 import apiClient from '../apiClient';
 
@@ -45,6 +47,21 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
     return 0;
   });
 
+  const [reminderData, setReminderData] = useState(() => {
+    try {
+      const cachedBills = localStorage.getItem('sts_bills') || localStorage.getItem('sts_segregation_records');
+      if (cachedBills) {
+        const parsed = JSON.parse(cachedBills);
+        if (Array.isArray(parsed)) {
+          const billItems = parsed.filter((r) => r.type === 'bill');
+          const totalDue = billItems.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+          return { totalDue, count: billItems.length };
+        }
+      }
+    } catch (_) {}
+    return { totalDue: 0, count: 0 };
+  });
+
   useEffect(() => {
     if (typeof fixedIncomeAmount === 'number' && fixedIncomeAmount >= 0) {
       setFixedIncomeTotal(fixedIncomeAmount);
@@ -52,7 +69,7 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
     }
 
     let isMounted = true;
-    const fetchFixedIncome = async () => {
+    const fetchLedgerData = async () => {
       try {
         const res = await apiClient.get('/api/segregation');
         if (res.ok) {
@@ -62,6 +79,11 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
               .filter((r) => r.type === 'fixed_income')
               .reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
             setFixedIncomeTotal(fixedTotal);
+
+            const billItems = json.data.filter((r) => r.type === 'bill');
+            const totalDue = billItems.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+            setReminderData({ totalDue, count: billItems.length });
+
             try {
               localStorage.setItem('sts_segregation_records', JSON.stringify(json.data));
             } catch (_) {}
@@ -72,8 +94,8 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
       }
     };
 
-    fetchFixedIncome();
-    const handleUpdate = () => fetchFixedIncome();
+    fetchLedgerData();
+    const handleUpdate = () => fetchLedgerData();
     window.addEventListener('sts_data_updated', handleUpdate);
     return () => {
       isMounted = false;
@@ -96,8 +118,16 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
   const expenseChangePct = comparisons?.expenseChangePct;
   const savingsChangePct = comparisons?.savingsChangePct;
 
+  // Card 5: Total Saving Rate calculations
+  const totalSavingRate = totalIncome > 0 ? ((totalSavings / totalIncome) * 100).toFixed(1) : '0.0';
+
+  // Card 6: Reminder Balance calculations
+  const reminderBalance = reminderData.totalDue || 0;
+  const upcomingCount = reminderData.count || 0;
+  const balanceAfterDues = Math.max(0, totalSavings - reminderBalance);
+
   return (
-    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       {/* CARD 1: TOTAL INCOME */}
       <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-xs relative overflow-hidden transition-all duration-200 hover:border-emerald-500/40">
         <div className="flex items-center justify-between">
@@ -303,6 +333,122 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
                 : savingsRate > 0
                 ? 'Sub-optimal'
                 : 'No Savings'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* CARD 5: TOTAL SAVING RATE */}
+      <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-xs relative overflow-hidden transition-all duration-200 hover:border-emerald-500/40">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Total Saving Rate
+          </span>
+          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <PiggyBank className="w-4 h-4" />
+          </div>
+        </div>
+
+        <div className="mt-3">
+          <div className="flex items-baseline space-x-1.5 flex-wrap">
+            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+              {totalSavingRate}%
+            </h3>
+            <span
+              className={`text-sm sm:text-base font-bold ${
+                isDeficit ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
+              }`}
+            >
+              ({isDeficit ? `-${formatINR(Math.abs(totalSavings))}` : formatINR(totalSavings)})
+            </span>
+          </div>
+
+          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+            of Total Inflow ({formatINR(totalIncome)})
+          </p>
+
+          {/* Mini Progress Bar */}
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                Number(totalSavingRate) >= 20
+                  ? 'bg-emerald-500'
+                  : Number(totalSavingRate) > 0
+                  ? 'bg-amber-500'
+                  : 'bg-rose-500'
+              }`}
+              style={{
+                width: `${Math.min(100, Math.max(0, Number(totalSavingRate)))}%`,
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-xs mt-2 text-slate-500 dark:text-slate-400">
+            <span>Net Retention</span>
+            <span
+              className={`font-bold ${
+                Number(totalSavingRate) > 0
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-rose-500'
+              }`}
+            >
+              {Number(totalSavingRate) > 0 ? 'Active' : 'No Retention'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* CARD 6: REMINDER BALANCE */}
+      <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-xs relative overflow-hidden transition-all duration-200 hover:border-emerald-500/40">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Reminder Balance
+          </span>
+          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            <Bell className="w-4 h-4" />
+          </div>
+        </div>
+
+        <div className="mt-3">
+          <div className="flex items-baseline space-x-1.5 flex-wrap">
+            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+              {formatINR(reminderBalance)}
+            </h3>
+          </div>
+
+          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+            {upcomingCount > 0 ? `${upcomingCount} pending reminders` : 'No upcoming dues'}
+          </p>
+          <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 mt-0.5 tabular-nums">
+            After Dues: {formatINR(balanceAfterDues)}
+          </p>
+
+          {/* Mini Progress Bar */}
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                reminderBalance === 0
+                  ? 'bg-emerald-500'
+                  : balanceAfterDues > 0
+                  ? 'bg-amber-500'
+                  : 'bg-rose-500'
+              }`}
+              style={{
+                width: reminderBalance === 0 ? '100%' : `${Math.min(100, Math.max(10, (reminderBalance / (totalIncome || 1)) * 100))}%`,
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-xs mt-2 text-slate-500 dark:text-slate-400">
+            <span>Commitment</span>
+            <span
+              className={`font-bold ${
+                reminderBalance === 0
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-amber-500'
+              }`}
+            >
+              {reminderBalance === 0 ? 'All Settled' : 'Due Scheduled'}
             </span>
           </div>
         </div>
