@@ -252,6 +252,9 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
               <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                 of Fixed Income ({formatINR(fixedIncomeTotal)})
               </p>
+              <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 mt-0.5 tabular-nums">
+                Balance: {formatINR(fixedIncomeTotal * 0.85)}
+              </p>
             </div>
           ) : (
             <div className="flex items-baseline space-x-1.5">
