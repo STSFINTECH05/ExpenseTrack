@@ -392,9 +392,20 @@ export default function CalculatorModal({ isOpen, onClose }) {
                 <span className="text-xs font-mono font-bold text-slate-400 flex-shrink-0">
                   {fromObj.symbol}
                 </span>
-                <span className="text-base sm:text-lg font-mono font-bold text-white truncate text-right">
-                  {currencyInput || '0'}
-                </span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={currencyInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    // Allow digits, single decimal point, and standard math operators (+ - * / × ÷ %)
+                    if (val === '' || /^[0-9+\-*/.×÷% ]*$/.test(val)) {
+                      setCurrencyInput(val);
+                    }
+                  }}
+                  placeholder="0"
+                  className="w-full bg-transparent text-right text-base sm:text-lg font-mono font-bold text-white focus:outline-none focus:ring-0 border-0 p-0"
+                />
               </div>
             </div>
 
