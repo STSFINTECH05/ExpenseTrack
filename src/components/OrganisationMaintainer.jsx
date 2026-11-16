@@ -415,7 +415,7 @@ export default function OrganisationMaintainer() {
                 <input
                   type="number"
                   min="0"
-                  step="500"
+                  step="any"
                   required
                   value={baseSalary}
                   onChange={(e) => setBaseSalary(e.target.value)}
@@ -433,7 +433,7 @@ export default function OrganisationMaintainer() {
                   <input
                     type="number"
                     min="0"
-                    step="100"
+                    step="any"
                     value={additionalSalary}
                     onChange={(e) => setAdditionalSalary(e.target.value)}
                     placeholder="e.g. 5000"
@@ -449,7 +449,7 @@ export default function OrganisationMaintainer() {
                   <input
                     type="number"
                     min="0"
-                    step="100"
+                    step="any"
                     value={expenses}
                     onChange={(e) => setExpenses(e.target.value)}
                     placeholder="e.g. 1500"
