@@ -118,8 +118,10 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
   const expenseChangePct = comparisons?.expenseChangePct;
   const savingsChangePct = comparisons?.savingsChangePct;
 
-  // Card 5: Total Saving Rate calculations
-  const totalSavingRate = totalIncome > 0 ? ((totalSavings / totalIncome) * 100).toFixed(1) : '0.0';
+  // Card 5: Total Saving Rate calculations (deducting 15% Fixed Income allocation)
+  const fifteenPercentAllocation = (fixedIncomeTotal || 0) * 0.15;
+  const adjustedNetSavings = Math.max(0, totalSavings - fifteenPercentAllocation);
+  const netSavingRatePct = totalIncome > 0 ? ((adjustedNetSavings / totalIncome) * 100).toFixed(1) : '0.0';
 
   // Card 6: Reminder Balance calculations
   const reminderBalance = reminderData.totalDue || 0;
@@ -352,14 +354,14 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
         <div className="mt-3">
           <div className="flex items-baseline space-x-1.5 flex-wrap">
             <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              {totalSavingRate}%
+              {netSavingRatePct}%
             </h3>
             <span
               className={`text-sm sm:text-base font-bold ${
-                isDeficit ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
+                adjustedNetSavings === 0 && isDeficit ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
               }`}
             >
-              ({isDeficit ? `-${formatINR(Math.abs(totalSavings))}` : formatINR(totalSavings)})
+              ({formatINR(adjustedNetSavings)})
             </span>
           </div>
 
@@ -371,14 +373,14 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
           <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                Number(totalSavingRate) >= 20
+                Number(netSavingRatePct) >= 20
                   ? 'bg-emerald-500'
-                  : Number(totalSavingRate) > 0
+                  : Number(netSavingRatePct) > 0
                   ? 'bg-amber-500'
                   : 'bg-rose-500'
               }`}
               style={{
-                width: `${Math.min(100, Math.max(0, Number(totalSavingRate)))}%`,
+                width: `${Math.min(100, Math.max(0, Number(netSavingRatePct)))}%`,
               }}
             />
           </div>
@@ -387,12 +389,12 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
             <span>Net Retention</span>
             <span
               className={`font-bold ${
-                Number(totalSavingRate) > 0
+                Number(netSavingRatePct) > 0
                   ? 'text-emerald-600 dark:text-emerald-400'
                   : 'text-rose-500'
               }`}
             >
-              {Number(totalSavingRate) > 0 ? 'Active' : 'No Retention'}
+              {Number(netSavingRatePct) > 0 ? 'Active' : 'No Retention'}
             </span>
           </div>
         </div>
