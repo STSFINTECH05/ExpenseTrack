@@ -44,14 +44,14 @@ export default function LiveWorthView({ currentUser }) {
     console.warn('LiveWorthView LanguageContext fallback:', err);
   }
 
-  // 1. Base Worth / Principal (defaults to ₹25,00,000 or saved value)
+  // 1. Base Worth / Principal (defaults to 0 or saved value)
   const [baseWorth, setBaseWorth] = useState(() => {
     try {
       const saved = localStorage.getItem('sts_live_worth_base');
       const val = parseFloat(saved);
-      return !isNaN(val) && val >= 0 ? val : 2500000;
+      return !isNaN(val) && val >= 0 ? val : 0;
     } catch {
-      return 2500000;
+      return 0;
     }
   });
 
