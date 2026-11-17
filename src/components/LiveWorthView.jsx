@@ -170,14 +170,33 @@ export default function LiveWorthView({ currentUser }) {
   }, [currentWorth]);
 
   // Split current worth into Integer & Fractional precision string (4 decimals for dynamic ticking)
-  const { integerPart, fractionPart } = useMemo(() => {
+  const { integerPart, fractionPart, integerFontSize, symbolFontSize, fractionFontSize } = useMemo(() => {
     const fixedStr = currentWorth.toFixed(4);
     const parts = fixedStr.split('.');
     const intNum = parseInt(parts[0], 10) || 0;
     const formattedInt = new Intl.NumberFormat('en-IN').format(intNum);
+    const charLen = formattedInt.length;
+
+    let intSize = 'text-3xl sm:text-4xl md:text-5xl';
+    let symSize = 'text-2xl sm:text-3xl md:text-4xl';
+    let fracSize = 'text-base sm:text-xl md:text-2xl';
+
+    if (charLen >= 14) {
+      intSize = 'text-xl sm:text-2xl md:text-[26px]';
+      symSize = 'text-lg sm:text-xl md:text-2xl';
+      fracSize = 'text-xs sm:text-sm md:text-base';
+    } else if (charLen >= 11) {
+      intSize = 'text-2xl sm:text-3xl md:text-4xl';
+      symSize = 'text-xl sm:text-2xl md:text-3xl';
+      fracSize = 'text-sm sm:text-base md:text-lg';
+    }
+
     return {
       integerPart: formattedInt,
       fractionPart: parts[1] || '0000',
+      integerFontSize: intSize,
+      symbolFontSize: symSize,
+      fractionFontSize: fracSize,
     };
   }, [currentWorth]);
 
@@ -298,18 +317,18 @@ export default function LiveWorthView({ currentUser }) {
             </button>
 
             {/* B. Main Dynamic Real-Time Counter */}
-            <div className="relative z-10 my-1 sm:my-2">
+            <div className="relative z-10 my-1 sm:my-2 w-full px-4 sm:px-6 max-w-full">
               <span className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
                 Total Live Net Worth
               </span>
-              <div className="font-mono font-black tracking-tight flex items-baseline justify-center">
-                <span className="text-2xl sm:text-3xl md:text-4xl text-[#0d5236] dark:text-emerald-400 mr-1 font-bold">
+              <div className="font-mono font-black tracking-tight flex items-baseline justify-center max-w-full whitespace-nowrap overflow-visible">
+                <span className={`${symbolFontSize} text-[#0d5236] dark:text-emerald-400 mr-1 font-bold flex-shrink-0`}>
                   ₹
                 </span>
-                <span className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white">
+                <span className={`${integerFontSize} font-black text-slate-900 dark:text-white tabular-nums`}>
                   {integerPart}
                 </span>
-                <span className="text-base sm:text-xl md:text-2xl text-emerald-600 dark:text-emerald-400 font-bold ml-1">
+                <span className={`${fractionFontSize} text-emerald-600 dark:text-emerald-400 font-bold ml-1 tabular-nums flex-shrink-0`}>
                   .{fractionPart}
                 </span>
               </div>
