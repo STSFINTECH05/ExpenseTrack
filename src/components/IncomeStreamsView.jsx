@@ -20,6 +20,7 @@ import {
   Landmark,
   Mail,
   ChevronRight,
+  ChevronDown,
   ExternalLink,
   Info,
   MapPin,
@@ -1090,6 +1091,16 @@ export default function IncomeStreamsView() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Individual card expansion state (tracks expanded card IDs)
+  const [expandedCardIds, setExpandedCardIds] = useState({});
+
+  const toggleCardExpansion = (cardId) => {
+    setExpandedCardIds((prev) => ({
+      ...prev,
+      [cardId]: !prev[cardId],
+    }));
+  };
+
   // Fixed Deposit & Post Office Directory Views
   const [activeDirectoryTab, setActiveDirectoryTab] = useState('none'); // 'none' | 'bank_fd' | 'post_office'
 
@@ -1660,110 +1671,136 @@ export default function IncomeStreamsView() {
       </div>
 
       {/* 4. Streams Grid View */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {finalStreams.map((item) => (
-          <div
-            key={item.id}
-            className={`p-5 rounded-3xl bg-white dark:bg-[#0c1322] border transition relative flex flex-col justify-between group ${item.isMatch
-                ? 'border-emerald-500/80 shadow-md ring-1 ring-emerald-500/30'
-                : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-              }`}
-          >
-            {/* Top Match Tag */}
-            {item.isMatch && (
-              <div className="absolute -top-3 left-4 px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold shadow-xs flex items-center space-x-1">
-                <CheckCircle2 className="w-3 h-3" />
-                <span>Target Match</span>
-              </div>
-            )}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
+        {finalStreams.map((item) => {
+          const isExpanded = !!expandedCardIds[item.id];
 
-            <div>
-              {/* Category & Risk Badges */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                  {item.categoryName}
-                </span>
+          return (
+            <div
+              key={item.id}
+              className={`p-5 rounded-3xl bg-white dark:bg-[#0c1322] border transition relative flex flex-col group ${item.isMatch
+                  ? 'border-emerald-500/80 shadow-md ring-1 ring-emerald-500/30'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                }`}
+            >
+              {/* Top Match Tag */}
+              {item.isMatch && (
+                <div className="absolute -top-3 left-4 px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold shadow-xs flex items-center space-x-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  <span>Target Match</span>
+                </div>
+              )}
 
-                <span
-                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${item.riskColor === 'emerald'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80'
-                      : item.riskColor === 'amber'
-                        ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80'
-                        : 'bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/80'
-                    }`}
+              <div>
+                {/* Category & Risk Badges */}
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                    {item.categoryName}
+                  </span>
+
+                  <span
+                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${item.riskColor === 'emerald'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80'
+                        : item.riskColor === 'amber'
+                          ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80'
+                          : 'bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/80'
+                      }`}
+                  >
+                    {item.risk}
+                  </span>
+                </div>
+
+                {/* Title & Asset Class */}
+                <div className="pt-3">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">{item.assetClass}</p>
+                </div>
+
+                {/* Yield & Horizon Callout */}
+                <div className={`mt-3 p-3 rounded-2xl border ${item.accentBg} ${item.accentBorder}`}>
+                  <span className="text-[10px] uppercase font-bold tracking-wider block opacity-70">
+                    Target Expected Return
+                  </span>
+                  <span className={`text-sm font-extrabold ${item.accentText} block mt-0.5`}>
+                    {item.returnHorizon}
+                  </span>
+                </div>
+
+                {/* Downward Chevron Toggle Bar */}
+                <button
+                  type="button"
+                  onClick={() => toggleCardExpansion(item.id)}
+                  aria-expanded={isExpanded}
+                  className="w-full mt-3.5 py-1.5 px-3 rounded-xl border border-slate-200/80 dark:border-slate-800 hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-slate-900/60 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all flex items-center justify-center space-x-1.5 cursor-pointer group/toggle text-xs font-semibold"
                 >
-                  {item.risk}
-                </span>
-              </div>
-
-              {/* Title & Asset Class */}
-              <div className="pt-3">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-emerald-500 transition-colors">
-                  {item.title}
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5">{item.assetClass}</p>
-              </div>
-
-              {/* Yield & Horizon Callout */}
-              <div className={`mt-3 p-3 rounded-2xl border ${item.accentBg} ${item.accentBorder}`}>
-                <span className="text-[10px] uppercase font-bold tracking-wider block opacity-70">
-                  Target Expected Return
-                </span>
-                <span className={`text-sm font-extrabold ${item.accentText} block mt-0.5`}>
-                  {item.returnHorizon}
-                </span>
-              </div>
-
-              {/* Projected Return on User Investment Amount */}
-              <div className="mt-3 p-2.5 rounded-xl bg-slate-50 dark:bg-[#070b14] border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between text-xs">
-                <div>
-                  <span className="text-[10px] text-slate-400 block">Est. Return on ₹{numPrincipal.toLocaleString()}</span>
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                    +₹{item.estAnnual.toLocaleString()}/yr
+                  <span className="text-[11px]">
+                    {isExpanded ? 'Less details' : 'More details'}
                   </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-slate-400 block">Monthly Equivalent</span>
-                  <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
-                    ~₹{item.estMonthly.toLocaleString()}/mo
-                  </span>
-                </div>
-              </div>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-300 ${
+                      isExpanded ? 'rotate-180 text-emerald-500' : 'group-hover/toggle:translate-y-0.5'
+                    }`}
+                  />
+                </button>
 
-              {/* Summary Description */}
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-3 leading-relaxed">
-                {item.summary}
-              </p>
+                {/* Expanded Details Section */}
+                {isExpanded && (
+                  <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 space-y-3 animate-fadeIn">
+                    {/* Projected Return on User Investment Amount */}
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#070b14] border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block">Est. Return on ₹{numPrincipal.toLocaleString()}</span>
+                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                          +₹{item.estAnnual.toLocaleString()}/yr
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-400 block">Monthly Equivalent</span>
+                        <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                          ~₹{item.estMonthly.toLocaleString()}/mo
+                        </span>
+                      </div>
+                    </div>
 
-              {/* Key Bullet Highlights */}
-              <div className="mt-3 space-y-1">
-                {item.highlights.map((h, idx) => (
-                  <div key={idx} className="flex items-center space-x-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-                    <span className="w-1 h-1 rounded-full bg-emerald-500 flex-shrink-0" />
-                    <span>{h}</span>
+                    {/* Summary Description */}
+                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {item.summary}
+                    </p>
+
+                    {/* Key Bullet Highlights */}
+                    <div className="space-y-1">
+                      {item.highlights.map((h, idx) => (
+                        <div key={idx} className="flex items-center space-x-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                          <span className="w-1 h-1 rounded-full bg-emerald-500 flex-shrink-0" />
+                          <span>{h}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Bottom Steps & Minimum entry */}
+                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 mb-2">
+                        <span>Min Entry: <b className="font-mono text-slate-700 dark:text-slate-200">₹{item.minAmount.toLocaleString()}</b></span>
+                        <span className="capitalize">{item.term} Term</span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
+                        <span className="font-bold text-slate-700 dark:text-slate-300 block text-[10px] uppercase">
+                          How to invest:
+                        </span>
+                        {item.guide.map((step, sIdx) => (
+                          <p key={sIdx} className="leading-tight">• {step}</p>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                ))}
+                )}
               </div>
             </div>
-
-            {/* Bottom Steps & Minimum entry */}
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <div className="flex items-center justify-between text-[11px] text-slate-400 mb-2">
-                <span>Min Entry: <b className="font-mono text-slate-700 dark:text-slate-200">₹{item.minAmount.toLocaleString()}</b></span>
-                <span className="capitalize">{item.term} Term</span>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 text-[11px] text-slate-600 dark:text-slate-400 space-y-1">
-                <span className="font-bold text-slate-700 dark:text-slate-300 block text-[10px] uppercase">
-                  How to invest:
-                </span>
-                {item.guide.map((step, sIdx) => (
-                  <p key={sIdx} className="leading-tight">• {step}</p>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </section>
 
       {/* 5. Wealth Diversification Strategy Guide Banner */}
