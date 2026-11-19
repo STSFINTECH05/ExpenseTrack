@@ -1107,10 +1107,10 @@ export default function IncomeStreamsView() {
   // Real Estate Land & Sq. Ft. Valuation Modal State
   const [isRealEstateModalOpen, setIsRealEstateModalOpen] = useState(false);
 
-  // Interactive Filter States (initialized with defaults)
+  // Interactive Filter States (initialized with 0 defaults)
   const [isFilterSubmitted, setIsFilterSubmitted] = useState(false);
-  const [invAmount, setInvAmount] = useState('35000');
-  const [targetProfit, setTargetProfit] = useState('1000');
+  const [invAmount, setInvAmount] = useState('0');
+  const [targetProfit, setTargetProfit] = useState('0');
   const [profitCadence, setProfitCadence] = useState('year'); // 'month' or 'year'
   const [timeHorizon, setTimeHorizon] = useState('any'); // 'any', 'short', 'medium', 'long'
 
@@ -1121,19 +1121,19 @@ export default function IncomeStreamsView() {
 
   const handleResetFilter = () => {
     setIsFilterSubmitted(false);
-    setInvAmount('35000');
-    setTargetProfit('1000');
+    setInvAmount('0');
+    setTargetProfit('0');
     setProfitCadence('year');
     setTimeHorizon('any');
   };
 
   // Safe numerical conversions
-  const numPrincipal = Math.max(Number(invAmount) || 0, 1);
+  const numPrincipal = Math.max(Number(invAmount) || 0, 0);
   const numTargetProfit = Math.max(Number(targetProfit) || 0, 0);
   const annualizedTarget = profitCadence === 'month' ? numTargetProfit * 12 : numTargetProfit;
 
   // Rate calculations
-  const requiredReturnRate = ((annualizedTarget / numPrincipal) * 100).toFixed(2);
+  const requiredReturnRate = numPrincipal > 0 ? ((annualizedTarget / numPrincipal) * 100).toFixed(2) : '0.00';
   const rateNum = Number(requiredReturnRate);
 
   // Capital suggestion
@@ -1461,7 +1461,7 @@ export default function IncomeStreamsView() {
                   step="any"
                   value={invAmount}
                   onChange={(e) => setInvAmount(e.target.value)}
-                  placeholder="35000"
+                  placeholder="0"
                   className="w-full pl-7 pr-2.5 py-1.5 bg-white dark:bg-[#0c1424] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white font-mono placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
@@ -1482,7 +1482,7 @@ export default function IncomeStreamsView() {
                   step="any"
                   value={targetProfit}
                   onChange={(e) => setTargetProfit(e.target.value)}
-                  placeholder="1000"
+                  placeholder="0"
                   className="w-full pl-7 pr-2.5 py-1.5 bg-white dark:bg-[#0c1424] border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white font-mono placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
