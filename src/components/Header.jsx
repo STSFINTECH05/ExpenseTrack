@@ -70,6 +70,44 @@ export default function Header({
   const profileMenuRef = useRef(null);
   const searchContainerRef = useRef(null);
 
+  // Active subscription remaining days calculation
+  const calculateDaysLeft = () => {
+    try {
+      const stored = localStorage.getItem('sts_active_subscription');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (typeof parsed?.daysLeft === 'number') {
+          return Math.max(0, parsed.daysLeft);
+        }
+        if (parsed?.activatedAt) {
+          const activatedTime = new Date(parsed.activatedAt).getTime();
+          if (!isNaN(activatedTime)) {
+            const diffMs = Date.now() - activatedTime;
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            return Math.max(0, 30 - diffDays);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error calculating days left in Header:', e);
+    }
+    return 30;
+  };
+
+  const [daysLeft, setDaysLeft] = useState(calculateDaysLeft);
+
+  useEffect(() => {
+    const handleSubChange = () => {
+      setDaysLeft(calculateDaysLeft());
+    };
+    window.addEventListener('sts_subscription_changed', handleSubChange);
+    window.addEventListener('storage', handleSubChange);
+    return () => {
+      window.removeEventListener('sts_subscription_changed', handleSubChange);
+      window.removeEventListener('storage', handleSubChange);
+    };
+  }, []);
+
   // Fetch segregation records and payments to populate global transaction search
   useEffect(() => {
     let isMounted = true;
@@ -535,7 +573,7 @@ export default function Header({
             )}
           </div>
 
-          {/* Subscription Plans Icon Button */}
+          {/* Subscription Plans Circular Remaining Days Badge / Button */}
           <button
             type="button"
             onClick={() => {
@@ -545,15 +583,19 @@ export default function Header({
                 setActiveTab('subscription');
               }
             }}
-            className={`relative p-2 rounded-xl border transition-all duration-200 cursor-pointer group shadow-xs ${
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold tabular-nums transition-all duration-200 cursor-pointer group shadow-xs hover:scale-105 active:scale-95 ${
+              daysLeft > 0
+                ? 'border-2 border-emerald-500 text-emerald-400 bg-emerald-500/10'
+                : 'border-2 border-zinc-600 text-zinc-400 bg-transparent'
+            } ${
               activeTab === 'subscription'
-                ? 'text-emerald-400 bg-emerald-950/60 border-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
-                : 'text-zinc-200 hover:text-emerald-400 bg-zinc-800/80 hover:bg-zinc-700/80 border-zinc-700 hover:border-emerald-500/50'
+                ? 'ring-2 ring-emerald-400/60 ring-offset-1 ring-offset-zinc-900 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+                : ''
             }`}
-            title="Subscription Plans"
-            aria-label="Subscription Plans"
+            title={`${daysLeft} days left`}
+            aria-label={`Subscription Plans (${daysLeft} days left)`}
           >
-            <Crown className="w-4 h-4 transition-transform group-hover:scale-110 text-zinc-200 group-hover:text-emerald-400" />
+            {daysLeft}
           </button>
 
           {/* 3. Login Details / User Profile with Floating Dropdown Menu */}
