@@ -67,6 +67,70 @@ const formatDate = (dateString) => {
   }).format(date);
 };
 
+// Plan normalizer helper
+const getNormalizedPlan = (user) => {
+  try {
+    const userPlan = user?.subscription?.name || user?.subscription?.id || user?.subscription || user?.plan;
+    if (typeof userPlan === 'string') {
+      const lower = userPlan.toLowerCase();
+      if (lower.includes('silver')) return 'silver';
+      if (lower.includes('elite')) return 'elite';
+      if (lower.includes('gold')) return 'gold';
+    }
+    const stored = localStorage.getItem('sts_active_subscription');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      const str = (parsed?.id || parsed?.name || '').toLowerCase();
+      if (str.includes('silver')) return 'silver';
+      if (str.includes('elite')) return 'elite';
+      if (str.includes('gold')) return 'gold';
+    }
+  } catch (e) {
+    console.warn('Error reading sts_active_subscription in App:', e);
+  }
+  return 'gold';
+};
+
+// Plan-based tab permissions checker
+const isTabAllowedForPlan = (tab, plan) => {
+  const p = (plan || 'gold').toLowerCase();
+  const t = (tab || '').toLowerCase().replace(/_/g, '-');
+
+  // Common tabs allowed across all plans
+  if (
+    t === 'dashboard' ||
+    t === 'contact-us' ||
+    t === 'contact' ||
+    t === 'settings' ||
+    t === 'subscription' ||
+    t === 'wallets' ||
+    t === 'payments'
+  ) {
+    return true;
+  }
+
+  // Silver plan allows only: Dashboard, Expenses (segregation), Split & Collect, Goal Target, Bill & Reminder (+ Contact Us & Settings)
+  // Hides: Financial Intelligence, AI Financial Assistant, Income Streams, Live Worth, Organisation Maintainer
+  if (p.includes('silver')) {
+    return (
+      t === 'segregation' ||
+      t === 'expenses' ||
+      t === 'split-collect' ||
+      t === 'goal-target' ||
+      t === 'bills-reminders' ||
+      t === 'bill-reminder'
+    );
+  }
+
+  // Gold plan shows all modules EXCEPT Income Streams
+  if (p.includes('gold')) {
+    return t !== 'income-streams';
+  }
+
+  // Elite plan shows all modules without restriction
+  return true;
+};
+
 export default function App() {
   // Primary Route State: 'landing' (/) | 'auth' (/login) | 'dashboard' (/dashboard) | '/settings' | '/income-streams'
   const getInitialRoute = () => {
@@ -151,20 +215,21 @@ export default function App() {
         setAuthMode('signup');
       } else if (path === '/dashboard' || path === '/settings' || path === '/income-streams' || path === '/live-worth' || path === '/organisation-maintainer' || path === '/organisation_maintainer' || path === '/financial-intelligence' || path === '/financial_intelligence') {
         setCurrentRoute('dashboard');
+        const currentPlan = getNormalizedPlan(currentUser);
         if (path === '/settings') {
           setActiveTab('settings');
           setMainNavTab('Expense');
         } else if (path === '/financial-intelligence' || path === '/financial_intelligence') {
-          setActiveTab('financial_intelligence');
+          setActiveTab(isTabAllowedForPlan('financial_intelligence', currentPlan) ? 'financial_intelligence' : 'dashboard');
           setMainNavTab('Expense');
         } else if (path === '/income-streams') {
-          setActiveTab('income-streams');
+          setActiveTab(isTabAllowedForPlan('income-streams', currentPlan) ? 'income-streams' : 'dashboard');
           setMainNavTab('Expense');
         } else if (path === '/live-worth') {
-          setActiveTab('live_worth');
+          setActiveTab(isTabAllowedForPlan('live_worth', currentPlan) ? 'live_worth' : 'dashboard');
           setMainNavTab('Expense');
         } else if (path === '/organisation-maintainer' || path === '/organisation_maintainer') {
-          setActiveTab('organisation_maintainer');
+          setActiveTab(isTabAllowedForPlan('organisation_maintainer', currentPlan) ? 'organisation_maintainer' : 'dashboard');
           setMainNavTab('Expense');
         }
       } else {
@@ -323,16 +388,44 @@ export default function App() {
 
   // Navigation State: 'dashboard' is active by default (or 'settings' if navigating to /settings, 'income-streams' if /income-streams)
   const [activeTab, setActiveTab] = useState(() => {
+    let initialTab = 'dashboard';
     if (typeof window !== 'undefined') {
-      if (window.location.pathname === '/settings') return 'settings';
-      if (window.location.pathname === '/income-streams') return 'income-streams';
-      if (window.location.pathname === '/live-worth') return 'live_worth';
-      if (window.location.pathname === '/financial-intelligence' || window.location.pathname === '/financial_intelligence') return 'financial_intelligence';
-      if (window.location.pathname === '/ai-financial-assistant' || window.location.pathname === '/ai_financial_assistant' || window.location.pathname === '/ai-chatbot') return 'ai_financial_assistant';
-      if (window.location.pathname === '/organisation-maintainer' || window.location.pathname === '/organisation_maintainer') return 'organisation_maintainer';
+      if (window.location.pathname === '/settings') initialTab = 'settings';
+      else if (window.location.pathname === '/income-streams') initialTab = 'income-streams';
+      else if (window.location.pathname === '/live-worth') initialTab = 'live_worth';
+      else if (window.location.pathname === '/financial-intelligence' || window.location.pathname === '/financial_intelligence') initialTab = 'financial_intelligence';
+      else if (window.location.pathname === '/ai-financial-assistant' || window.location.pathname === '/ai_financial_assistant' || window.location.pathname === '/ai-chatbot') initialTab = 'ai_financial_assistant';
+      else if (window.location.pathname === '/organisation-maintainer' || window.location.pathname === '/organisation_maintainer') initialTab = 'organisation_maintainer';
     }
-    return 'dashboard';
+    const currentPlan = getNormalizedPlan();
+    return isTabAllowedForPlan(initialTab, currentPlan) ? initialTab : 'dashboard';
   });
+
+  // Auto-redirect to dashboard if subscription plan does not permit current tab
+  useEffect(() => {
+    const checkPlanAndTab = () => {
+      const currentPlan = getNormalizedPlan(currentUser);
+      if (!isTabAllowedForPlan(activeTab, currentPlan)) {
+        setActiveTab('dashboard');
+        if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard' && window.location.pathname !== '/') {
+          window.history.replaceState(null, '', '/dashboard');
+        }
+      }
+    };
+
+    checkPlanAndTab();
+
+    const handleSubChange = () => {
+      checkPlanAndTab();
+    };
+
+    window.addEventListener('sts_subscription_changed', handleSubChange);
+    window.addEventListener('storage', handleSubChange);
+    return () => {
+      window.removeEventListener('sts_subscription_changed', handleSubChange);
+      window.removeEventListener('storage', handleSubChange);
+    };
+  }, [activeTab, currentUser]);
   const [mainNavTab, setMainNavTab] = useState('Expense');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -590,9 +683,15 @@ export default function App() {
               activeTab={activeTab}
               setActiveTab={(tab) => {
                 setMainNavTab('Expense');
-                setActiveTab(tab);
+                const currentPlan = getNormalizedPlan(currentUser);
+                if (isTabAllowedForPlan(tab, currentPlan)) {
+                  setActiveTab(tab);
+                } else {
+                  setActiveTab('dashboard');
+                }
               }}
               backendHealth={backendHealth}
+              currentUser={currentUser}
             />
           </div>
         )}
@@ -609,10 +708,16 @@ export default function App() {
                 activeTab={activeTab}
                 setActiveTab={(tab) => {
                   setMainNavTab('Expense');
-                  setActiveTab(tab);
+                  const currentPlan = getNormalizedPlan(currentUser);
+                  if (isTabAllowedForPlan(tab, currentPlan)) {
+                    setActiveTab(tab);
+                  } else {
+                    setActiveTab('dashboard');
+                  }
                   setIsMobileMenuOpen(false);
                 }}
                 backendHealth={backendHealth}
+                currentUser={currentUser}
               />
             </div>
           </div>
@@ -644,12 +749,12 @@ export default function App() {
               )}
 
               {/* TAB: FINANCIAL INTELLIGENCE */}
-              {(activeTab === 'financial_intelligence' || activeTab === 'financial-intelligence') && (
+              {(activeTab === 'financial_intelligence' || activeTab === 'financial-intelligence') && isTabAllowedForPlan('financial_intelligence', getNormalizedPlan(currentUser)) && (
                 <FinancialIntelligenceView />
               )}
 
               {/* TAB: AI FINANCIAL ASSISTANT */}
-              {(activeTab === 'ai_financial_assistant' || activeTab === 'ai-financial-assistant' || activeTab === 'ai_chatbot' || activeTab === 'ai-chatbot') && (
+              {(activeTab === 'ai_financial_assistant' || activeTab === 'ai-financial-assistant' || activeTab === 'ai_chatbot' || activeTab === 'ai-chatbot') && isTabAllowedForPlan('ai_financial_assistant', getNormalizedPlan(currentUser)) && (
                 <AIFinancialChatbot />
               )}
 
@@ -666,17 +771,17 @@ export default function App() {
               {(activeTab === 'bills_reminders' || activeTab === 'bill-reminder' || activeTab === 'bills-reminders') && <BillsAndRemindersView />}
 
               {/* TAB: INCOME STREAMS */}
-              {(activeTab === 'income-streams' || activeTab === 'income_streams') && (
+              {(activeTab === 'income-streams' || activeTab === 'income_streams') && isTabAllowedForPlan('income-streams', getNormalizedPlan(currentUser)) && (
                 <IncomeStreamsView />
               )}
 
               {/* TAB: LIVE WORTH */}
-              {(activeTab === 'live_worth' || activeTab === 'live-worth') && (
+              {(activeTab === 'live_worth' || activeTab === 'live-worth') && isTabAllowedForPlan('live_worth', getNormalizedPlan(currentUser)) && (
                 <LiveWorthView currentUser={currentUser} />
               )}
 
               {/* TAB: ORGANISATION MAINTAINER */}
-              {(activeTab === 'organisation_maintainer' || activeTab === 'organisation-maintainer') && (
+              {(activeTab === 'organisation_maintainer' || activeTab === 'organisation-maintainer') && isTabAllowedForPlan('organisation_maintainer', getNormalizedPlan(currentUser)) && (
                 <OrganisationMaintainer currentUser={currentUser} />
               )}
 

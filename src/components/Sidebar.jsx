@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 
-export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
+export default function Sidebar({ activeTab, setActiveTab, backendHealth, currentUser }) {
   let t = (key, fallback) => fallback || key;
   try {
     const lang = useLanguage();
@@ -11,6 +11,47 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
   } catch (err) {
     console.warn('Sidebar LanguageContext fallback:', err);
   }
+
+  const getNormalizedPlan = () => {
+    try {
+      const userPlan = currentUser?.subscription?.name || currentUser?.subscription?.id || currentUser?.subscription || currentUser?.plan;
+      if (typeof userPlan === 'string') {
+        const lower = userPlan.toLowerCase();
+        if (lower.includes('silver')) return 'silver';
+        if (lower.includes('elite')) return 'elite';
+        if (lower.includes('gold')) return 'gold';
+      }
+      const stored = localStorage.getItem('sts_active_subscription');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const str = (parsed?.id || parsed?.name || '').toLowerCase();
+        if (str.includes('silver')) return 'silver';
+        if (str.includes('elite')) return 'elite';
+        if (str.includes('gold')) return 'gold';
+      }
+    } catch (e) {
+      console.warn('Sidebar plan check:', e);
+    }
+    return 'gold';
+  };
+
+  const [activePlan, setActivePlan] = useState(getNormalizedPlan);
+
+  useEffect(() => {
+    setActivePlan(getNormalizedPlan());
+  }, [currentUser]);
+
+  useEffect(() => {
+    const handleSubChange = () => {
+      setActivePlan(getNormalizedPlan());
+    };
+    window.addEventListener('sts_subscription_changed', handleSubChange);
+    window.addEventListener('storage', handleSubChange);
+    return () => {
+      window.removeEventListener('sts_subscription_changed', handleSubChange);
+      window.removeEventListener('storage', handleSubChange);
+    };
+  }, [currentUser]);
 
   const primaryNavItems = [
     {
@@ -55,6 +96,23 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
     },
   ];
 
+  const visibleNavItems = primaryNavItems.filter((item) => {
+    if (activePlan === 'silver') {
+      return [
+        'dashboard',
+        'segregation',
+        'split_collect',
+        'goal_target',
+        'bills_reminders',
+      ].includes(item.id);
+    }
+    if (activePlan === 'gold') {
+      return item.id !== 'income-streams';
+    }
+    // Elite plan: show all
+    return true;
+  });
+
   return (
     <aside
       className="w-64 flex-shrink-0 bg-[#18181B] border-r border-zinc-800 flex flex-col justify-between overflow-y-auto"
@@ -62,7 +120,7 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth }) {
     >
       {/* Primary Navigation Links Grouped at Top */}
       <div className="p-3.5 space-y-1.5 flex-1">
-        {primaryNavItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const isActive =
             activeTab === item.id ||
             (item.id === 'financial_intelligence' && (activeTab === 'financial_intelligence' || activeTab === 'financial-intelligence')) ||
