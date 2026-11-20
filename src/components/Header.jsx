@@ -64,11 +64,23 @@ export default function Header({
   const [showCalendar, setShowCalendar] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isDropdownDismissed, setIsDropdownDismissed] = useState(false);
   const [transactions, setTransactions] = useState([]);
   const moreMenuRef = useRef(null);
   const notificationRef = useRef(null);
   const profileMenuRef = useRef(null);
   const searchContainerRef = useRef(null);
+  const searchInputRef = useRef(null);
+
+  // Auto-focus search input when expanded
+  useEffect(() => {
+    if (isSearchOpen) {
+      const timer = setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isSearchOpen]);
 
   // Active subscription remaining days calculation
   const calculateDaysLeft = () => {
@@ -274,13 +286,17 @@ export default function Header({
         setShowProfileMenu(false);
       }
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
-        setIsSearchOpen(false);
+        if (!searchQuery || !searchQuery.trim()) {
+          setIsSearchOpen(false);
+        }
+        setIsDropdownDismissed(true);
       }
     }
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
         setIsSearchOpen(false);
+        setIsDropdownDismissed(false);
         setShowMoreMenu(false);
         setShowNotifications(false);
         setShowProfileMenu(false);
@@ -293,18 +309,20 @@ export default function Header({
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [searchQuery]);
 
   const handleNavigateToModule = (moduleId) => {
     if (setActiveMainTab) setActiveMainTab('Expense');
     if (setActiveTab) setActiveTab(moduleId);
     setIsSearchOpen(false);
+    setIsDropdownDismissed(false);
   };
 
   const handleSelectTransaction = (item) => {
     if (setActiveMainTab) setActiveMainTab('Expense');
     if (setActiveTab) setActiveTab(item.targetTab || 'segregation');
     setIsSearchOpen(false);
+    setIsDropdownDismissed(false);
   };
 
   const handleSearchKeyDown = (e) => {
@@ -426,27 +444,57 @@ export default function Header({
         {/* ========================================================= */}
         <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
           {/* 1. Search Bar */}
-          <div className="relative hidden md:block" ref={searchContainerRef}>
-            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                if (setSearchQuery) setSearchQuery(e.target.value);
-                setIsSearchOpen(true);
-              }}
-              onFocus={() => {
-                if (searchQuery && searchQuery.trim()) {
+          <div className="relative" ref={searchContainerRef}>
+            {!isSearchOpen ? (
+              <button
+                type="button"
+                onClick={() => {
                   setIsSearchOpen(true);
-                }
-              }}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="Search transactions..."
-              className="w-36 lg:w-48 bg-zinc-800/80 border border-zinc-700 rounded-xl pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-zinc-800 transition-all shadow-inner"
-            />
+                  setIsDropdownDismissed(false);
+                }}
+                className="w-8 h-8 rounded-full bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/70 hover:border-zinc-600 flex items-center justify-center text-zinc-300 hover:text-white transition shadow-xs cursor-pointer group"
+                title="Search transactions"
+                aria-label="Open search"
+              >
+                <Search className="w-4 h-4 text-zinc-300 group-hover:text-white transition-colors" />
+              </button>
+            ) : (
+              <div className="relative flex items-center animate-fadeIn">
+                <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    if (setSearchQuery) setSearchQuery(e.target.value);
+                    setIsDropdownDismissed(false);
+                  }}
+                  onFocus={() => {
+                    setIsDropdownDismissed(false);
+                  }}
+                  onKeyDown={handleSearchKeyDown}
+                  placeholder="Search transactions..."
+                  className="w-44 sm:w-56 lg:w-64 bg-zinc-800/90 border border-zinc-700 rounded-xl pl-8 pr-8 py-1.5 text-xs text-zinc-200 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-zinc-800 transition-all shadow-inner"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (setSearchQuery) setSearchQuery('');
+                    setIsSearchOpen(false);
+                    setIsDropdownDismissed(false);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-0.5 rounded-md hover:bg-zinc-700/60 transition cursor-pointer flex items-center justify-center"
+                  title="Close search"
+                  aria-label="Close search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
 
             {/* Search Results Dropdown Popover */}
-            {isSearchOpen && searchQuery && searchQuery.trim() && (
+            {isSearchOpen && !isDropdownDismissed && searchQuery && searchQuery.trim() && (
               <div className="absolute right-0 sm:left-0 sm:right-auto mt-2 w-80 max-w-[90vw] rounded-2xl bg-[#18181B] border border-zinc-700 shadow-2xl py-3 px-3 z-50 animate-fadeIn divide-y divide-zinc-800">
                 {/* Navigation Modules Section */}
                 {searchResults.modules.length > 0 && (
