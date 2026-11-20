@@ -585,11 +585,11 @@ export default function Header({
             }}
             className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold tabular-nums transition-all duration-200 cursor-pointer group shadow-xs hover:scale-105 active:scale-95 ${
               daysLeft > 0
-                ? 'border-2 border-emerald-500 text-emerald-400 bg-emerald-500/10'
+                ? 'border-2 border-amber-400 text-amber-400 bg-amber-400/10'
                 : 'border-2 border-zinc-600 text-zinc-400 bg-transparent'
             } ${
               activeTab === 'subscription'
-                ? 'ring-2 ring-emerald-400/60 ring-offset-1 ring-offset-zinc-900 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+                ? 'ring-2 ring-amber-400/60 ring-offset-1 ring-offset-zinc-900 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
                 : ''
             }`}
             title={`${daysLeft} days left`}
