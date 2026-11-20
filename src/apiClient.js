@@ -15,6 +15,7 @@ export const API_BASE_URL = getApiBaseUrl();
 
 let csrfToken = null;
 let unauthorizedHandler = null;
+let activeCsrfPromise = null;
 
 export function setCsrfToken(token) {
   csrfToken = token || null;
@@ -29,29 +30,39 @@ export function setUnauthorizedHandler(handler) {
 }
 
 /**
- * Fetch a fresh CSRF token from backend
+ * Fetch a fresh CSRF token from backend (deduplicating concurrent calls)
  */
 export async function fetchCsrfToken() {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/csrf`, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-      },
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.csrfToken) {
-        setCsrfToken(data.csrfToken);
-        return data.csrfToken;
-      }
-    }
-  } catch (err) {
-    console.warn('[STS FINTECH] Unable to fetch CSRF token:', err.message);
+  if (activeCsrfPromise) {
+    return activeCsrfPromise;
   }
-  return null;
+
+  activeCsrfPromise = (async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/csrf`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.csrfToken) {
+          setCsrfToken(data.csrfToken);
+          return data.csrfToken;
+        }
+      }
+    } catch (err) {
+      console.warn('[STS FINTECH] Unable to fetch CSRF token:', err.message);
+    } finally {
+      activeCsrfPromise = null;
+    }
+    return null;
+  })();
+
+  return activeCsrfPromise;
 }
 
 /**

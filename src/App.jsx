@@ -405,13 +405,15 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    fetchPayments();
+    if (currentUser) {
+      fetchPayments();
+    }
     checkHealth();
     const interval = setInterval(() => {
       checkHealth();
     }, 30000);
     return () => clearInterval(interval);
-  }, [fetchPayments, checkHealth]);
+  }, [currentUser, fetchPayments, checkHealth]);
 
   // Handle Submit Form
   const handleSubmit = async (e) => {
