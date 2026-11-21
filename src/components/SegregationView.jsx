@@ -23,6 +23,7 @@ import {
   BarChart3,
   Copy,
   Sparkles,
+  Flame,
 } from 'lucide-react';
 import AddIncomeModal from './AddIncomeModal';
 import EditIncomeModal from './EditIncomeModal';
@@ -37,6 +38,15 @@ const formatINR = (value) => {
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
   }).format(num);
+};
+
+const formatCompactINR = (value) => {
+  const num = Number(value) || 0;
+  if (num === 0) return '₹0';
+  if (num >= 10000000) return `₹${(num / 10000000).toFixed(1)}Cr`;
+  if (num >= 100000) return `₹${(num / 100000).toFixed(1)}L`;
+  if (num >= 1000) return `₹${(num / 1000).toFixed(1)}k`;
+  return `₹${Math.round(num)}`;
 };
 
 const formatDate = (dateString) => {
@@ -85,6 +95,27 @@ export default function SegregationView() {
   const [parsedSchedule, setParsedSchedule] = useState('One-Time');
   const [isSubmittingSms, setIsSubmittingSms] = useState(false);
   const [parserFeedback, setParserFeedback] = useState(null);
+
+  // Calendar Heatmap State
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState(() => new Date().getDate());
+
+  const getDayIntensityClass = (amount, isSelected) => {
+    let base = '';
+    if (amount === 0) {
+      base = 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700/60 hover:bg-slate-200 dark:hover:bg-slate-700/60';
+    } else if (amount < 500) {
+      base = 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800/60 hover:bg-emerald-200 dark:hover:bg-emerald-900/60';
+    } else if (amount < 2000) {
+      base = 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800/60 hover:bg-amber-200 dark:hover:bg-amber-900/60';
+    } else {
+      base = 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-800/60 hover:bg-rose-200 dark:hover:bg-rose-900/60';
+    }
+
+    if (isSelected) {
+      base += ' ring-2 ring-emerald-500 dark:ring-emerald-400 shadow-md scale-[1.02] font-bold z-10';
+    }
+    return base;
+  };
 
   // Parse SMS text in real-time
   const parseSmsContent = useCallback((text) => {
@@ -462,6 +493,70 @@ export default function SegregationView() {
       netWorth,
     };
   }, [additionalIncome, fixedIncome, additionalExpense, fixedExpense, bills]);
+
+  // Monthly Spend Patterns & Calendar Heatmap data
+  const calendarSpendData = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const todayDay = now.getDate();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
+
+    const dailyMap = {};
+    for (let d = 1; d <= daysInMonth; d++) {
+      dailyMap[d] = {
+        day: d,
+        totalSpend: 0,
+        items: [],
+      };
+    }
+
+    const allExpenses = [...fixedExpense, ...additionalExpense];
+    allExpenses.forEach((item) => {
+      if (!item.date) return;
+      const parts = item.date.split('-');
+      if (parts.length === 3) {
+        const y = Number(parts[0]);
+        const m = Number(parts[1]);
+        const d = Number(parts[2]);
+        if (y === currentYear && m === currentMonth + 1 && d >= 1 && d <= daysInMonth) {
+          const amt = Number(item.amount) || 0;
+          dailyMap[d].totalSpend += amt;
+          dailyMap[d].items.push(item);
+        }
+      }
+    });
+
+    // Zero-Spend Streak: consecutive ₹0 days up to today
+    let zeroSpendStreak = 0;
+    for (let d = todayDay; d >= 1; d--) {
+      if (dailyMap[d].totalSpend === 0) {
+        zeroSpendStreak++;
+      } else {
+        break;
+      }
+    }
+
+    // Low-Spend Days (<₹500): days where totalSpend > 0 and < 500
+    const lowSpendDays = Object.values(dailyMap).filter((d) => d.totalSpend > 0 && d.totalSpend < 500).length;
+
+    // Peak Spend Days (₹2,000+): days where totalSpend >= 2000
+    const peakSpendDays = Object.values(dailyMap).filter((d) => d.totalSpend >= 2000).length;
+
+    return {
+      currentYear,
+      currentMonth,
+      monthLabel: now.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+      todayDay,
+      daysInMonth,
+      firstDayOfWeek,
+      dailyMap,
+      zeroSpendStreak,
+      lowSpendDays,
+      peakSpendDays,
+    };
+  }, [fixedExpense, additionalExpense]);
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -1720,6 +1815,178 @@ export default function SegregationView() {
             );
           })()}
         </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* 5. MONTHLY SPEND PATTERNS & DAY STREAKS HEATMAP CALENDAR                  */}
+      {/* ========================================================================= */}
+      <section className="bg-white dark:bg-[#0c1322] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-sm mb-6">
+        {/* Header & Legend */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center space-x-2.5">
+            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <span>Monthly Spend Patterns &amp; Day Streaks</span>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                  {calendarSpendData.monthLabel}
+                </span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Client-side daily spending calendar, streak tracking, and day-by-day expense drilldown
+              </p>
+            </div>
+          </div>
+
+          {/* Compact 4-Dot Color Legend */}
+          <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/60 p-2 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200/80 dark:border-slate-800 self-start sm:self-auto">
+            <div className="flex items-center space-x-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600 border border-slate-400/40" />
+              <span>₹0</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 dark:bg-emerald-500 border border-emerald-500/40" />
+              <span>&lt;₹500</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 dark:bg-amber-500 border border-amber-500/40" />
+              <span>₹500–₹2k</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-400 dark:bg-rose-500 border border-rose-500/40" />
+              <span>&gt;₹2k</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Streak Summary Pills */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+            <Flame className="w-3.5 h-3.5 text-amber-500" />
+            <span>Zero-Spend Streak: <strong className="font-bold text-slate-900 dark:text-slate-100">{calendarSpendData.zeroSpendStreak} Days</strong></span>
+          </div>
+          <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Low-Spend Days (&lt;₹500): <strong className="font-bold text-emerald-900 dark:text-emerald-100">{calendarSpendData.lowSpendDays} / {calendarSpendData.daysInMonth}</strong></span>
+          </div>
+          <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60">
+            <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+            <span>Peak Spend Days (₹2,000+): <strong className="font-bold text-rose-900 dark:text-rose-100">{calendarSpendData.peakSpendDays} / {calendarSpendData.daysInMonth}</strong></span>
+          </div>
+        </div>
+
+        {/* Responsive 7-Column Calendar Grid */}
+        <div className="w-full overflow-hidden">
+          {/* Day Headers (Sun to Sat) */}
+          <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center mb-1.5">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+              <div key={d} className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 py-1">
+                {d}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar Grid Tiles */}
+          <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+            {/* Empty slots before first day of month */}
+            {Array.from({ length: calendarSpendData.firstDayOfWeek }).map((_, idx) => (
+              <div key={`empty-${idx}`} className="min-h-[50px] sm:min-h-[58px] opacity-0 pointer-events-none" />
+            ))}
+
+            {/* Days of Month */}
+            {Array.from({ length: calendarSpendData.daysInMonth }).map((_, idx) => {
+              const dayNum = idx + 1;
+              const dayData = calendarSpendData.dailyMap[dayNum] || { totalSpend: 0, items: [] };
+              const isSelected = selectedCalendarDay === dayNum;
+              const isToday = dayNum === calendarSpendData.todayDay;
+
+              return (
+                <button
+                  key={dayNum}
+                  type="button"
+                  onClick={() => setSelectedCalendarDay(dayNum)}
+                  className={`p-1.5 sm:p-2 rounded-xl border flex flex-col justify-between items-center transition cursor-pointer text-center min-h-[50px] sm:min-h-[58px] relative ${getDayIntensityClass(dayData.totalSpend, isSelected)}`}
+                  title={`Day ${dayNum}: ${formatINR(dayData.totalSpend)}`}
+                >
+                  <div className="flex items-center justify-between w-full px-0.5">
+                    <span className="text-[11px] sm:text-xs font-bold leading-none">
+                      {dayNum}
+                    </span>
+                    {isToday && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Today" />
+                    )}
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] font-mono font-bold leading-tight truncate w-full block">
+                    {formatCompactINR(dayData.totalSpend)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Selected Day Inline Breakdown */}
+        {(() => {
+          const selectedDayData = calendarSpendData.dailyMap[selectedCalendarDay] || { totalSpend: 0, items: [] };
+          const selectedDateLabel = new Date(calendarSpendData.currentYear, calendarSpendData.currentMonth, selectedCalendarDay).toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          });
+
+          return (
+            <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-2.5">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
+                    Breakdown for {selectedDateLabel}
+                  </h4>
+                  {selectedCalendarDay === calendarSpendData.todayDay && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      Today
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
+                  Total Day Spend: <span className={selectedDayData.totalSpend > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500'}>{formatINR(selectedDayData.totalSpend)}</span>
+                </span>
+              </div>
+
+              {selectedDayData.items.length === 0 ? (
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800 text-center text-xs text-slate-500 dark:text-slate-400">
+                  No expenses logged on this day
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {selectedDayData.items.map((item, idx) => (
+                    <div
+                      key={item.id || idx}
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition text-xs"
+                    >
+                      <div className="flex items-center space-x-2.5 min-w-0">
+                        <span className="w-2 h-2 rounded-full bg-rose-500 flex-shrink-0" />
+                        <div className="truncate">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100 truncate block">
+                            {item.name || 'Expense'}
+                          </span>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {item.category || 'General'} {item.time ? `• ${item.time}` : ''} {item.schedule ? `(${item.schedule})` : ''}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap ml-2">
+                        {formatINR(item.amount)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </section>
 
       {/* Add Entry Modal */}
