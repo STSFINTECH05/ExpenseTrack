@@ -427,7 +427,7 @@ export default function DashboardView({ setActiveTab, onNavigateToSegregation, o
             </div>
 
             {/* Supported Badges */}
-            <div className="flex items-center gap-2 mt-4 text-xs">
+            <div className="flex flex-wrap items-center gap-2 mt-4 text-xs">
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                 Supported formats:
               </span>

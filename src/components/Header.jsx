@@ -352,7 +352,7 @@ export default function Header({
     >
       {/* Full width horizontal flex container matching layout requirements */}
       <div
-        className="px-4 h-16 w-full flex items-center justify-between"
+        className="px-2.5 sm:px-4 h-16 w-full flex items-center justify-between relative"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -364,13 +364,14 @@ export default function Header({
         {/* ========================================================= */}
         {/* LEFT SECTION: Company Logo & Branding                     */}
         {/* ========================================================= */}
-        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-shrink-0">
+        <div className="flex items-center space-x-1.5 sm:space-x-3 min-w-0 flex-shrink-0">
           {/* Mobile Menu Toggle Button */}
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl text-zinc-300 hover:text-white hover:bg-zinc-800 border border-zinc-700/80 hover:border-zinc-600 transition cursor-pointer flex-shrink-0"
+            className="md:hidden p-1.5 sm:p-2 rounded-xl text-zinc-300 hover:text-white hover:bg-zinc-800 border border-zinc-700/80 hover:border-zinc-600 transition cursor-pointer flex-shrink-0"
             aria-label="Toggle Navigation Menu"
+            title="Open Menu"
           >
             {isMobileMenuOpen ? <X className="w-5 h-5 text-emerald-400" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -385,7 +386,7 @@ export default function Header({
             <img
               src={stsLogo}
               alt="STS FINTECH PVT LTD"
-              className="h-14 sm:h-16 w-auto max-w-[210px] object-contain scale-105 origin-left group-hover:scale-110 transition-all drop-shadow-xs"
+              className="h-7 sm:h-12 md:h-14 lg:h-16 w-auto max-w-[120px] sm:max-w-[180px] md:max-w-[210px] object-contain scale-100 md:scale-105 origin-left group-hover:scale-105 md:group-hover:scale-110 transition-all drop-shadow-xs shrink-0"
             />
           </button>
         </div>
@@ -393,16 +394,16 @@ export default function Header({
         {/* ========================================================= */}
         {/* CENTER SECTION: Navigation Links ("Expense" & "Social")   */}
         {/* ========================================================= */}
-        <div className="flex items-center justify-center mx-2 sm:mx-4">
+        <div className="flex items-center justify-center mx-1 sm:mx-2 md:mx-4">
           <nav
-            className="flex items-center space-x-1 bg-zinc-800/80 p-1 rounded-xl border border-zinc-700/80 shadow-inner"
+            className="flex items-center space-x-0.5 sm:space-x-1 bg-zinc-800/80 p-0.5 sm:p-1 rounded-xl border border-zinc-700/80 shadow-inner"
             aria-label="Primary Navigation"
           >
             {/* Expense Tab */}
             <button
               type="button"
               onClick={() => setActiveMainTab && setActiveMainTab('Expense')}
-              className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
+              className={`px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Expense'
                   ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500/50'
                   : 'text-zinc-300 hover:text-white hover:bg-zinc-700/60'
@@ -415,7 +416,7 @@ export default function Header({
             <button
               type="button"
               onClick={() => setActiveMainTab && setActiveMainTab('Wallet')}
-              className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
+              className={`px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Wallet'
                   ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500/50'
                   : 'text-zinc-300 hover:text-white hover:bg-zinc-700/60'
@@ -428,7 +429,7 @@ export default function Header({
             <button
               type="button"
               onClick={() => setActiveMainTab && setActiveMainTab('Social')}
-              className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
+              className={`px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Social'
                   ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500/50'
                   : 'text-zinc-300 hover:text-white hover:bg-zinc-700/60'
@@ -442,7 +443,7 @@ export default function Header({
         {/* ========================================================= */}
         {/* RIGHT SECTION: Search Bar, Notifications, Profile, More   */}
         {/* ========================================================= */}
-        <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 flex-shrink-0">
           {/* 1. Search Bar */}
           <div className="relative" ref={searchContainerRef}>
             {!isSearchOpen ? (
@@ -459,8 +460,9 @@ export default function Header({
                 <Search className="w-4 h-4 text-zinc-300 group-hover:text-white transition-colors" />
               </button>
             ) : (
-              <div className="relative flex items-center animate-fadeIn">
-                <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              /* Desktop inline search or Mobile full-width overlay bar */
+              <div className="fixed md:relative inset-x-2 top-2 md:inset-auto md:top-auto z-50 md:z-auto flex items-center animate-fadeIn bg-zinc-900 md:bg-transparent p-1.5 md:p-0 rounded-2xl md:rounded-none border border-zinc-700 md:border-transparent shadow-2xl md:shadow-none">
+                <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-4 md:left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -474,7 +476,7 @@ export default function Header({
                   }}
                   onKeyDown={handleSearchKeyDown}
                   placeholder="Search transactions..."
-                  className="w-44 sm:w-56 lg:w-64 bg-zinc-800/90 border border-zinc-700 rounded-xl pl-8 pr-8 py-1.5 text-xs text-zinc-200 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-zinc-800 transition-all shadow-inner"
+                  className="w-full md:w-44 md:sm:w-56 md:lg:w-64 bg-zinc-800/95 border border-zinc-700 rounded-xl pl-9 md:pl-8 pr-8 py-2 md:py-1.5 text-xs text-zinc-200 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-inner"
                 />
                 <button
                   type="button"
@@ -484,18 +486,18 @@ export default function Header({
                     setIsSearchOpen(false);
                     setIsDropdownDismissed(false);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-0.5 rounded-md hover:bg-zinc-700/60 transition cursor-pointer flex items-center justify-center"
+                  className="absolute right-3.5 md:right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-1 md:p-0.5 rounded-md hover:bg-zinc-700/60 transition cursor-pointer flex items-center justify-center"
                   title="Close search"
                   aria-label="Close search"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4 md:w-3.5 md:h-3.5" />
                 </button>
               </div>
             )}
 
             {/* Search Results Dropdown Popover */}
             {isSearchOpen && !isDropdownDismissed && searchQuery && searchQuery.trim() && (
-              <div className="absolute right-0 sm:left-0 sm:right-auto mt-2 w-80 max-w-[90vw] rounded-2xl bg-[#18181B] border border-zinc-700 shadow-2xl py-3 px-3 z-50 animate-fadeIn divide-y divide-zinc-800">
+              <div className="fixed md:absolute inset-x-2 md:inset-x-auto right-0 sm:left-0 sm:right-auto top-16 md:top-auto md:mt-2 w-auto md:w-80 max-w-[95vw] md:max-w-[90vw] rounded-2xl bg-[#18181B] border border-zinc-700 shadow-2xl py-3 px-3 z-50 animate-fadeIn divide-y divide-zinc-800">
                 {/* Navigation Modules Section */}
                 {searchResults.modules.length > 0 && (
                   <div className="pb-2.5">
@@ -578,15 +580,17 @@ export default function Header({
             )}
           </div>
 
-          {/* Global Language Selector Dropdown [ 🌐 English ▾ ] */}
-          <LanguageDropdown variant="dark" />
+          {/* Global Language Selector Dropdown [ 🌐 English ▾ ] (hidden on mobile < sm to guarantee space for core actions) */}
+          <div className="hidden sm:block">
+            <LanguageDropdown variant="dark" />
+          </div>
 
-          {/* 2. Notification Icon Button */}
-          <div className="relative" ref={notificationRef}>
+          {/* 2. Notification Icon Button (compact on mobile) */}
+          <div className="relative hidden xs:block" ref={notificationRef}>
             <button
               type="button"
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 rounded-xl text-zinc-200 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700 hover:border-zinc-600 transition shadow-xs"
+              className="relative p-1.5 sm:p-2 rounded-xl text-zinc-200 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700 hover:border-zinc-600 transition shadow-xs"
               title="Notifications"
               aria-label="View notifications"
             >

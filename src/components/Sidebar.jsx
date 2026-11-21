@@ -115,8 +115,8 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth, curren
 
   return (
     <aside
-      className="w-64 flex-shrink-0 bg-[#18181B] border-r border-zinc-800 flex flex-col justify-between overflow-y-auto"
-      style={{ height: 'calc(100vh - 64px)' }}
+      className="w-full h-full md:w-64 flex-shrink-0 bg-[#18181B] border-r border-zinc-800 flex flex-col justify-between overflow-y-auto"
+      style={{ minHeight: '100%' }}
     >
       {/* Primary Navigation Links Grouped at Top */}
       <div className="p-3.5 space-y-1.5 flex-1">

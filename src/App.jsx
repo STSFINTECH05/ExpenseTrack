@@ -641,7 +641,7 @@ export default function App() {
 
   return (
     <div
-      className="h-screen overflow-hidden bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white relative transition-colors duration-200"
+      className="h-screen overflow-hidden overflow-x-hidden max-w-full w-full bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white relative transition-colors duration-200"
       style={{ height: '100vh', overflow: 'hidden' }}
     >
       {/* Top Navbar Header Component */}
@@ -670,7 +670,7 @@ export default function App() {
 
       {/* Main Layout: Sidebar + Content */}
       <div
-        className="flex flex-1 relative overflow-hidden"
+        className="flex flex-1 relative overflow-hidden overflow-x-hidden max-w-full w-full"
         style={{ height: 'calc(100vh - 64px)' }}
       >
         {/* Desktop Sidebar (Toggled with isSidebarOpen) */}
@@ -725,7 +725,7 @@ export default function App() {
 
         {/* Primary Main View Container */}
         <main
-          className={`flex-1 overflow-y-auto h-full w-full min-w-0 overflow-x-hidden p-4 md:p-6 ${isSidebarOpen ? 'max-w-7xl' : 'w-full max-w-full'} mx-auto bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-colors duration-200`}
+          className={`flex-1 overflow-y-auto h-full w-full min-w-0 overflow-x-hidden max-w-full px-3 sm:px-4 md:px-6 py-4 md:py-6 ${isSidebarOpen ? 'max-w-7xl' : 'w-full max-w-full'} mx-auto bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-colors duration-200`}
           style={{
             flex: 1,
             overflowY: 'auto',
