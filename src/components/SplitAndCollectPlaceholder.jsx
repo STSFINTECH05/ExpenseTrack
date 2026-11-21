@@ -28,6 +28,7 @@ import {
   VolumeX,
   Radio,
   Loader2,
+  Pencil,
 } from 'lucide-react';
 import apiClient from '../apiClient';
 import {
@@ -47,6 +48,58 @@ const WhatsAppIcon = ({ className = 'w-3.5 h-3.5' }) => (
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
   </svg>
 );
+
+// LocalStorage helpers for participant phone numbers (isolated client fallback)
+const getStoredPhones = () => {
+  try {
+    const raw = localStorage.getItem('sts_participant_phones');
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveStoredPhone = (ticketId, memberIdentifier, phone) => {
+  if (!memberIdentifier) return;
+  try {
+    const current = getStoredPhones();
+    const cleanId = ticketId || 'global';
+    const key = `${cleanId}_${String(memberIdentifier).trim().toLowerCase()}`;
+    if (phone) {
+      current[key] = String(phone).trim();
+    } else {
+      delete current[key];
+    }
+    localStorage.setItem('sts_participant_phones', JSON.stringify(current));
+  } catch (e) {
+    console.error('Error saving stored phone:', e);
+  }
+};
+
+const getMemberPhone = (ticketId, participant) => {
+  if (!participant) return '';
+  if (participant.phone) return String(participant.phone).trim();
+  try {
+    const store = getStoredPhones();
+    const idKey = ticketId ? `${ticketId}_${String(participant.name || '').trim().toLowerCase()}` : '';
+    const emailKey = ticketId && participant.email ? `${ticketId}_${String(participant.email || '').trim().toLowerCase()}` : '';
+    const fallbackNameKey = `global_${String(participant.name || '').trim().toLowerCase()}`;
+    return (idKey && store[idKey]) || (emailKey && store[emailKey]) || store[fallbackNameKey] || '';
+  } catch {
+    return '';
+  }
+};
+
+const saveTicketParticipantsPhones = (ticketId, participantsList) => {
+  if (!participantsList || !Array.isArray(participantsList)) return;
+  participantsList.forEach((p) => {
+    if (p.phone) {
+      saveStoredPhone(ticketId, p.name, p.phone);
+      if (p.email) saveStoredPhone(ticketId, p.email, p.phone);
+      saveStoredPhone('global', p.name, p.phone);
+    }
+  });
+};
 
 // Curated database of famous places for popular cities
 const FAMOUS_DESTINATIONS = {
@@ -225,7 +278,15 @@ export default function SplitAndCollectPlaceholder() {
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.data) {
-          setActiveTicket(json.data);
+          const group = json.data;
+          const enriched = {
+            ...group,
+            participants: (group.participants || []).map((p) => ({
+              ...p,
+              phone: p.phone || getMemberPhone(group.id, p) || '',
+            })),
+          };
+          setActiveTicket(enriched);
         }
       }
     } catch (err) {
@@ -241,7 +302,14 @@ export default function SplitAndCollectPlaceholder() {
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
-          setTicketsList(json.data);
+          const enriched = json.data.map((t) => ({
+            ...t,
+            participants: (t.participants || []).map((p) => ({
+              ...p,
+              phone: p.phone || getMemberPhone(t.id, p) || '',
+            })),
+          }));
+          setTicketsList(enriched);
         }
       }
     } catch (err) {
@@ -263,17 +331,21 @@ export default function SplitAndCollectPlaceholder() {
     await fetchTicketDetails(ticket.id);
   };
 
-  // Modal State: Create Ticket
+  // Modal State: Create / Edit Ticket
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingTicketId, setEditingTicketId] = useState(null);
   const [ticketTitle, setTicketTitle] = useState('');
   const [ticketLocation, setTicketLocation] = useState('');
   const [ticketCurrency, setTicketCurrency] = useState('INR (₹)');
   const [ticketDescription, setTicketDescription] = useState('');
   const [participantName, setParticipantName] = useState('');
   const [participantEmail, setParticipantEmail] = useState('');
+  const [participantPhone, setParticipantPhone] = useState('');
   const [participants, setParticipants] = useState([
-    { id: 'user-you', name: 'You', email: '', isSelf: true },
+    { id: 'user-you', name: 'You', email: '', phone: '', isSelf: true },
   ]);
+  const [editingInlinePhoneMemberId, setEditingInlinePhoneMemberId] = useState(null);
+  const [inlinePhoneInput, setInlinePhoneInput] = useState('');
 
   // Voice Assistant & AI Voice Recognition Bot States
   const [isListeningTitle, setIsListeningTitle] = useState(false);
@@ -642,8 +714,49 @@ export default function SplitAndCollectPlaceholder() {
   const [expenseSearchQuery, setExpenseSearchQuery] = useState('');
 
   // =========================================================================
-  // Handlers for Creating Ticket
+  // Handlers for Creating & Editing Split Tickets
   // =========================================================================
+  const handleOpenCreateTicket = () => {
+    setEditingTicketId(null);
+    setTicketTitle('');
+    setTicketLocation('');
+    setTicketCurrency('INR (₹)');
+    setTicketDescription('');
+    setParticipantName('');
+    setParticipantEmail('');
+    setParticipantPhone('');
+    setParticipants([{ id: 'user-you', name: 'You', email: '', phone: '', isSelf: true }]);
+    setShowCreateModal(true);
+  };
+
+  const handleOpenEditTicket = (ticket) => {
+    setEditingTicketId(ticket.id);
+    setTicketTitle(ticket.title || '');
+    setTicketLocation(ticket.location || '');
+    setTicketCurrency(ticket.currency || 'INR (₹)');
+    setTicketDescription(ticket.description || '');
+
+    const ticketParticipants = (ticket.participants && ticket.participants.length > 0)
+      ? ticket.participants.map((p, idx) => ({
+          id: p.id || `part-${idx}-${Date.now()}`,
+          name: p.name,
+          email: p.email || '',
+          phone: p.phone || getMemberPhone(ticket.id, p) || '',
+          isSelf: p.isSelf || p.name.toLowerCase() === 'you',
+        }))
+      : [{ id: 'user-you', name: 'You', email: '', phone: '', isSelf: true }];
+
+    if (!ticketParticipants.some((p) => p.isSelf || p.name.toLowerCase() === 'you')) {
+      ticketParticipants.unshift({ id: 'user-you', name: 'You', email: '', phone: '', isSelf: true });
+    }
+
+    setParticipants(ticketParticipants);
+    setParticipantName('');
+    setParticipantEmail('');
+    setParticipantPhone('');
+    setShowCreateModal(true);
+  };
+
   const handleAddParticipant = () => {
     if (!participantName.trim()) return;
 
@@ -651,16 +764,66 @@ export default function SplitAndCollectPlaceholder() {
       id: `part-${Date.now()}`,
       name: participantName.trim(),
       email: participantEmail.trim() || `${participantName.toLowerCase().replace(/\s+/g, '')}@stsfintech.com`,
+      phone: participantPhone.trim() || '',
       isSelf: false,
     };
 
     setParticipants([...participants, newParticipant]);
+    if (participantPhone.trim()) {
+      if (editingTicketId) {
+        saveStoredPhone(editingTicketId, newParticipant.name, participantPhone.trim());
+        if (newParticipant.email) saveStoredPhone(editingTicketId, newParticipant.email, participantPhone.trim());
+      }
+      saveStoredPhone('global', newParticipant.name, participantPhone.trim());
+    }
     setParticipantName('');
     setParticipantEmail('');
+    setParticipantPhone('');
   };
 
   const handleRemoveParticipant = (idToRemove) => {
     setParticipants(participants.filter((p) => p.id !== idToRemove || p.isSelf));
+  };
+
+  const saveInlinePhone = (member, phoneVal) => {
+    const clean = String(phoneVal || '').trim();
+    if (activeTicket?.id) {
+      saveStoredPhone(activeTicket.id, member.name, clean);
+      if (member.email) saveStoredPhone(activeTicket.id, member.email, clean);
+    }
+    saveStoredPhone('global', member.name, clean);
+
+    if (activeTicket) {
+      setActiveTicket((prev) => ({
+        ...prev,
+        participants: (prev.participants || []).map((p) => {
+          if (p.id === member.id || p.name === member.name) {
+            return { ...p, phone: clean };
+          }
+          return p;
+        }),
+      }));
+    }
+
+    setTicketsList((prev) =>
+      prev.map((t) => {
+        if (t.id === activeTicket?.id) {
+          return {
+            ...t,
+            participants: (t.participants || []).map((p) => {
+              if (p.id === member.id || p.name === member.name) {
+                return { ...p, phone: clean };
+              }
+              return p;
+            }),
+          };
+        }
+        return t;
+      })
+    );
+
+    setEditingInlinePhoneMemberId(null);
+    setInlinePhoneInput('');
   };
 
   const handleCreateTicket = async (e) => {
@@ -668,6 +831,85 @@ export default function SplitAndCollectPlaceholder() {
     if (!ticketTitle.trim()) return;
 
     stopAllVoice();
+
+    if (editingTicketId) {
+      saveTicketParticipantsPhones(editingTicketId, participants);
+
+      const updatedTicketData = {
+        title: ticketTitle.trim(),
+        location: ticketLocation.trim(),
+        currency: ticketCurrency,
+        description: ticketDescription.trim() || 'Team collaborative split ledger',
+        participants: participants.map((p) => ({
+          ...p,
+          phone: p.phone || getMemberPhone(editingTicketId, p) || '',
+        })),
+      };
+
+      try {
+        await apiClient.put(`/api/splits/groups/${editingTicketId}`, {
+          title: ticketTitle.trim(),
+          location: ticketLocation.trim(),
+          currency: ticketCurrency,
+          description: ticketDescription.trim() || 'Team collaborative split ledger',
+        });
+
+        const existingTicket = ticketsList.find((t) => t.id === editingTicketId) || activeTicket;
+        const existingNames = new Set((existingTicket?.participants || []).map((p) => p.name.toLowerCase()));
+        const newMembers = participants.filter(
+          (p) => !p.isSelf && p.name.toLowerCase() !== 'you' && !existingNames.has(p.name.toLowerCase())
+        );
+        for (const mem of newMembers) {
+          try {
+            await apiClient.post(`/api/splits/groups/${editingTicketId}/members`, {
+              name: mem.name,
+              email: mem.email,
+            });
+          } catch (err) {
+            console.warn('Could not add member to backend:', mem.name, err);
+          }
+        }
+      } catch (err) {
+        console.warn('Backend update failed or offline, updating locally:', err);
+      }
+
+      setTicketsList((prev) =>
+        prev.map((t) => {
+          if (t.id === editingTicketId) {
+            return {
+              ...t,
+              ...updatedTicketData,
+            };
+          }
+          return t;
+        })
+      );
+
+      if (activeTicket && activeTicket.id === editingTicketId) {
+        setActiveTicket((prev) => ({
+          ...prev,
+          ...updatedTicketData,
+        }));
+      }
+
+      setShowCreateModal(false);
+      setEditingTicketId(null);
+
+      // Reset form
+      setTicketTitle('');
+      setTicketLocation('');
+      setTicketDescription('');
+      setTicketCurrency('INR (₹)');
+      setParticipantName('');
+      setParticipantEmail('');
+      setParticipantPhone('');
+      setParticipants([{ id: 'user-you', name: 'You', email: '', phone: '', isSelf: true }]);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('sts_data_updated'));
+      }
+      return;
+    }
 
     try {
       const payload = {
@@ -692,6 +934,15 @@ export default function SplitAndCollectPlaceholder() {
       }
 
       const created = json.data;
+      saveTicketParticipantsPhones(created.id, participants);
+
+      if (created.participants && Array.isArray(created.participants)) {
+        created.participants = created.participants.map((p) => ({
+          ...p,
+          phone: getMemberPhone(created.id, p) || '',
+        }));
+      }
+
       setTicketsList((prev) => [created, ...prev]);
       setActiveTicket(created);
       setShowCreateModal(false);
@@ -701,7 +952,10 @@ export default function SplitAndCollectPlaceholder() {
       setTicketLocation('');
       setTicketDescription('');
       setTicketCurrency('INR (₹)');
-      setParticipants([{ id: 'user-you', name: 'You', email: '', isSelf: true }]);
+      setParticipantName('');
+      setParticipantEmail('');
+      setParticipantPhone('');
+      setParticipants([{ id: 'user-you', name: 'You', email: '', phone: '', isSelf: true }]);
 
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new Event('sts_data_updated'));
@@ -824,7 +1078,10 @@ export default function SplitAndCollectPlaceholder() {
 
   const handleSendWhatsAppReminder = (memberName, amount, phone) => {
     const msg = getWhatsAppReminderMessage(memberName, amount);
-    const cleanPhone = phone ? String(phone).replace(/[^0-9]/g, '') : '';
+    let cleanPhone = phone ? String(phone).replace(/[^0-9]/g, '') : '';
+    if (cleanPhone.length === 10) {
+      cleanPhone = `91${cleanPhone}`;
+    }
     const url = cleanPhone && cleanPhone.length >= 10
       ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`
       : `https://wa.me/?text=${encodeURIComponent(msg)}`;
@@ -965,6 +1222,7 @@ export default function SplitAndCollectPlaceholder() {
     });
 
     return ticket.participants.map((participant) => {
+      const phone = participant.phone || getMemberPhone(ticket.id, participant) || '';
       const totalPaidByPerson = (ticket.expenses || [])
         .filter((exp) => exp.paidBy === participant.name)
         .reduce((sum, exp) => sum + exp.amount, 0);
@@ -974,6 +1232,7 @@ export default function SplitAndCollectPlaceholder() {
 
       return {
         ...participant,
+        phone,
         totalPaid: totalPaidByPerson,
         netBalance: Math.abs(netBalance) < 0.01 ? 0 : netBalance,
       };
@@ -1039,9 +1298,19 @@ export default function SplitAndCollectPlaceholder() {
               )}
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight capitalize">
-              {activeTicket.title}
-            </h2>
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight capitalize">
+                {activeTicket.title}
+              </h2>
+              <button
+                type="button"
+                onClick={() => handleOpenEditTicket(activeTicket)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-400 transition cursor-pointer"
+                title="Edit Split Ticket"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {activeTicket.description} • Created by You on{' '}
               {new Date(activeTicket.createdAt).toLocaleDateString('en-IN', {
@@ -1208,6 +1477,68 @@ export default function SplitAndCollectPlaceholder() {
                             )}
                           </p>
                           <p className="text-[10px] text-slate-400 truncate">{member.email}</p>
+
+                          {/* Saved Phone Number with quick inline edit */}
+                          {editingInlinePhoneMemberId === member.id ? (
+                            <div className="flex items-center gap-1 mt-1">
+                              <input
+                                type="tel"
+                                value={inlinePhoneInput}
+                                onChange={(e) => setInlinePhoneInput(e.target.value)}
+                                placeholder="enter phone number"
+                                className="w-36 bg-slate-50 dark:bg-[#080d19] border border-emerald-500 rounded px-2 py-0.5 text-[10px] text-slate-900 dark:text-white focus:outline-none ring-1 ring-emerald-500"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    saveInlinePhone(member, inlinePhoneInput);
+                                  } else if (e.key === 'Escape') {
+                                    setEditingInlinePhoneMemberId(null);
+                                  }
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => saveInlinePhone(member, inlinePhoneInput)}
+                                className="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold transition cursor-pointer"
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingInlinePhoneMemberId(null)}
+                                className="p-0.5 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : member.phone ? (
+                            <div className="flex items-center gap-1 mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
+                              <span className="font-mono text-emerald-700 dark:text-emerald-400 font-medium">📞 {member.phone}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingInlinePhoneMemberId(member.id);
+                                  setInlinePhoneInput(member.phone);
+                                }}
+                                className="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition cursor-pointer p-0.5"
+                                title="Edit phone number"
+                              >
+                                <Pencil className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingInlinePhoneMemberId(member.id);
+                                setInlinePhoneInput('');
+                              }}
+                              className="mt-0.5 text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-0.5 cursor-pointer font-medium"
+                            >
+                              <span>+ Add phone</span>
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -1339,7 +1670,11 @@ export default function SplitAndCollectPlaceholder() {
                             <div className="relative group/wa-debt inline-block">
                               <button
                                 type="button"
-                                onClick={() => handleSendWhatsAppReminder(debt.from, debt.amount)}
+                                onClick={() => {
+                                  const memberObj = activeTicket?.participants?.find((p) => p.name === debt.from);
+                                  const phone = memberObj?.phone || getMemberPhone(activeTicket?.id, memberObj || { name: debt.from });
+                                  handleSendWhatsAppReminder(debt.from, debt.amount, phone);
+                                }}
                                 className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-sm transition-all cursor-pointer active:scale-95"
                                 title={`Ready to Send: "${getWhatsAppReminderMessage(debt.from, debt.amount)}"`}
                               >
@@ -1613,7 +1948,7 @@ export default function SplitAndCollectPlaceholder() {
 
         {/* Top Right Button: + New Split Ticket */}
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={handleOpenCreateTicket}
           className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-[#0d5236] hover:bg-[#093d28] text-white text-xs sm:text-sm font-semibold shadow-sm transition active:scale-95 cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -1671,7 +2006,7 @@ export default function SplitAndCollectPlaceholder() {
           </div>
 
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={handleOpenCreateTicket}
             className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-[#0d5236] hover:bg-[#093d28] text-white text-xs font-bold transition shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" />
@@ -1707,6 +2042,19 @@ export default function SplitAndCollectPlaceholder() {
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{ticket.description}</p>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenEditTicket(ticket);
+                    }}
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-400 transition cursor-pointer ml-2 flex-shrink-0"
+                    title="Edit Split Ticket"
+                    aria-label="Edit Split Ticket"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
@@ -1739,8 +2087,14 @@ export default function SplitAndCollectPlaceholder() {
                   <Wallet className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-slate-100">Create Split Ticket</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Start a group ledger for collaborative expenses</p>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-slate-100">
+                    {editingTicketId ? 'Edit Split Ticket' : 'Create Split Ticket'}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {editingTicketId
+                      ? 'Update split ticket details and group participants'
+                      : 'Start a group ledger for collaborative expenses'}
+                  </p>
                 </div>
               </div>
               <button
@@ -1748,6 +2102,7 @@ export default function SplitAndCollectPlaceholder() {
                 onClick={() => {
                   stopAllVoice();
                   setShowCreateModal(false);
+                  setEditingTicketId(null);
                 }}
                 className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
@@ -2155,7 +2510,7 @@ export default function SplitAndCollectPlaceholder() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                  <div className="sm:col-span-5 relative flex items-center">
+                  <div className="sm:col-span-4 relative flex items-center">
                     <input
                       type="text"
                       value={participantName}
@@ -2176,7 +2531,7 @@ export default function SplitAndCollectPlaceholder() {
                       />
                     </div>
                   </div>
-                  <div className="sm:col-span-5">
+                  <div className="sm:col-span-3">
                     <input
                       type="email"
                       value={participantEmail}
@@ -2185,11 +2540,20 @@ export default function SplitAndCollectPlaceholder() {
                       className="w-full bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white"
                     />
                   </div>
+                  <div className="sm:col-span-3">
+                    <input
+                      type="tel"
+                      value={participantPhone}
+                      onChange={(e) => setParticipantPhone(e.target.value)}
+                      placeholder="enter phone number"
+                      className="w-full bg-slate-50 dark:bg-[#080d19] border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0d5236]/40 focus:bg-white"
+                    />
+                  </div>
                   <div className="sm:col-span-2">
                     <button
                       type="button"
                       onClick={handleAddParticipant}
-                      className="w-full h-full py-2 px-3 rounded-xl bg-[#0d5236] hover:bg-[#093d28] text-white text-xs font-bold transition shadow-sm flex items-center justify-center cursor-pointer"
+                      className="w-full h-full py-2 px-3 rounded-xl bg-[#0d5236] hover:bg-[#093d28] text-white text-xs font-bold transition shadow-sm flex items-center justify-center cursor-pointer active:scale-95"
                     >
                       + Add
                     </button>
@@ -2218,6 +2582,7 @@ export default function SplitAndCollectPlaceholder() {
                         }`}
                     >
                       <span>{p.name}</span>
+                      {p.phone && <span className="text-[10px] opacity-75 font-mono">({p.phone})</span>}
                       {!p.isSelf && (
                         <button
                           type="button"
@@ -2237,7 +2602,7 @@ export default function SplitAndCollectPlaceholder() {
                 type="submit"
                 className="w-full py-3.5 rounded-xl bg-[#0d5236] hover:bg-[#093d28] text-white font-bold text-sm shadow-md transition cursor-pointer active:scale-95"
               >
-                Create Ticket
+                {editingTicketId ? 'Save Changes' : 'Create Ticket'}
               </button>
             </form>
           </div>
