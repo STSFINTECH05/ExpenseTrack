@@ -129,14 +129,9 @@ export default function FinancialIntelligenceView() {
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                Financial Intelligence
-              </h1>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                Milestone 2
-              </span>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+              Financial Intelligence
+            </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
               Deterministic mathematical analytics, expenditure segregation, and cashflow intelligence
             </p>
