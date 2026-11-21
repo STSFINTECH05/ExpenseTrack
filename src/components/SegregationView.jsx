@@ -76,16 +76,34 @@ export default function SegregationView() {
   const [parsedMerchant, setParsedMerchant] = useState('');
   const [parsedDate, setParsedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [parsedCategory, setParsedCategory] = useState('🍔 Food & Dining');
+  const [sourceType, setSourceType] = useState('Additional Source');
+  const [entryType, setEntryType] = useState('Expense');
+  const [parsedDescription, setParsedDescription] = useState('');
+  const [parsedTime, setParsedTime] = useState(() => {
+    const now = new Date();
+    return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+  });
+  const [parsedSchedule, setParsedSchedule] = useState('One-Time');
   const [isSubmittingSms, setIsSubmittingSms] = useState(false);
   const [parserFeedback, setParserFeedback] = useState(null);
 
   // Parse SMS text in real-time
   const parseSmsContent = useCallback((text) => {
+    const getFormattedTime = () => {
+      const now = new Date();
+      return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    };
+
     if (!text || !text.trim()) {
       setParsedAmount('');
       setParsedMerchant('');
       setParsedDate(new Date().toISOString().split('T')[0]);
       setParsedCategory('🍔 Food & Dining');
+      setSourceType('Additional Source');
+      setEntryType('Expense');
+      setParsedDescription('');
+      setParsedTime(getFormattedTime());
+      setParsedSchedule('One-Time');
       setParserFeedback(null);
       return;
     }
@@ -95,9 +113,9 @@ export default function SegregationView() {
     let detectedDate = '';
     let detectedCategory = 'Miscellaneous';
 
-    // 1. Amount matching: (?:INR|₹|Rs\.?)\s*([\d,]+\.?\d*) or debit(?:ed)?\s*(?:INR|₹|Rs\.?)?\s*([\d,]+\.?\d*)
+    // 1. Amount matching: (?:INR|₹|Rs\.?)\s*([\d,]+\.?\d*) or (?:debit|credit)(?:ed)?\s*(?:INR|₹|Rs\.?)?\s*([\d,]+\.?\d*)
     const amtRegex1 = /(?:INR|₹|Rs\.?)\s*([\d,]+\.?\d*)/i;
-    const amtRegex2 = /debit(?:ed)?\s*(?:INR|₹|Rs\.?)?\s*([\d,]+\.?\d*)/i;
+    const amtRegex2 = /(?:debit(?:ed)?|credit(?:ed)?)\s*(?:INR|₹|Rs\.?)?\s*([\d,]+\.?\d*)/i;
     const mAmt1 = text.match(amtRegex1);
     const mAmt2 = text.match(amtRegex2);
 
@@ -107,8 +125,8 @@ export default function SegregationView() {
       detectedAmount = mAmt2[1].replace(/,/g, '');
     }
 
-    // 2. Merchant matching: (?:to|at|merchant)\s+([A-Za-z0-9\s&]+?)(?=\s+on|\s+at|\s+via|\s+Ref|\.|\d|$)
-    const merchantRegex = /(?:to|at|merchant)\s+([A-Za-z0-9\s&]+?)(?=\s+on|\s+at|\s+via|\s+Ref|\.|\d|$)/i;
+    // 2. Merchant matching: (?:to|at|merchant|from)\s+([A-Za-z0-9\s&]+?)(?=\s+on|\s+at|\s+via|\s+Ref|\.|\d|$)
+    const merchantRegex = /(?:to|at|merchant|from)\s+([A-Za-z0-9\s&]+?)(?=\s+on|\s+at|\s+via|\s+Ref|\.|\d|$)/i;
     const mMerch = text.match(merchantRegex);
     if (mMerch && mMerch[1]) {
       const cleanMerch = mMerch[1].trim().replace(/\s+/g, ' ');
@@ -179,15 +197,55 @@ export default function SegregationView() {
       detectedCategory = 'Miscellaneous';
     }
 
+    // 5. Entry Type detection: credited/received -> Income, debited/spent/paid -> Expense (default: Expense)
+    let detectedEntryType = 'Expense';
+    if (/(credit(?:ed)?|received|deposit(?:ed)?|refund(?:ed)?|cashback)\b/i.test(text)) {
+      detectedEntryType = 'Income';
+    } else if (/(debit(?:ed)?|spent|paid|withdrawal)\b/i.test(text)) {
+      detectedEntryType = 'Expense';
+    }
+
+    // 6. Source Group detection: rent/EMI/salary/subscription -> Fixed Source (default: Additional Source)
+    let detectedSourceType = 'Additional Source';
+    if (/(rent|emi|salary|subscription|sip|insurance|recurring|maintenance|bill)\b/i.test(text)) {
+      detectedSourceType = 'Fixed Source';
+    }
+
+    // 7. Schedule detection: Monthly for Fixed Source, One-Time for Additional Source
+    const detectedSchedule = detectedSourceType === 'Fixed Source' ? 'Monthly' : 'One-Time';
+
+    // 8. Description pre-fill: category + UPI/bank reference (e.g. Travel • UPI Ref 49201847)
+    const refRegex = /(?:upi\s*ref(?:\s*no\.?|erence)?|ref(?:\s*no\.?|erence)?|utr|txn(?:\s*id)?|rrn)[\s:]*([A-Za-z0-9]+)/i;
+    const mRef = text.match(refRegex);
+    const catLabel = detectedCategory.replace(/^[^\w\s]+\s*/, '');
+    let detectedDescription = '';
+    if (mRef && mRef[1]) {
+      detectedDescription = `${catLabel} • UPI Ref ${mRef[1]}`;
+    } else if (detectedMerchant) {
+      detectedDescription = `${catLabel} • ${detectedMerchant}`;
+    } else {
+      detectedDescription = `${catLabel} • SMS Parser`;
+    }
+
+    // 9. Time detection: pre-filled with current time or extracted time
+    const timeRegex = /\b(\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM|am|pm)?)\b/;
+    const mTime = text.match(timeRegex);
+    const detectedTime = mTime ? mTime[1].trim() : getFormattedTime();
+
     if (detectedAmount) setParsedAmount(detectedAmount);
     if (detectedMerchant) setParsedMerchant(detectedMerchant);
     if (detectedDate) setParsedDate(detectedDate);
     setParsedCategory(detectedCategory);
+    setSourceType(detectedSourceType);
+    setEntryType(detectedEntryType);
+    setParsedDescription(detectedDescription);
+    setParsedTime(detectedTime);
+    setParsedSchedule(detectedSchedule);
 
     if (detectedAmount || detectedMerchant) {
       setParserFeedback({
         type: 'success',
-        message: `Parsed: ${detectedAmount ? '₹' + detectedAmount : ''} ${detectedMerchant ? '• ' + detectedMerchant : ''} [${detectedCategory}]`,
+        message: `Parsed: ${detectedAmount ? '₹' + detectedAmount : ''} ${detectedMerchant ? '• ' + detectedMerchant : ''} [${detectedSourceType} • ${detectedEntryType}]`,
       });
     } else {
       setParserFeedback(null);
@@ -201,34 +259,54 @@ export default function SegregationView() {
   };
 
   const handleResetParser = () => {
+    const now = new Date();
+    const curTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
     setSmsRawText('');
     setParsedAmount('');
     setParsedMerchant('');
-    setParsedDate(new Date().toISOString().split('T')[0]);
+    setParsedDate(now.toISOString().split('T')[0]);
     setParsedCategory('🍔 Food & Dining');
+    setSourceType('Additional Source');
+    setEntryType('Expense');
+    setParsedDescription('');
+    setParsedTime(curTime);
+    setParsedSchedule('One-Time');
     setParserFeedback(null);
   };
 
   const handleLogSmsExpense = async () => {
     const numAmount = parseFloat(parsedAmount);
     if (isNaN(numAmount) || numAmount <= 0) {
-      alert('Please enter or parse a valid expense amount.');
+      alert('Please enter or parse a valid amount.');
       return;
     }
-    const expenseName = (parsedMerchant || 'SMS Expense').trim();
+    const entryName = (parsedMerchant || `${entryType === 'Income' ? 'Income' : 'Expense'} Entry`).trim();
 
     setIsSubmittingSms(true);
     const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const curTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    const timeStr = (parsedTime || curTime).trim();
+
+    // Map source and entry type directly to the matching ledger section type
+    let targetType = 'additional_expense';
+    if (sourceType === 'Fixed Source') {
+      targetType = entryType === 'Income' ? 'fixed_income' : 'fixed_expense';
+    } else {
+      targetType = entryType === 'Income' ? 'additional_income' : 'additional_expense';
+    }
+
+    const cleanCategory = (parsedCategory || 'Miscellaneous').replace(/^[^\w\s]+\s*/, '');
 
     const payload = {
-      type: 'additional_expense',
-      name: expenseName,
-      description: smsRawText ? `SMS Parser: ${smsRawText.slice(0, 80)}...` : 'Logged via Smart SMS & Clipboard Parser',
+      type: targetType,
+      sourceType,
+      entryType,
+      name: entryName,
+      description: (parsedDescription || (smsRawText ? `SMS Parser: ${smsRawText.slice(0, 80)}...` : 'Logged via Smart SMS & Clipboard Parser')).trim(),
       date: parsedDate || now.toISOString().split('T')[0],
       time: timeStr,
-      schedule: 'One-time',
-      category: parsedCategory.replace(/^[^\w\s]+\s*/, ''),
+      schedule: parsedSchedule || (sourceType === 'Fixed Source' ? 'Monthly' : 'One-Time'),
+      category: cleanCategory,
       associated_wallet: 'HDFC Corporate Account',
       amount: numAmount,
     };
@@ -464,8 +542,8 @@ export default function SegregationView() {
           />
         </div>
 
-        {/* Real-time Parsed Preview Textboxes / Inputs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-4">
+        {/* Real-time Parsed Preview Textboxes / Inputs - Row 1 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-3.5">
           {/* Amount */}
           <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
@@ -526,6 +604,92 @@ export default function SegregationView() {
           </div>
         </div>
 
+        {/* Real-time Parsed Preview Textboxes / Inputs - Row 2 (Ledger Columns Mapping) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 mb-4">
+          {/* Source Group */}
+          <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Source Group
+            </label>
+            <select
+              value={sourceType}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSourceType(val);
+                if (val === 'Fixed Source' && (parsedSchedule === 'One-Time' || !parsedSchedule)) {
+                  setParsedSchedule('Monthly');
+                } else if (val === 'Additional Source' && parsedSchedule === 'Monthly') {
+                  setParsedSchedule('One-Time');
+                }
+              }}
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+            >
+              <option value="Additional Source">Additional Source</option>
+              <option value="Fixed Source">Fixed Source</option>
+            </select>
+          </div>
+
+          {/* Entry Type */}
+          <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Entry Type
+            </label>
+            <select
+              value={entryType}
+              onChange={(e) => setEntryType(e.target.value)}
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+            >
+              <option value="Expense">Expense</option>
+              <option value="Income">Income</option>
+            </select>
+          </div>
+
+          {/* Description */}
+          <div className="sm:col-span-2 lg:col-span-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Description
+            </label>
+            <input
+              type="text"
+              value={parsedDescription}
+              onChange={(e) => setParsedDescription(e.target.value)}
+              placeholder="e.g. Travel • UPI Ref 49201847"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* Time */}
+          <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Time
+            </label>
+            <input
+              type="text"
+              value={parsedTime}
+              onChange={(e) => setParsedTime(e.target.value)}
+              placeholder="12:05 PM"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-semibold font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* Schedule */}
+          <div className="lg:col-span-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Schedule
+            </label>
+            <select
+              value={parsedSchedule}
+              onChange={(e) => setParsedSchedule(e.target.value)}
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+            >
+              <option value="One-Time">One-Time</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Weekly">Weekly</option>
+              <option value="Yearly">Yearly</option>
+            </select>
+          </div>
+        </div>
+
         {/* Action Buttons Row */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
           <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
@@ -537,7 +701,10 @@ export default function SegregationView() {
             <button
               type="button"
               onClick={() => {
-                openAddModal('additional_expense');
+                const targetType = sourceType === 'Fixed Source'
+                  ? (entryType === 'Income' ? 'fixed_income' : 'fixed_expense')
+                  : (entryType === 'Income' ? 'additional_income' : 'additional_expense');
+                openAddModal(targetType);
                 handleResetParser();
               }}
               className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center space-x-1"
