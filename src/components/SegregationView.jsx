@@ -432,6 +432,142 @@ export default function SegregationView() {
       )}
 
       {/* ========================================================================= */}
+      {/* SMART SMS & CLIPBOARD PARSER SECTION                                      */}
+      {/* ========================================================================= */}
+      <section className="bg-white dark:bg-[#0c1322] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-sm mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+          <div className="flex items-center space-x-2.5">
+            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+              <Smartphone className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <span>📱 Smart SMS & Clipboard Parser</span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Paste raw SMS or UPI transaction alert text for instant automated regex parsing
+              </p>
+            </div>
+          </div>
+          <span className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-medium inline-block self-start sm:self-auto">
+            Active OCR & SMS Auto-Parsing
+          </span>
+        </div>
+
+        {/* Input Textarea */}
+        <div className="mt-3">
+          <textarea
+            value={smsRawText}
+            onChange={handleSmsTextChange}
+            placeholder="Paste Bank/UPI SMS or Transaction Details Here (e.g. Debited INR 1,500.00 from HDFC Bank A/c XX1234 to UPI merchant Zomato on 21-Nov-2026)"
+            className="w-full border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500/50 bg-slate-50/50 dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 min-h-[90px] mb-4 transition"
+          />
+        </div>
+
+        {/* Real-time Parsed Preview Textboxes / Inputs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-4">
+          {/* Amount */}
+          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Amount (₹)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              value={parsedAmount}
+              onChange={(e) => setParsedAmount(e.target.value)}
+              placeholder="0.00"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-mono font-bold text-slate-900 dark:text-slate-100 text-right focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* Merchant */}
+          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Merchant / Payee
+            </label>
+            <input
+              type="text"
+              value={parsedMerchant}
+              onChange={(e) => setParsedMerchant(e.target.value)}
+              placeholder="Merchant Name"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 text-right focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* Date */}
+          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Date
+            </label>
+            <input
+              type="date"
+              value={parsedDate}
+              onChange={(e) => setParsedDate(e.target.value)}
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 text-right focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* Category Dropdown */}
+          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              Category
+            </label>
+            <select
+              value={parsedCategory}
+              onChange={(e) => setParsedCategory(e.target.value)}
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 text-right focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+            >
+              <option value="🍔 Food & Dining">🍔 Food & Dining</option>
+              <option value="🚗 Travel">🚗 Travel</option>
+              <option value="🛍️ Shopping">🛍️ Shopping</option>
+              <option value="Miscellaneous">Miscellaneous</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Action Buttons Row */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Regex-powered real-time client-side extraction</span>
+          </div>
+
+          <div className="flex items-center space-x-2.5">
+            <button
+              type="button"
+              onClick={() => {
+                openAddModal('additional_expense');
+                handleResetParser();
+              }}
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center space-x-1"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Quick Add manual</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleLogSmsExpense}
+              disabled={isSubmittingSms || !parsedAmount}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md shadow-emerald-600/20 cursor-pointer flex items-center space-x-1.5"
+            >
+              {isSubmittingSms ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <span>Logging...</span>
+                </>
+              ) : (
+                <>
+                  <span>📥 Log to Expenses</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
       {/* 1. TOP OVERVIEW CARDS                                                     */}
       {/* ========================================================================= */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1422,142 +1558,6 @@ export default function SegregationView() {
               </div>
             );
           })()}
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* SMART SMS & CLIPBOARD PARSER SECTION                                      */}
-      {/* ========================================================================= */}
-      <section className="bg-white dark:bg-[#0c1322] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-sm mt-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
-              <Smartphone className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <span>📱 Smart SMS & Clipboard Parser</span>
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Paste raw SMS or UPI transaction alert text for instant automated regex parsing
-              </p>
-            </div>
-          </div>
-          <span className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-medium inline-block self-start sm:self-auto">
-            Active OCR & SMS Auto-Parsing
-          </span>
-        </div>
-
-        {/* Input Textarea */}
-        <div className="mt-3">
-          <textarea
-            value={smsRawText}
-            onChange={handleSmsTextChange}
-            placeholder="Paste Bank/UPI SMS or Transaction Details Here (e.g. Debited INR 1,500.00 from HDFC Bank A/c XX1234 to UPI merchant Zomato on 21-Nov-2026)"
-            className="w-full border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500/50 bg-slate-50/50 dark:bg-slate-900/60 text-slate-900 dark:text-slate-100 min-h-[90px] mb-4 transition"
-          />
-        </div>
-
-        {/* Real-time Parsed Preview Textboxes / Inputs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-4">
-          {/* Amount */}
-          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-              Amount (₹)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              value={parsedAmount}
-              onChange={(e) => setParsedAmount(e.target.value)}
-              placeholder="0.00"
-              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-mono font-bold text-slate-900 dark:text-slate-100 text-right focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            />
-          </div>
-
-          {/* Merchant */}
-          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-              Merchant / Payee
-            </label>
-            <input
-              type="text"
-              value={parsedMerchant}
-              onChange={(e) => setParsedMerchant(e.target.value)}
-              placeholder="Merchant Name"
-              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 text-right focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            />
-          </div>
-
-          {/* Date */}
-          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-              Date
-            </label>
-            <input
-              type="date"
-              value={parsedDate}
-              onChange={(e) => setParsedDate(e.target.value)}
-              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 text-right focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            />
-          </div>
-
-          {/* Category Dropdown */}
-          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3">
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-              Category
-            </label>
-            <select
-              value={parsedCategory}
-              onChange={(e) => setParsedCategory(e.target.value)}
-              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-900 dark:text-slate-100 text-right focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
-            >
-              <option value="🍔 Food & Dining">🍔 Food & Dining</option>
-              <option value="🚗 Travel">🚗 Travel</option>
-              <option value="🛍️ Shopping">🛍️ Shopping</option>
-              <option value="Miscellaneous">Miscellaneous</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Action Buttons Row */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
-          <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Regex-powered real-time client-side extraction</span>
-          </div>
-
-          <div className="flex items-center space-x-2.5">
-            <button
-              type="button"
-              onClick={() => {
-                openAddModal('additional_expense');
-                handleResetParser();
-              }}
-              className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center space-x-1"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>➕ Quick Add manual</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleLogSmsExpense}
-              disabled={isSubmittingSms || !parsedAmount}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md shadow-emerald-600/20 cursor-pointer flex items-center space-x-1.5"
-            >
-              {isSubmittingSms ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Logging...</span>
-                </>
-              ) : (
-                <>
-                  <span>📥 Log to Expenses</span>
-                </>
-              )}
-            </button>
-          </div>
         </div>
       </section>
 
