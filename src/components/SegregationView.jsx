@@ -21,7 +21,6 @@ import {
   ShieldAlert,
   PieChart,
   BarChart3,
-  Smartphone,
   Copy,
   Sparkles,
 } from 'lucide-react';
@@ -514,18 +513,13 @@ export default function SegregationView() {
       {/* ========================================================================= */}
       <section className="bg-white dark:bg-[#0c1322] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-sm mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
-              <Smartphone className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <span>📱 Smart SMS & Clipboard Parser</span>
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Paste raw SMS or UPI transaction alert text for instant automated regex parsing
-              </p>
-            </div>
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
+              Smart SMS & Clipboard Parser
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Paste raw SMS or UPI transaction alert text for instant automated regex parsing
+            </p>
           </div>
           <span className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-medium inline-block self-start sm:self-auto">
             Active OCR & SMS Auto-Parsing
