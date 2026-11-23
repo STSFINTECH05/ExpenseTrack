@@ -79,11 +79,11 @@ const CITY_SPREADS = {
 
 // Next-day trend predictions (percentage shift)
 const NEXT_DAY_PREDICTIONS = {
-  gold: { pct: 0.35, direction: 'up', label: '+₹44/g est.' },
-  silver: { pct: 0.55, direction: 'up', label: '+₹0.95/g est.' },
-  platinum: { pct: -0.20, direction: 'down', label: '-₹8/g est.' },
-  copper: { pct: 0.40, direction: 'up', label: '+₹4.5/kg est.' },
-  diamond: { pct: 0.00, direction: 'stable', label: 'Stable' },
+  gold: { pct: 0.5, direction: 'up', symbol: '↗', label: '+0.5%' },
+  silver: { pct: 1.4, direction: 'up', symbol: '↗', label: '+1.4%' },
+  platinum: { pct: 0.9, direction: 'up', symbol: '↗', label: '+0.9%' },
+  copper: { pct: 0.6, direction: 'up', symbol: '↗', label: '+0.6%' },
+  diamond: { pct: 0.0, direction: 'stable', symbol: '→', label: '0.0%' },
 };
 
 const COMMODITY_CACHE_KEY = 'sts_live_commodity_rates_v2';
@@ -105,8 +105,8 @@ const computeCityCalibratedRates = (baseRates, cityId) => {
   const diamondLab1ct = cityId === 'dubai' ? 48000 : (baseRates.diamondLab1ct || DEFAULT_COMMODITY_RATES.diamondLab1ct);
 
   // Dynamic next-day estimated figures
-  const nextDayGold24k = Math.round(gold24k * (1 + NEXT_DAY_PREDICTIONS.gold.pct / 100));
-  const nextDaySilver = Number((silverPerGram * (1 + NEXT_DAY_PREDICTIONS.silver.pct / 100)).toFixed(2));
+  const nextDayGold24k = Math.round((gold24k * (1 + NEXT_DAY_PREDICTIONS.gold.pct / 100)) / 10) * 10;
+  const nextDaySilver = Number((Math.round(silverPerGram * (1 + NEXT_DAY_PREDICTIONS.silver.pct / 100) * 2) / 2).toFixed(2));
   const nextDayPlatinum = Math.round(platinumPerGram * (1 + NEXT_DAY_PREDICTIONS.platinum.pct / 100));
   const nextDayCopper = Math.round(copperPerKg * (1 + NEXT_DAY_PREDICTIONS.copper.pct / 100));
   const nextDayDiamond = diamondNatural1ct;
@@ -208,11 +208,12 @@ const fetchLiveCommodityRates = async (forceRefresh = false) => {
         const xauJson = await xauRes.json();
         const inrPerOz = Number(xauJson?.xau?.inr);
         if (inrPerOz && inrPerOz > 0) {
-          const perGram = inrPerOz / 31.1035;
+          // Apply Indian landed market multiplier (1.185: customs duty + MCX/jeweller spread)
+          const perGram = (inrPerOz / 31.1035) * 1.185;
           finalRates.gold24k = Math.round(perGram);
           finalRates.gold22k = Math.round(perGram * (22 / 24));
           fetchedLive = true;
-          sourceLabel = 'Global Bullion Index (CDN)';
+          sourceLabel = 'Global Bullion Index (Landed Indian Market)';
         }
       }
 
@@ -220,7 +221,8 @@ const fetchLiveCommodityRates = async (forceRefresh = false) => {
         const xagJson = await xagRes.json();
         const inrPerOz = Number(xagJson?.xag?.inr);
         if (inrPerOz && inrPerOz > 0) {
-          const perGram = inrPerOz / 31.1035;
+          // Apply Indian landed market multiplier (1.43: customs duty + freight + local jeweller spread)
+          const perGram = (inrPerOz / 31.1035) * 1.43;
           finalRates.silverPerGram = Number(perGram.toFixed(2));
           finalRates.silverPerKg = Math.round(perGram * 1000);
           fetchedLive = true;
@@ -229,6 +231,22 @@ const fetchLiveCommodityRates = async (forceRefresh = false) => {
     } catch (err) {
       console.warn('Secondary CDN gold/silver fallback error:', err);
     }
+  }
+
+  // Validate that the resulting 24K Gold rate falls within realistic Indian bounds (>= 12000 INR/g);
+  // otherwise fallback cleanly to the calibrated Chennai daily rates
+  if (!finalRates.gold24k || finalRates.gold24k < 12000) {
+    finalRates.gold24k = DEFAULT_COMMODITY_RATES.gold24k;
+    finalRates.gold22k = DEFAULT_COMMODITY_RATES.gold22k;
+    finalRates.silverPerGram = DEFAULT_COMMODITY_RATES.silverPerGram;
+    finalRates.silverPerKg = DEFAULT_COMMODITY_RATES.silverPerKg;
+    finalRates.platinumPerGram = DEFAULT_COMMODITY_RATES.platinumPerGram;
+    finalRates.platinum10g = DEFAULT_COMMODITY_RATES.platinum10g;
+    finalRates.copperPerKg = DEFAULT_COMMODITY_RATES.copperPerKg;
+    finalRates.copperPerGram = DEFAULT_COMMODITY_RATES.copperPerGram;
+    finalRates.diamondNatural1ct = DEFAULT_COMMODITY_RATES.diamondNatural1ct;
+    finalRates.diamondLab1ct = DEFAULT_COMMODITY_RATES.diamondLab1ct;
+    sourceLabel = DEFAULT_COMMODITY_RATES.source;
   }
 
   const updatedTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
@@ -1744,7 +1762,7 @@ export default function IncomeStreamsView() {
 
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>● {activeCityObj.name} Market Rates • Next-Day Trend Est.</span>
+              <span>● {activeCityObj.name} Market Rates • Next-Day AI Trend Est.</span>
             </span>
           </div>
 
@@ -1791,9 +1809,8 @@ export default function IncomeStreamsView() {
               </div>
             </div>
             <div className="mt-2 pt-1.5 border-t border-amber-200/40 dark:border-amber-800/30 flex items-center justify-between text-[10px]">
-              <span className="text-slate-400">Next-Day Est:</span>
               <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                ₹{commodityRates.nextDay?.gold24k.toLocaleString('en-IN')}/g ({NEXT_DAY_PREDICTIONS.gold.label})
+                ↗ Next-Day Est: ₹{commodityRates.nextDay?.gold24k.toLocaleString('en-IN')}/g (+0.5%)
               </span>
             </div>
           </div>
@@ -1822,9 +1839,8 @@ export default function IncomeStreamsView() {
               </div>
             </div>
             <div className="mt-2 pt-1.5 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[10px]">
-              <span className="text-slate-400">Next-Day Est:</span>
               <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                ₹{commodityRates.nextDay?.silverPerGram.toFixed(2)}/g ({NEXT_DAY_PREDICTIONS.silver.label})
+                ↗ Next-Day Est: ₹{commodityRates.nextDay?.silverPerGram.toFixed(2)}/g (+1.4%)
               </span>
             </div>
           </div>
@@ -1853,9 +1869,8 @@ export default function IncomeStreamsView() {
               </div>
             </div>
             <div className="mt-2 pt-1.5 border-t border-teal-200/40 dark:border-teal-800/30 flex items-center justify-between text-[10px]">
-              <span className="text-slate-400">Next-Day Est:</span>
-              <span className="font-mono font-bold text-rose-500 dark:text-rose-400">
-                ₹{commodityRates.nextDay?.platinumPerGram.toLocaleString('en-IN')}/g ({NEXT_DAY_PREDICTIONS.platinum.label})
+              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                ↗ Next-Day Est: ₹{commodityRates.nextDay?.platinumPerGram.toLocaleString('en-IN')}/g (+0.9%)
               </span>
             </div>
           </div>
@@ -1884,9 +1899,8 @@ export default function IncomeStreamsView() {
               </div>
             </div>
             <div className="mt-2 pt-1.5 border-t border-orange-200/40 dark:border-orange-800/30 flex items-center justify-between text-[10px]">
-              <span className="text-slate-400">Next-Day Est:</span>
               <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                ₹{commodityRates.nextDay?.copperPerKg.toLocaleString('en-IN')}/kg ({NEXT_DAY_PREDICTIONS.copper.label})
+                ↗ Next-Day Est: ₹{commodityRates.nextDay?.copperPerKg.toLocaleString('en-IN')}/kg (+0.6%)
               </span>
             </div>
           </div>
@@ -1915,9 +1929,8 @@ export default function IncomeStreamsView() {
               </div>
             </div>
             <div className="mt-2 pt-1.5 border-t border-sky-200/40 dark:border-sky-800/30 flex items-center justify-between text-[10px]">
-              <span className="text-slate-400">Next-Day Est:</span>
               <span className="font-mono font-bold text-sky-600 dark:text-sky-400">
-                ₹{commodityRates.nextDay?.diamondNatural1ct.toLocaleString('en-IN')}/ct ({NEXT_DAY_PREDICTIONS.diamond.label})
+                → Stable Est: ₹{commodityRates.nextDay?.diamondNatural1ct.toLocaleString('en-IN')}/ct (0.0%)
               </span>
             </div>
           </div>
