@@ -17,10 +17,11 @@ import apiClient from '../apiClient';
 /**
  * Full-screen Black Cursive "Live-Writing" Multilingual Welcome Splash
  * Displays for 10 seconds strictly on new user sign-up completion.
- * Stacked typography written letter-by-letter with live typing cursor:
- * 1. 0.0s - 3.3s: English -> "Welcome" + "Welcome to STS FINTECH, {userName}"
- * 2. 3.3s - 6.6s: Tamil -> "வணக்கம்"
- * 3. 6.6s - 10.0s: Hindi -> "स्वागत है"
+ * Single focal position with seamless letter-by-letter drawing,
+ * flat crisp white text (no shadows, halos, cursors, or ghosting):
+ * 1. 0.0s - 3.3s: English -> "Welcome" + "Welcome to STS FINTECH, {userName}" (350ms fade-out)
+ * 2. 3.3s - 6.6s: Tamil -> "வணக்கம்" (350ms fade-out)
+ * 3. 6.6s - 10.0s: Hindi -> "स्वागत है" (350ms fade-out)
  */
 function AppleWelcomeSplash({ user, fallbackName = '', onComplete }) {
   const [elapsed, setElapsed] = useState(0);
@@ -30,7 +31,7 @@ function AppleWelcomeSplash({ user, fallbackName = '', onComplete }) {
   const rawName = user?.name || fallbackName || 'Member';
   const userName = rawName.trim();
 
-  // Letter arrays for authentic live penmanship / grapheme typing
+  // Letter arrays for letter-by-letter live handwriting
   const englishLetters = useMemo(() => ['W', 'e', 'l', 'c', 'o', 'm', 'e'], []);
   const tamilLetters = useMemo(() => ['வ', 'ண', 'க்', 'க', 'ம்'], []);
   const hindiLetters = useMemo(() => ['स्वा', 'ग', 'त', ' ', 'है'], []);
@@ -44,7 +45,7 @@ function AppleWelcomeSplash({ user, fallbackName = '', onComplete }) {
     }, 500);
   }, [onComplete]);
 
-  // Main 10s master timeline loop
+  // Master 10s timeline
   useEffect(() => {
     const startTime = Date.now();
     const totalDuration = 10000;
@@ -62,81 +63,34 @@ function AppleWelcomeSplash({ user, fallbackName = '', onComplete }) {
     return () => clearInterval(interval);
   }, [triggerFinish]);
 
-  // English: 0.0s - 3.3s (letters type between 250ms and 2300ms)
-  const isEnglishActive = elapsed < 3300;
-  const englishTypedCount = useMemo(() => {
-    if (elapsed < 250) return 0;
-    if (elapsed >= 2300) return englishLetters.length;
-    const progressInWindow = (elapsed - 250) / (2300 - 250);
-    return Math.min(englishLetters.length, Math.floor(progressInWindow * englishLetters.length) + 1);
-  }, [elapsed, englishLetters.length]);
+  // English: 0.0s – 3.3s (letters type between 200ms and 2200ms)
+  const englishTyped = useMemo(() => {
+    if (elapsed < 200) return '';
+    if (elapsed >= 2200) return 'Welcome';
+    const progressInWindow = (elapsed - 200) / (2200 - 200);
+    const count = Math.min(englishLetters.length, Math.floor(progressInWindow * englishLetters.length) + 1);
+    return englishLetters.slice(0, count).join('');
+  }, [elapsed, englishLetters]);
 
-  // Tamil: 3.3s - 6.6s (letters type between 3500ms and 5800ms)
-  const isTamilStarted = elapsed >= 3300;
-  const isTamilActive = elapsed >= 3300 && elapsed < 6600;
-  const tamilTypedCount = useMemo(() => {
-    if (elapsed < 3500) return 0;
-    if (elapsed >= 5800) return tamilLetters.length;
-    const progressInWindow = (elapsed - 3500) / (5800 - 3500);
-    return Math.min(tamilLetters.length, Math.floor(progressInWindow * tamilLetters.length) + 1);
-  }, [elapsed, tamilLetters.length]);
+  // Tamil: 3.3s – 6.6s (letters type between 3500ms and 5600ms)
+  const tamilTyped = useMemo(() => {
+    if (elapsed < 3500) return '';
+    if (elapsed >= 5600) return 'வணக்கம்';
+    const progressInWindow = (elapsed - 3500) / (5600 - 3500);
+    const count = Math.min(tamilLetters.length, Math.floor(progressInWindow * tamilLetters.length) + 1);
+    return tamilLetters.slice(0, count).join('');
+  }, [elapsed, tamilLetters]);
 
-  // Hindi: 6.6s - 10.0s (letters type between 6800ms and 9100ms)
-  const isHindiStarted = elapsed >= 6600;
-  const isHindiActive = elapsed >= 6600 && elapsed < 10000;
-  const hindiTypedCount = useMemo(() => {
-    if (elapsed < 6800) return 0;
-    if (elapsed >= 9100) return hindiLetters.length;
-    const progressInWindow = (elapsed - 6800) / (9100 - 6800);
-    return Math.min(hindiLetters.length, Math.floor(progressInWindow * hindiLetters.length) + 1);
-  }, [elapsed, hindiLetters.length]);
+  // Hindi: 6.6s – 10.0s (letters type between 6800ms and 8900ms)
+  const hindiTyped = useMemo(() => {
+    if (elapsed < 6800) return '';
+    if (elapsed >= 8900) return 'स्वागत है';
+    const progressInWindow = (elapsed - 6800) / (8900 - 6800);
+    const count = Math.min(hindiLetters.length, Math.floor(progressInWindow * hindiLetters.length) + 1);
+    return hindiLetters.slice(0, count).join('');
+  }, [elapsed, hindiLetters]);
 
   const progress = Math.min(100, (elapsed / 10000) * 100);
-
-  // Helper renderer for each live-writing line
-  const renderLiveLine = (letters, typedCount, isActive, isStarted) => {
-    if (!isStarted) {
-      return (
-        <div className="opacity-0 pointer-events-none select-none py-1 min-h-[1.3em]">
-          <span className="font-live-writing text-4xl sm:text-6xl md:text-7xl italic">
-            {letters.join('')}
-          </span>
-        </div>
-      );
-    }
-
-    return (
-      <div className="opacity-100 transition-opacity duration-500 py-1 select-none min-h-[1.3em]">
-        <div className="font-live-writing text-4xl sm:text-6xl md:text-7xl font-normal tracking-wide leading-relaxed text-white italic">
-          {letters.map((char, idx) => {
-            const isTyped = idx < typedCount;
-            const isTip = idx === typedCount - 1;
-            const displayChar = char === ' ' ? '\u00A0' : char;
-
-            return (
-              <React.Fragment key={idx}>
-                <span
-                  className={`transition-colors duration-150 ${
-                    isTyped
-                      ? 'text-white font-normal drop-shadow-[0_0_12px_rgba(255,255,255,0.35)]'
-                      : 'text-white/15'
-                  }`}
-                >
-                  {displayChar}
-                </span>
-                {isActive && isTip && (
-                  <span className="inline-block border-r-2 sm:border-r-[3px] border-white animate-pulse h-[0.8em] ml-0.5 align-middle pointer-events-none" />
-                )}
-              </React.Fragment>
-            );
-          })}
-          {isActive && typedCount === 0 && (
-            <span className="inline-block border-r-2 sm:border-r-[3px] border-white animate-pulse h-[0.8em] align-middle pointer-events-none" />
-          )}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div
@@ -154,32 +108,56 @@ function AppleWelcomeSplash({ user, fallbackName = '', onComplete }) {
         }
       `}</style>
 
-      {/* Stacked Live-Writing Typography Area */}
-      <div className="flex flex-col items-center justify-center text-center px-6 max-w-3xl space-y-2 sm:space-y-3 md:space-y-4">
-        {/* Row 1: English ("Welcome") + Sub-label */}
-        <div className="flex flex-col items-center justify-center">
-          {renderLiveLine(englishLetters, englishTypedCount, isEnglishActive, true)}
+      {/* Exact Center Single Focal Spot */}
+      <div className="flex flex-col items-center justify-center text-center px-6 max-w-3xl min-h-[160px] sm:min-h-[220px]">
+        {/* 1. English Greeting (0.0s – 3.3s, fades out over 350ms from 2950ms) */}
+        {elapsed < 3300 && (
           <div
-            className={`text-xs sm:text-sm md:text-base text-white/50 tracking-wider font-sans mt-0.5 transition-all duration-700 ${
-              englishTypedCount >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+            className={`flex flex-col items-center justify-center transition-opacity duration-350 ease-out ${
+              elapsed >= 2950 ? 'opacity-0' : 'opacity-100'
             }`}
           >
-            Welcome to STS FINTECH, {userName}
+            <div className="font-live-writing text-5xl sm:text-7xl md:text-8xl font-normal tracking-wide leading-relaxed py-2 text-white select-none italic">
+              {englishTyped || '\u00A0'}
+            </div>
+            <div
+              className={`text-xs sm:text-sm md:text-base text-white/50 tracking-wider font-sans mt-1 transition-opacity duration-500 ease-out ${
+                elapsed >= 1000 && elapsed < 2950 ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              Welcome to STS FINTECH, {userName}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Row 2: Tamil ("வணக்கம்") */}
-        <div className="flex flex-col items-center justify-center">
-          {renderLiveLine(tamilLetters, tamilTypedCount, isTamilActive, isTamilStarted)}
-        </div>
+        {/* 2. Tamil Greeting (3.3s – 6.6s, single center spot, fades out over 350ms from 6250ms) */}
+        {elapsed >= 3300 && elapsed < 6600 && (
+          <div
+            className={`flex flex-col items-center justify-center transition-opacity duration-350 ease-out ${
+              elapsed >= 6250 ? 'opacity-0' : 'opacity-100'
+            }`}
+          >
+            <div className="font-live-writing text-5xl sm:text-7xl md:text-8xl font-normal tracking-wide leading-relaxed py-2 text-white select-none italic">
+              {tamilTyped || '\u00A0'}
+            </div>
+          </div>
+        )}
 
-        {/* Row 3: Hindi ("स्वागत है") */}
-        <div className="flex flex-col items-center justify-center">
-          {renderLiveLine(hindiLetters, hindiTypedCount, isHindiActive, isHindiStarted)}
-        </div>
+        {/* 3. Hindi Greeting (6.6s – 10.0s, single center spot, fades out over 350ms from 9650ms) */}
+        {elapsed >= 6600 && (
+          <div
+            className={`flex flex-col items-center justify-center transition-opacity duration-350 ease-out ${
+              elapsed >= 9650 ? 'opacity-0' : 'opacity-100'
+            }`}
+          >
+            <div className="font-live-writing text-5xl sm:text-7xl md:text-8xl font-normal tracking-wide leading-relaxed py-2 text-white select-none italic">
+              {hindiTyped || '\u00A0'}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Minimal Ultra-Thin Bottom Progress Bar */}
+      {/* Ultra-Thin Flat Bottom Progress Bar (No Glows) */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
         <div className="w-32 h-0.5 bg-white/20 rounded-full overflow-hidden">
           <div
