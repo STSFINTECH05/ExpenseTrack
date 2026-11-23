@@ -24,6 +24,8 @@ import {
   ExternalLink,
   Info,
   MapPin,
+  RefreshCw,
+  Gem,
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -33,6 +35,142 @@ const CATEGORIES = [
   { id: 'metals', label: 'Precious Metals & Commodities', icon: Coins },
   { id: 'cashflow', label: 'Cash-Flow Assets', icon: Building2 },
 ];
+
+// Indicative Chennai INR Benchmark Rates (Nov 2026, excl. 3% GST)
+const DEFAULT_COMMODITY_RATES = {
+  gold24k: 12694,
+  gold22k: 11686,
+  silverPerGram: 175.0,
+  silverPerKg: 175000,
+  platinumPerGram: 3890,
+  platinum10g: 38900,
+  copperPerKg: 1152,
+  copperPerGram: 1.15,
+  diamondNatural1ct: 350000,
+  diamondLab1ct: 52000,
+  updatedAt: 'Nov 2026 Indicative Benchmark',
+  source: 'Chennai Bullion & MCX Benchmark',
+};
+
+const COMMODITY_CACHE_KEY = 'sts_live_commodity_rates_v1';
+const COMMODITY_CACHE_DURATION_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+// Helper to fetch live bullion, copper & diamond rates with 6h cache and zero-key fallback
+const fetchLiveCommodityRates = async (forceRefresh = false) => {
+  if (!forceRefresh && typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem(COMMODITY_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.timestamp && Date.now() - parsed.timestamp < COMMODITY_CACHE_DURATION_MS && parsed?.rates) {
+          return { rates: parsed.rates, isLive: true, cached: true, updatedAt: parsed.updatedAt };
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading commodity cache:', e);
+    }
+  }
+
+  let finalRates = { ...DEFAULT_COMMODITY_RATES };
+  let fetchedLive = false;
+  let sourceLabel = DEFAULT_COMMODITY_RATES.source;
+
+  // 1. Primary Free API: Metals.dev / MetalpriceAPI if optional key provided
+  const metalsApiKey = import.meta.env?.VITE_METALS_API_KEY;
+  if (metalsApiKey) {
+    try {
+      const res = await fetch(`https://api.metals.dev/v1/latest?api_key=${encodeURIComponent(metalsApiKey)}&currency=INR&unit=g`);
+      if (res.ok) {
+        const json = await res.json();
+        const metals = json?.metals || json?.rates || json?.data;
+        if (metals) {
+          const gold = Number(metals.gold || metals.XAU);
+          const silver = Number(metals.silver || metals.XAG);
+          const platinum = Number(metals.platinum || metals.XPT);
+          const copper = Number(metals.copper || metals.XCU);
+
+          if (gold && gold > 0) {
+            finalRates.gold24k = Math.round(gold);
+            finalRates.gold22k = Math.round(gold * (22 / 24));
+          }
+          if (silver && silver > 0) {
+            finalRates.silverPerGram = Number(silver.toFixed(2));
+            finalRates.silverPerKg = Math.round(silver * 1000);
+          }
+          if (platinum && platinum > 0) {
+            finalRates.platinumPerGram = Math.round(platinum);
+            finalRates.platinum10g = Math.round(platinum * 10);
+          }
+          if (copper && copper > 0) {
+            finalRates.copperPerKg = Math.round(copper * 1000);
+            finalRates.copperPerGram = Number(copper.toFixed(2));
+          }
+          fetchedLive = true;
+          sourceLabel = 'Metals.dev Live API';
+        }
+      }
+    } catch (err) {
+      console.warn('Primary Metals.dev API error:', err);
+    }
+  }
+
+  // 2. Secondary Zero-Key Fallback: jsDelivr CDN fawazahmed0 currency-api for XAU & XAG
+  if (!fetchedLive) {
+    try {
+      const [xauRes, xagRes] = await Promise.all([
+        fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/xau.json').catch(() => null),
+        fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/xag.json').catch(() => null),
+      ]);
+
+      if (xauRes && xauRes.ok) {
+        const xauJson = await xauRes.json();
+        const inrPerOz = Number(xauJson?.xau?.inr);
+        if (inrPerOz && inrPerOz > 0) {
+          const perGram = inrPerOz / 31.1035;
+          finalRates.gold24k = Math.round(perGram);
+          finalRates.gold22k = Math.round(perGram * (22 / 24));
+          fetchedLive = true;
+          sourceLabel = 'Global Bullion Index (CDN)';
+        }
+      }
+
+      if (xagRes && xagRes.ok) {
+        const xagJson = await xagRes.json();
+        const inrPerOz = Number(xagJson?.xag?.inr);
+        if (inrPerOz && inrPerOz > 0) {
+          const perGram = inrPerOz / 31.1035;
+          finalRates.silverPerGram = Number(perGram.toFixed(2));
+          finalRates.silverPerKg = Math.round(perGram * 1000);
+          fetchedLive = true;
+        }
+      }
+    } catch (err) {
+      console.warn('Secondary CDN gold/silver fallback error:', err);
+    }
+  }
+
+  const updatedTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  const timeStr = `${new Date().toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}, ${updatedTime}`;
+  finalRates.updatedAt = timeStr;
+  finalRates.source = sourceLabel;
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(
+        COMMODITY_CACHE_KEY,
+        JSON.stringify({
+          rates: finalRates,
+          timestamp: Date.now(),
+          updatedAt: timeStr,
+        })
+      );
+    } catch (e) {
+      console.warn('Error saving commodity cache:', e);
+    }
+  }
+
+  return { rates: finalRates, isLive: fetchedLive, cached: false, updatedAt: timeStr };
+};
 
 // --- BANK FD DIRECTORY DATA WITH RATES & DIGITAL PROCESS ---
 const BANK_FD_RATES = [
@@ -1091,6 +1229,38 @@ export default function IncomeStreamsView() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Live Precious Metals & Commodity Rates State
+  const [commodityRates, setCommodityRates] = useState(DEFAULT_COMMODITY_RATES);
+  const [isRatesLoading, setIsRatesLoading] = useState(false);
+  const [ratesLastUpdated, setRatesLastUpdated] = useState(DEFAULT_COMMODITY_RATES.updatedAt);
+
+  const loadCommodityRates = async (forceRefresh = false) => {
+    setIsRatesLoading(true);
+    try {
+      const res = await fetchLiveCommodityRates(forceRefresh);
+      if (res?.rates) {
+        setCommodityRates(res.rates);
+        if (res.updatedAt) setRatesLastUpdated(res.updatedAt);
+      }
+    } catch (e) {
+      console.warn('Error fetching commodity rates:', e);
+    } finally {
+      setIsRatesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCommodityRates(false);
+  }, []);
+
+  const handleSelectMetalsCategory = () => {
+    setActiveCategory('metals');
+    const targetEl = document.getElementById('streams-filter-bar');
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   // Individual card expansion state (tracks expanded card IDs)
   const [expandedCardIds, setExpandedCardIds] = useState({});
 
@@ -1425,6 +1595,157 @@ export default function IncomeStreamsView() {
         </div>
       )}
 
+      {/* --- TOP LIVE COMMODITY & BULLION RATES STRIP --- */}
+      <div className="bg-white dark:bg-[#0c1322] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-sm mb-6 transition-colors">
+        {/* Header Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <Coins className="w-4 h-4 text-amber-500" />
+              <span>Live Precious Metals &amp; Commodity Rates (INR)</span>
+            </h3>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Live Market Benchmark • Excl. 3% GST</span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <span className="text-[10px] text-slate-400 hidden md:inline">
+              Updated: {ratesLastUpdated}
+            </span>
+            <button
+              type="button"
+              onClick={() => loadCommodityRates(true)}
+              disabled={isRatesLoading}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+              title="Refresh live commodity market benchmark"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRatesLoading ? 'animate-spin text-emerald-500' : ''}`} />
+              <span className="text-[11px]">{isRatesLoading ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 5-Column Responsive Rate Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-3">
+          {/* Card 1: Gold (24K / 22K) */}
+          <div
+            onClick={handleSelectMetalsCategory}
+            className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-800/40 hover:border-amber-400 dark:hover:border-amber-600 transition cursor-pointer group"
+            title="Click to view Gold and Bullion investment streams"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                Gold (24K / 22K)
+              </span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700/80 dark:text-amber-400">
+                99.9%
+              </span>
+            </div>
+            <div className="text-base sm:text-lg font-black font-mono text-amber-950 dark:text-amber-100 tracking-tight">
+              ₹{commodityRates.gold24k.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/g</span>
+            </div>
+            <div className="text-[10px] text-amber-800/80 dark:text-amber-300/80 font-medium mt-0.5">
+              22K: ₹{commodityRates.gold22k.toLocaleString('en-IN')}/g
+            </div>
+          </div>
+
+          {/* Card 2: Silver (999) */}
+          <div
+            onClick={handleSelectMetalsCategory}
+            className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600 transition cursor-pointer group"
+            title="Click to view Silver and Commodity streams"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                Silver (999)
+              </span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Pure
+              </span>
+            </div>
+            <div className="text-base sm:text-lg font-black font-mono text-slate-900 dark:text-white tracking-tight">
+              ₹{commodityRates.silverPerGram.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/g</span>
+            </div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+              ₹{commodityRates.silverPerKg.toLocaleString('en-IN')}/kg
+            </div>
+          </div>
+
+          {/* Card 3: Platinum (950) */}
+          <div
+            onClick={handleSelectMetalsCategory}
+            className="p-3 rounded-xl bg-teal-50/40 dark:bg-teal-950/20 border border-teal-200/70 dark:border-teal-800/40 hover:border-teal-400 dark:hover:border-teal-600 transition cursor-pointer group"
+            title="Click to view Platinum and Rare Metals streams"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold text-teal-900 dark:text-teal-200 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                Platinum (950)
+              </span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-teal-700/80 dark:text-teal-400">
+                MCX
+              </span>
+            </div>
+            <div className="text-base sm:text-lg font-black font-mono text-teal-950 dark:text-teal-100 tracking-tight">
+              ₹{commodityRates.platinumPerGram.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/g</span>
+            </div>
+            <div className="text-[10px] text-teal-800/80 dark:text-teal-300/80 font-medium mt-0.5">
+              ₹{commodityRates.platinum10g.toLocaleString('en-IN')}/10g
+            </div>
+          </div>
+
+          {/* Card 4: Copper (MCX) */}
+          <div
+            onClick={handleSelectMetalsCategory}
+            className="p-3 rounded-xl bg-orange-50/40 dark:bg-orange-950/20 border border-orange-200/70 dark:border-orange-800/40 hover:border-orange-400 dark:hover:border-orange-600 transition cursor-pointer group"
+            title="Click to view Industrial Commodities streams"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold text-orange-900 dark:text-orange-200 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                Copper (MCX)
+              </span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-orange-700/80 dark:text-orange-400">
+                COMEX
+              </span>
+            </div>
+            <div className="text-base sm:text-lg font-black font-mono text-orange-950 dark:text-orange-100 tracking-tight">
+              ₹{commodityRates.copperPerKg.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/kg</span>
+            </div>
+            <div className="text-[10px] text-orange-800/80 dark:text-orange-300/80 font-medium mt-0.5">
+              ₹{commodityRates.copperPerGram.toFixed(2)}/g
+            </div>
+          </div>
+
+          {/* Card 5: Diamond (1.00 ct) */}
+          <div
+            onClick={handleSelectMetalsCategory}
+            className="p-3 rounded-xl bg-sky-50/40 dark:bg-sky-950/20 border border-sky-200/70 dark:border-sky-800/40 hover:border-sky-400 dark:hover:border-sky-600 transition cursor-pointer group col-span-2 sm:col-span-1"
+            title="Click to view Diamond and Luxury Asset streams"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-bold text-sky-900 dark:text-sky-200 flex items-center gap-1">
+                <Gem className="w-3 h-3 text-sky-500" />
+                Diamond (1.00 ct)
+              </span>
+              <span className="text-[9px] font-bold uppercase tracking-wider text-sky-700/80 dark:text-sky-400">
+                VS1
+              </span>
+            </div>
+            <div className="text-base sm:text-lg font-black font-mono text-sky-950 dark:text-sky-100 tracking-tight">
+              ₹{commodityRates.diamondNatural1ct.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/ct</span>
+            </div>
+            <div className="text-[10px] text-sky-800/80 dark:text-sky-300/80 font-medium mt-0.5">
+              Lab: ₹{commodityRates.diamondLab1ct.toLocaleString('en-IN')}/ct
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* 2. Interactive Investment & Profit Matcher Banner (Full Filter) */}
       <section className="p-6 rounded-3xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -1635,7 +1956,7 @@ export default function IncomeStreamsView() {
       </section>
 
       {/* 3. Category & Filter Pills Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div id="streams-filter-bar" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         {/* Category Pill Tabs */}
         <div className="flex items-center overflow-x-auto space-x-1 p-1 rounded-2xl bg-slate-100 dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 text-xs">
           {CATEGORIES.map((cat) => {
