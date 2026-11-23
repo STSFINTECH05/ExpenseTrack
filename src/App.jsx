@@ -109,6 +109,11 @@ const isTabAllowedForPlan = (tab, plan) => {
     return true;
   }
 
+  // Financial Intelligence and Income Streams are restricted exclusively to Elite Plan
+  if (t === 'financial-intelligence' || t === 'income-streams') {
+    return p.includes('elite');
+  }
+
   // Silver plan allows only: Dashboard, Expenses (segregation), Split & Collect, Goal Target, Bill & Reminder (+ Contact Us & Settings)
   // Hides: Financial Intelligence, AI Financial Assistant, Income Streams, Live Worth, Organisation Maintainer
   if (p.includes('silver')) {
@@ -122,9 +127,9 @@ const isTabAllowedForPlan = (tab, plan) => {
     );
   }
 
-  // Gold plan shows all modules EXCEPT Income Streams
+  // Gold plan shows all modules EXCEPT Income Streams & Financial Intelligence
   if (p.includes('gold')) {
-    return t !== 'income-streams';
+    return t !== 'income-streams' && t !== 'financial-intelligence';
   }
 
   // Elite plan shows all modules without restriction
@@ -220,10 +225,12 @@ export default function App() {
           setActiveTab('settings');
           setMainNavTab('Expense');
         } else if (path === '/financial-intelligence' || path === '/financial_intelligence') {
-          setActiveTab(isTabAllowedForPlan('financial_intelligence', currentPlan) ? 'financial_intelligence' : 'dashboard');
+          const allowed = isTabAllowedForPlan('financial_intelligence', currentPlan);
+          setActiveTab(allowed ? 'financial_intelligence' : 'subscription');
           setMainNavTab('Expense');
         } else if (path === '/income-streams') {
-          setActiveTab(isTabAllowedForPlan('income-streams', currentPlan) ? 'income-streams' : 'dashboard');
+          const allowed = isTabAllowedForPlan('income-streams', currentPlan);
+          setActiveTab(allowed ? 'income-streams' : 'subscription');
           setMainNavTab('Expense');
         } else if (path === '/live-worth') {
           setActiveTab(isTabAllowedForPlan('live_worth', currentPlan) ? 'live_worth' : 'dashboard');
@@ -398,15 +405,19 @@ export default function App() {
       else if (window.location.pathname === '/organisation-maintainer' || window.location.pathname === '/organisation_maintainer') initialTab = 'organisation_maintainer';
     }
     const currentPlan = getNormalizedPlan();
-    return isTabAllowedForPlan(initialTab, currentPlan) ? initialTab : 'dashboard';
+    if (!isTabAllowedForPlan(initialTab, currentPlan)) {
+      return (initialTab === 'financial_intelligence' || initialTab === 'income-streams') ? 'subscription' : 'dashboard';
+    }
+    return initialTab;
   });
 
-  // Auto-redirect to dashboard if subscription plan does not permit current tab
+  // Auto-redirect to subscription view or dashboard if subscription plan does not permit current tab
   useEffect(() => {
     const checkPlanAndTab = () => {
       const currentPlan = getNormalizedPlan(currentUser);
       if (!isTabAllowedForPlan(activeTab, currentPlan)) {
-        setActiveTab('dashboard');
+        const fallbackTab = (activeTab === 'financial_intelligence' || activeTab === 'income-streams' || activeTab === 'financial-intelligence') ? 'subscription' : 'dashboard';
+        setActiveTab(fallbackTab);
         if (typeof window !== 'undefined' && window.location.pathname !== '/dashboard' && window.location.pathname !== '/') {
           window.history.replaceState(null, '', '/dashboard');
         }
@@ -687,7 +698,8 @@ export default function App() {
                 if (isTabAllowedForPlan(tab, currentPlan)) {
                   setActiveTab(tab);
                 } else {
-                  setActiveTab('dashboard');
+                  const fallbackTab = (tab === 'financial_intelligence' || tab === 'income-streams' || tab === 'financial-intelligence') ? 'subscription' : 'dashboard';
+                  setActiveTab(fallbackTab);
                 }
               }}
               backendHealth={backendHealth}
@@ -712,7 +724,8 @@ export default function App() {
                   if (isTabAllowedForPlan(tab, currentPlan)) {
                     setActiveTab(tab);
                   } else {
-                    setActiveTab('dashboard');
+                    const fallbackTab = (tab === 'financial_intelligence' || tab === 'income-streams' || tab === 'financial-intelligence') ? 'subscription' : 'dashboard';
+                    setActiveTab(fallbackTab);
                   }
                   setIsMobileMenuOpen(false);
                 }}

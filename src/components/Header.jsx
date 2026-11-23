@@ -185,23 +185,79 @@ export default function Header({
     };
   }, []);
 
+  // Active subscription plan helper
+  const getNormalizedPlan = () => {
+    try {
+      const userPlan = currentUser?.subscription?.name || currentUser?.subscription?.id || currentUser?.subscription || currentUser?.plan;
+      if (typeof userPlan === 'string') {
+        const lower = userPlan.toLowerCase();
+        if (lower.includes('silver')) return 'silver';
+        if (lower.includes('elite')) return 'elite';
+        if (lower.includes('gold')) return 'gold';
+      }
+      const stored = localStorage.getItem('sts_active_subscription');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const str = (parsed?.id || parsed?.name || '').toLowerCase();
+        if (str.includes('silver')) return 'silver';
+        if (str.includes('elite')) return 'elite';
+        if (str.includes('gold')) return 'gold';
+      }
+    } catch (e) {
+      console.warn('Header plan check:', e);
+    }
+    return 'gold';
+  };
+
+  const [activePlan, setActivePlan] = useState(getNormalizedPlan);
+
+  useEffect(() => {
+    setActivePlan(getNormalizedPlan());
+  }, [currentUser]);
+
+  useEffect(() => {
+    const handleSubChange = () => {
+      setActivePlan(getNormalizedPlan());
+    };
+    window.addEventListener('sts_subscription_changed', handleSubChange);
+    window.addEventListener('storage', handleSubChange);
+    return () => {
+      window.removeEventListener('sts_subscription_changed', handleSubChange);
+      window.removeEventListener('storage', handleSubChange);
+    };
+  }, [currentUser]);
+
   // Defined quick navigation modules
   const navigationModules = useMemo(
-    () => [
-      { id: 'dashboard', label: 'Dashboard', keywords: ['dashboard', 'home', 'overview', 'summary', 'metrics'] },
-      { id: 'financial_intelligence', label: 'Financial Intelligence', keywords: ['intelligence', 'analytics', 'savings rate', 'kpi', 'reports'] },
-      { id: 'ai_financial_assistant', label: 'AI Financial Assistant', keywords: ['ai', 'assistant', 'chatbot', 'bot', 'advisor'] },
-      { id: 'segregation', label: 'Expenses', keywords: ['expenses', 'segregation', 'fixed income', 'fixed expense', 'additional', 'ledger'] },
-      { id: 'split_collect', label: 'Split & Collect', keywords: ['split', 'collect', 'shared', 'group', 'tickets'] },
-      { id: 'goal_target', label: 'Goal Target', keywords: ['goal', 'target', 'savings', 'milestone', 'vault'] },
-      { id: 'bills_reminders', label: 'Bill & Reminder', keywords: ['bill', 'bills', 'reminder', 'reminders', 'due', 'utility'] },
-      { id: 'income-streams', label: 'Income Streams', keywords: ['income', 'streams', 'revenue', 'freelance', 'salary'] },
-      { id: 'live_worth', label: 'Live Worth', keywords: ['live worth', 'net worth', 'assets', 'investments', 'stocks', 'gold'] },
-      { id: 'organisation_maintainer', label: 'Organisation Maintainer', keywords: ['organisation', 'organization', 'staff', 'maintainer', 'payroll', 'employee'] },
-      { id: 'contact_us', label: 'Contact Us', keywords: ['contact', 'help', 'support', 'email', 'phone'] },
-      { id: 'settings', label: 'Settings', keywords: ['settings', 'preferences', 'profile', 'security', 'account'] },
-    ],
-    []
+    () => {
+      const allModules = [
+        { id: 'dashboard', label: 'Dashboard', keywords: ['dashboard', 'home', 'overview', 'summary', 'metrics'] },
+        { id: 'financial_intelligence', label: 'Financial Intelligence', keywords: ['intelligence', 'analytics', 'savings rate', 'kpi', 'reports'] },
+        { id: 'ai_financial_assistant', label: 'AI Financial Assistant', keywords: ['ai', 'assistant', 'chatbot', 'bot', 'advisor'] },
+        { id: 'segregation', label: 'Expenses', keywords: ['expenses', 'segregation', 'fixed income', 'fixed expense', 'additional', 'ledger'] },
+        { id: 'split_collect', label: 'Split & Collect', keywords: ['split', 'collect', 'shared', 'group', 'tickets'] },
+        { id: 'goal_target', label: 'Goal Target', keywords: ['goal', 'target', 'savings', 'milestone', 'vault'] },
+        { id: 'bills_reminders', label: 'Bill & Reminder', keywords: ['bill', 'bills', 'reminder', 'reminders', 'due', 'utility'] },
+        { id: 'income-streams', label: 'Income Streams', keywords: ['income', 'streams', 'revenue', 'freelance', 'salary'] },
+        { id: 'live_worth', label: 'Live Worth', keywords: ['live worth', 'net worth', 'assets', 'investments', 'stocks', 'gold'] },
+        { id: 'organisation_maintainer', label: 'Organisation Maintainer', keywords: ['organisation', 'organization', 'staff', 'maintainer', 'payroll', 'employee'] },
+        { id: 'contact_us', label: 'Contact Us', keywords: ['contact', 'help', 'support', 'email', 'phone'] },
+        { id: 'settings', label: 'Settings', keywords: ['settings', 'preferences', 'profile', 'security', 'account'] },
+      ];
+
+      return allModules.filter((m) => {
+        if (activePlan !== 'elite') {
+          if (m.id === 'financial_intelligence' || m.id === 'income-streams') {
+            return false;
+          }
+        }
+        if (activePlan === 'silver') {
+          return ['dashboard', 'segregation', 'split_collect', 'goal_target', 'bills_reminders', 'contact_us', 'settings'].includes(m.id);
+        }
+        return true;
+      });
+    },
+    [activePlan]
   );
 
   // Filter matching navigation sections and transactions
@@ -313,7 +369,11 @@ export default function Header({
 
   const handleNavigateToModule = (moduleId) => {
     if (setActiveMainTab) setActiveMainTab('Expense');
-    if (setActiveTab) setActiveTab(moduleId);
+    if (activePlan !== 'elite' && (moduleId === 'financial_intelligence' || moduleId === 'income-streams')) {
+      if (setActiveTab) setActiveTab('subscription');
+    } else {
+      if (setActiveTab) setActiveTab(moduleId);
+    }
     setIsSearchOpen(false);
     setIsDropdownDismissed(false);
   };

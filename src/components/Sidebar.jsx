@@ -97,6 +97,13 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth, curren
   ];
 
   const visibleNavItems = primaryNavItems.filter((item) => {
+    // Both Financial Intelligence and Income Streams are hidden for Silver and Gold, accessible exclusively on Elite
+    if (activePlan !== 'elite') {
+      if (item.id === 'financial_intelligence' || item.id === 'income-streams') {
+        return false;
+      }
+    }
+
     if (activePlan === 'silver') {
       return [
         'dashboard',
@@ -106,8 +113,9 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth, curren
         'bills_reminders',
       ].includes(item.id);
     }
+    // Gold plan (and non-silver/non-elite)
     if (activePlan === 'gold') {
-      return item.id !== 'income-streams';
+      return item.id !== 'income-streams' && item.id !== 'financial_intelligence';
     }
     // Elite plan: show all
     return true;
