@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Mail,
   Lock,
@@ -13,6 +13,195 @@ import {
 } from 'lucide-react';
 import stsLogo from '../assets/sts-fintech-logo.png';
 import apiClient from '../apiClient';
+
+/**
+ * Full-screen Black Cursive "Live-Writing" Multilingual Welcome Splash
+ * Displays for 10 seconds strictly on new user sign-up completion.
+ * Stacked typography written letter-by-letter with live typing cursor:
+ * 1. 0.0s - 3.3s: English -> "Welcome" + "Welcome to STS FINTECH, {userName}"
+ * 2. 3.3s - 6.6s: Tamil -> "வணக்கம்"
+ * 3. 6.6s - 10.0s: Hindi -> "स्वागत है"
+ */
+function AppleWelcomeSplash({ user, fallbackName = '', onComplete }) {
+  const [elapsed, setElapsed] = useState(0);
+  const [isFadingOut, setIsFadingOut] = useState(false);
+  const completedRef = useRef(false);
+
+  const rawName = user?.name || fallbackName || 'Member';
+  const userName = rawName.trim();
+
+  // Letter arrays for authentic live penmanship / grapheme typing
+  const englishLetters = useMemo(() => ['W', 'e', 'l', 'c', 'o', 'm', 'e'], []);
+  const tamilLetters = useMemo(() => ['வ', 'ண', 'க்', 'க', 'ம்'], []);
+  const hindiLetters = useMemo(() => ['स्वा', 'ग', 'त', ' ', 'है'], []);
+
+  const triggerFinish = useCallback(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    setIsFadingOut(true);
+    setTimeout(() => {
+      onComplete();
+    }, 500);
+  }, [onComplete]);
+
+  // Main 10s master timeline loop
+  useEffect(() => {
+    const startTime = Date.now();
+    const totalDuration = 10000;
+
+    const interval = setInterval(() => {
+      const diff = Date.now() - startTime;
+      setElapsed(diff);
+
+      if (diff >= totalDuration) {
+        clearInterval(interval);
+        triggerFinish();
+      }
+    }, 35);
+
+    return () => clearInterval(interval);
+  }, [triggerFinish]);
+
+  // English: 0.0s - 3.3s (letters type between 250ms and 2300ms)
+  const isEnglishActive = elapsed < 3300;
+  const englishTypedCount = useMemo(() => {
+    if (elapsed < 250) return 0;
+    if (elapsed >= 2300) return englishLetters.length;
+    const progressInWindow = (elapsed - 250) / (2300 - 250);
+    return Math.min(englishLetters.length, Math.floor(progressInWindow * englishLetters.length) + 1);
+  }, [elapsed, englishLetters.length]);
+
+  // Tamil: 3.3s - 6.6s (letters type between 3500ms and 5800ms)
+  const isTamilStarted = elapsed >= 3300;
+  const isTamilActive = elapsed >= 3300 && elapsed < 6600;
+  const tamilTypedCount = useMemo(() => {
+    if (elapsed < 3500) return 0;
+    if (elapsed >= 5800) return tamilLetters.length;
+    const progressInWindow = (elapsed - 3500) / (5800 - 3500);
+    return Math.min(tamilLetters.length, Math.floor(progressInWindow * tamilLetters.length) + 1);
+  }, [elapsed, tamilLetters.length]);
+
+  // Hindi: 6.6s - 10.0s (letters type between 6800ms and 9100ms)
+  const isHindiStarted = elapsed >= 6600;
+  const isHindiActive = elapsed >= 6600 && elapsed < 10000;
+  const hindiTypedCount = useMemo(() => {
+    if (elapsed < 6800) return 0;
+    if (elapsed >= 9100) return hindiLetters.length;
+    const progressInWindow = (elapsed - 6800) / (9100 - 6800);
+    return Math.min(hindiLetters.length, Math.floor(progressInWindow * hindiLetters.length) + 1);
+  }, [elapsed, hindiLetters.length]);
+
+  const progress = Math.min(100, (elapsed / 10000) * 100);
+
+  // Helper renderer for each live-writing line
+  const renderLiveLine = (letters, typedCount, isActive, isStarted) => {
+    if (!isStarted) {
+      return (
+        <div className="opacity-0 pointer-events-none select-none py-1 min-h-[1.3em]">
+          <span className="font-live-writing text-4xl sm:text-6xl md:text-7xl italic">
+            {letters.join('')}
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="opacity-100 transition-opacity duration-500 py-1 select-none min-h-[1.3em]">
+        <div className="font-live-writing text-4xl sm:text-6xl md:text-7xl font-normal tracking-wide leading-relaxed text-white italic">
+          {letters.map((char, idx) => {
+            const isTyped = idx < typedCount;
+            const isTip = idx === typedCount - 1;
+            const displayChar = char === ' ' ? '\u00A0' : char;
+
+            return (
+              <React.Fragment key={idx}>
+                <span
+                  className={`transition-colors duration-150 ${
+                    isTyped
+                      ? 'text-white font-normal drop-shadow-[0_0_12px_rgba(255,255,255,0.35)]'
+                      : 'text-white/15'
+                  }`}
+                >
+                  {displayChar}
+                </span>
+                {isActive && isTip && (
+                  <span className="inline-block border-r-2 sm:border-r-[3px] border-white animate-pulse h-[0.8em] ml-0.5 align-middle pointer-events-none" />
+                )}
+              </React.Fragment>
+            );
+          })}
+          {isActive && typedCount === 0 && (
+            <span className="inline-block border-r-2 sm:border-r-[3px] border-white animate-pulse h-[0.8em] align-middle pointer-events-none" />
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      className={`fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center text-white select-none transition-opacity duration-500 ease-out ${
+        isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}
+      style={{ willChange: 'opacity' }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playball&family=Caveat:wght@600;700&display=swap');
+
+        .font-live-writing {
+          font-family: 'Great Vibes', 'Playball', 'Caveat', cursive, 'Brush Script MT', sans-serif;
+          font-style: italic;
+        }
+      `}</style>
+
+      {/* Stacked Live-Writing Typography Area */}
+      <div className="flex flex-col items-center justify-center text-center px-6 max-w-3xl space-y-2 sm:space-y-3 md:space-y-4">
+        {/* Row 1: English ("Welcome") + Sub-label */}
+        <div className="flex flex-col items-center justify-center">
+          {renderLiveLine(englishLetters, englishTypedCount, isEnglishActive, true)}
+          <div
+            className={`text-xs sm:text-sm md:text-base text-white/50 tracking-wider font-sans mt-0.5 transition-all duration-700 ${
+              englishTypedCount >= 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+            }`}
+          >
+            Welcome to STS FINTECH, {userName}
+          </div>
+        </div>
+
+        {/* Row 2: Tamil ("வணக்கம்") */}
+        <div className="flex flex-col items-center justify-center">
+          {renderLiveLine(tamilLetters, tamilTypedCount, isTamilActive, isTamilStarted)}
+        </div>
+
+        {/* Row 3: Hindi ("स्वागत है") */}
+        <div className="flex flex-col items-center justify-center">
+          {renderLiveLine(hindiLetters, hindiTypedCount, isHindiActive, isHindiStarted)}
+        </div>
+      </div>
+
+      {/* Minimal Ultra-Thin Bottom Progress Bar */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
+        <div className="w-32 h-0.5 bg-white/20 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-white rounded-full transition-all duration-75 ease-linear"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Subtle Skip Button in Bottom-Right Corner */}
+      <button
+        type="button"
+        onClick={triggerFinish}
+        className="absolute bottom-6 right-6 text-xs text-white/40 hover:text-white transition-colors duration-200 cursor-pointer flex items-center gap-1 font-medium tracking-wide z-10 px-3 py-1.5 rounded-lg hover:bg-white/5"
+        title="Skip to Dashboard"
+      >
+        <span>Skip</span>
+        <span>→</span>
+      </button>
+    </div>
+  );
+}
 
 export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLanding }) {
   const [mode, setMode] = useState(initialMode); // 'signin' | 'signup'
@@ -39,6 +228,10 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState(false);
+
+  // New User Welcome Splash Screen States (Apple-Style 10s Splash strictly on Sign-Up)
+  const [showWelcomeSplash, setShowWelcomeSplash] = useState(false);
+  const [signedUpUser, setSignedUpUser] = useState(null);
 
   // Switch between tabs
   const handleTabChange = (newMode) => {
@@ -146,7 +339,9 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
         apiClient.setCsrfToken(data.csrfToken);
       }
 
-      onAuthSuccess(data.user);
+      // Display 10-second Apple-style multilingual welcome screen strictly on new user sign-up
+      setSignedUpUser(data.user);
+      setShowWelcomeSplash(true);
     } catch (err) {
       setSuccessMsg(null);
       setErrorMsg(err.message || 'Unable to connect to registration server.');
@@ -190,6 +385,17 @@ export default function Auth({ initialMode = 'signin', onAuthSuccess, onBackToLa
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-emerald-500 selection:text-white flex flex-col relative overflow-hidden">
+      {/* Full-Screen Black Apple-Style Multilingual Welcome Splash (10s strictly on Sign-Up) */}
+      {showWelcomeSplash && (
+        <AppleWelcomeSplash
+          user={signedUpUser}
+          fallbackName={signUpName}
+          onComplete={() => {
+            onAuthSuccess(signedUpUser);
+          }}
+        />
+      )}
+
       {/* Subtle Light Ambient Background Tints */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-10 left-10 w-96 h-96 bg-emerald-500/8 rounded-full blur-[140px]" />
