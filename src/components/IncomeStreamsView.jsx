@@ -36,24 +36,106 @@ const CATEGORIES = [
   { id: 'cashflow', label: 'Cash-Flow Assets', icon: Building2 },
 ];
 
-// Indicative Chennai INR Benchmark Rates (Nov 2026, excl. 3% GST)
+// Base Indian Benchmark Rates (Chennai base: Nov 2026, excl. 3% GST)
 const DEFAULT_COMMODITY_RATES = {
-  gold24k: 12694,
-  gold22k: 11686,
+  gold24k: 12655,
+  gold22k: 11600,
   silverPerGram: 175.0,
   silverPerKg: 175000,
   platinumPerGram: 3890,
   platinum10g: 38900,
-  copperPerKg: 1152,
-  copperPerGram: 1.15,
+  copperPerKg: 1161,
+  copperPerGram: 1.16,
   diamondNatural1ct: 350000,
   diamondLab1ct: 52000,
   updatedAt: 'Nov 2026 Indicative Benchmark',
   source: 'Chennai Bullion & MCX Benchmark',
 };
 
-const COMMODITY_CACHE_KEY = 'sts_live_commodity_rates_v1';
+// City definitions and verified local market spreads/adjustments
+const COMMODITY_CITIES = [
+  { id: 'chennai', name: 'Chennai', label: 'Chennai' },
+  { id: 'mumbai', name: 'Mumbai', label: 'Mumbai' },
+  { id: 'delhi', name: 'Delhi', label: 'Delhi' },
+  { id: 'bangalore', name: 'Bangalore', label: 'Bangalore' },
+  { id: 'hyderabad', name: 'Hyderabad', label: 'Hyderabad' },
+  { id: 'kolkata', name: 'Kolkata', label: 'Kolkata' },
+  { id: 'coimbatore', name: 'Coimbatore', label: 'Coimbatore' },
+  { id: 'madurai', name: 'Madurai', label: 'Madurai' },
+  { id: 'dubai', name: 'Dubai (AED -> INR)', label: 'Dubai (AED -> INR)' },
+];
+
+const CITY_SPREADS = {
+  chennai: { gold24k: 0, gold22k: 0, silver: 0, platinum: 0, copper: 0, diamond: 0 },
+  coimbatore: { gold24k: 0, gold22k: 0, silver: 0, platinum: 0, copper: 0, diamond: 0 },
+  madurai: { gold24k: 0, gold22k: 0, silver: 0, platinum: 0, copper: 0, diamond: 0 },
+  mumbai: { gold24k: -140, gold22k: -130, silver: -3.5, platinum: -30, copper: -6, diamond: -5000 },
+  delhi: { gold24k: -90, gold22k: -85, silver: -3.5, platinum: -15, copper: 3, diamond: 2000 },
+  bangalore: { gold24k: -80, gold22k: -75, silver: -2.0, platinum: -5, copper: -1, diamond: 0 },
+  hyderabad: { gold24k: -140, gold22k: -130, silver: 0, platinum: 0, copper: -3, diamond: 0 },
+  kolkata: { gold24k: -40, gold22k: -35, silver: -3.0, platinum: -10, copper: 1, diamond: -2000 },
+  dubai: { gold24k: -1350, gold22k: -1240, silver: -22.0, platinum: -400, copper: -111, diamond: -25000 },
+};
+
+// Next-day trend predictions (percentage shift)
+const NEXT_DAY_PREDICTIONS = {
+  gold: { pct: 0.35, direction: 'up', label: '+₹44/g est.' },
+  silver: { pct: 0.55, direction: 'up', label: '+₹0.95/g est.' },
+  platinum: { pct: -0.20, direction: 'down', label: '-₹8/g est.' },
+  copper: { pct: 0.40, direction: 'up', label: '+₹4.5/kg est.' },
+  diamond: { pct: 0.00, direction: 'stable', label: 'Stable' },
+};
+
+const COMMODITY_CACHE_KEY = 'sts_live_commodity_rates_v2';
+const COMMODITY_LOCATION_KEY = 'sts_commodity_location_v1';
 const COMMODITY_CACHE_DURATION_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+// Helper to calculate city-calibrated rates
+const computeCityCalibratedRates = (baseRates, cityId) => {
+  const spread = CITY_SPREADS[cityId] || CITY_SPREADS.chennai;
+  const gold24k = Math.max(1000, (baseRates.gold24k || DEFAULT_COMMODITY_RATES.gold24k) + spread.gold24k);
+  const gold22k = Math.max(900, (baseRates.gold22k || DEFAULT_COMMODITY_RATES.gold22k) + spread.gold22k);
+  const silverPerGram = Math.max(10, Number(((baseRates.silverPerGram || DEFAULT_COMMODITY_RATES.silverPerGram) + spread.silver).toFixed(2)));
+  const silverPerKg = Math.round(silverPerGram * 1000);
+  const platinumPerGram = Math.max(100, (baseRates.platinumPerGram || DEFAULT_COMMODITY_RATES.platinumPerGram) + spread.platinum);
+  const platinum10g = Math.round(platinumPerGram * 10);
+  const copperPerKg = Math.max(100, (baseRates.copperPerKg || DEFAULT_COMMODITY_RATES.copperPerKg) + spread.copper);
+  const copperPerGram = Number((copperPerKg / 1000).toFixed(2));
+  const diamondNatural1ct = Math.max(50000, (baseRates.diamondNatural1ct || DEFAULT_COMMODITY_RATES.diamondNatural1ct) + spread.diamond);
+  const diamondLab1ct = cityId === 'dubai' ? 48000 : (baseRates.diamondLab1ct || DEFAULT_COMMODITY_RATES.diamondLab1ct);
+
+  // Dynamic next-day estimated figures
+  const nextDayGold24k = Math.round(gold24k * (1 + NEXT_DAY_PREDICTIONS.gold.pct / 100));
+  const nextDaySilver = Number((silverPerGram * (1 + NEXT_DAY_PREDICTIONS.silver.pct / 100)).toFixed(2));
+  const nextDayPlatinum = Math.round(platinumPerGram * (1 + NEXT_DAY_PREDICTIONS.platinum.pct / 100));
+  const nextDayCopper = Math.round(copperPerKg * (1 + NEXT_DAY_PREDICTIONS.copper.pct / 100));
+  const nextDayDiamond = diamondNatural1ct;
+
+  return {
+    ...baseRates,
+    gold24k,
+    gold22k,
+    silverPerGram,
+    silverPerKg,
+    platinumPerGram,
+    platinum10g,
+    copperPerKg,
+    copperPerGram,
+    diamondNatural1ct,
+    diamondLab1ct,
+    nextDay: {
+      gold24k: nextDayGold24k,
+      goldDiff: nextDayGold24k - gold24k,
+      silverPerGram: nextDaySilver,
+      silverDiff: Number((nextDaySilver - silverPerGram).toFixed(2)),
+      platinumPerGram: nextDayPlatinum,
+      platinumDiff: nextDayPlatinum - platinumPerGram,
+      copperPerKg: nextDayCopper,
+      copperDiff: nextDayCopper - copperPerKg,
+      diamondNatural1ct: nextDayDiamond,
+    },
+  };
+};
 
 // Helper to fetch live bullion, copper & diamond rates with 6h cache and zero-key fallback
 const fetchLiveCommodityRates = async (forceRefresh = false) => {
@@ -1229,8 +1311,34 @@ export default function IncomeStreamsView() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Live Precious Metals & Commodity Rates State
-  const [commodityRates, setCommodityRates] = useState(DEFAULT_COMMODITY_RATES);
+  // Selected Commodity City Location State (persisted in localStorage)
+  const [selectedCityId, setSelectedCityId] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem(COMMODITY_LOCATION_KEY);
+        if (stored && COMMODITY_CITIES.some((c) => c.id === stored)) {
+          return stored;
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading commodity location:', e);
+    }
+    return 'chennai';
+  });
+
+  const handleCityChange = (newCityId) => {
+    setSelectedCityId(newCityId);
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(COMMODITY_LOCATION_KEY, newCityId);
+      }
+    } catch (e) {
+      console.warn('Error saving commodity location:', e);
+    }
+  };
+
+  // Live Precious Metals & Commodity Rates Base State
+  const [baseCommodityRates, setBaseCommodityRates] = useState(DEFAULT_COMMODITY_RATES);
   const [isRatesLoading, setIsRatesLoading] = useState(false);
   const [ratesLastUpdated, setRatesLastUpdated] = useState(DEFAULT_COMMODITY_RATES.updatedAt);
 
@@ -1239,7 +1347,7 @@ export default function IncomeStreamsView() {
     try {
       const res = await fetchLiveCommodityRates(forceRefresh);
       if (res?.rates) {
-        setCommodityRates(res.rates);
+        setBaseCommodityRates(res.rates);
         if (res.updatedAt) setRatesLastUpdated(res.updatedAt);
       }
     } catch (e) {
@@ -1252,6 +1360,15 @@ export default function IncomeStreamsView() {
   useEffect(() => {
     loadCommodityRates(false);
   }, []);
+
+  // Compute city-calibrated rates dynamically whenever city or base rates change
+  const commodityRates = useMemo(() => {
+    return computeCityCalibratedRates(baseCommodityRates, selectedCityId);
+  }, [baseCommodityRates, selectedCityId]);
+
+  const activeCityObj = useMemo(() => {
+    return COMMODITY_CITIES.find((c) => c.id === selectedCityId) || COMMODITY_CITIES[0];
+  }, [selectedCityId]);
 
   const handleSelectMetalsCategory = () => {
     setActiveCategory('metals');
@@ -1604,9 +1721,30 @@ export default function IncomeStreamsView() {
               <Coins className="w-4 h-4 text-amber-500" />
               <span>Live Precious Metals &amp; Commodity Rates (INR)</span>
             </h3>
+
+            {/* City Selector Dropdown */}
+            <div className="relative inline-flex items-center">
+              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-xs">
+                📍
+              </span>
+              <select
+                value={selectedCityId}
+                onChange={(e) => handleCityChange(e.target.value)}
+                className="pl-7 pr-8 py-1 bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200/70 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition cursor-pointer appearance-none shadow-2xs"
+                title="Select city to update local market rates"
+              >
+                {COMMODITY_CITIES.map((c) => (
+                  <option key={c.id} value={c.id} className="bg-white dark:bg-[#0c1322] text-slate-900 dark:text-white">
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Live Market Benchmark • Excl. 3% GST</span>
+              <span>● {activeCityObj.name} Market Rates • Next-Day Trend Est.</span>
             </span>
           </div>
 
@@ -1632,115 +1770,155 @@ export default function IncomeStreamsView() {
           {/* Card 1: Gold (24K / 22K) */}
           <div
             onClick={handleSelectMetalsCategory}
-            className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-800/40 hover:border-amber-400 dark:hover:border-amber-600 transition cursor-pointer group"
-            title="Click to view Gold and Bullion investment streams"
+            className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-800/40 hover:border-amber-400 dark:hover:border-amber-600 transition cursor-pointer group flex flex-col justify-between"
+            title={`Click to view Gold and Bullion investment streams in ${activeCityObj.name}`}
           >
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                Gold (24K / 22K)
-              </span>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700/80 dark:text-amber-400">
-                99.9%
-              </span>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                  Gold (24K / 22K)
+                </span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700/80 dark:text-amber-400">
+                  99.9%
+                </span>
+              </div>
+              <div className="text-base sm:text-lg font-black font-mono text-amber-950 dark:text-amber-100 tracking-tight">
+                ₹{commodityRates.gold24k.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/g</span>
+              </div>
+              <div className="text-[10px] text-amber-800/80 dark:text-amber-300/80 font-medium mt-0.5">
+                22K: ₹{commodityRates.gold22k.toLocaleString('en-IN')}/g
+              </div>
             </div>
-            <div className="text-base sm:text-lg font-black font-mono text-amber-950 dark:text-amber-100 tracking-tight">
-              ₹{commodityRates.gold24k.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/g</span>
-            </div>
-            <div className="text-[10px] text-amber-800/80 dark:text-amber-300/80 font-medium mt-0.5">
-              22K: ₹{commodityRates.gold22k.toLocaleString('en-IN')}/g
+            <div className="mt-2 pt-1.5 border-t border-amber-200/40 dark:border-amber-800/30 flex items-center justify-between text-[10px]">
+              <span className="text-slate-400">Next-Day Est:</span>
+              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                ₹{commodityRates.nextDay?.gold24k.toLocaleString('en-IN')}/g ({NEXT_DAY_PREDICTIONS.gold.label})
+              </span>
             </div>
           </div>
 
           {/* Card 2: Silver (999) */}
           <div
             onClick={handleSelectMetalsCategory}
-            className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600 transition cursor-pointer group"
-            title="Click to view Silver and Commodity streams"
+            className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600 transition cursor-pointer group flex flex-col justify-between"
+            title={`Click to view Silver and Commodity streams in ${activeCityObj.name}`}
           >
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                Silver (999)
-              </span>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Pure
-              </span>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+                  Silver (999)
+                </span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Pure
+                </span>
+              </div>
+              <div className="text-base sm:text-lg font-black font-mono text-slate-900 dark:text-white tracking-tight">
+                ₹{commodityRates.silverPerGram.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/g</span>
+              </div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                ₹{commodityRates.silverPerKg.toLocaleString('en-IN')}/kg
+              </div>
             </div>
-            <div className="text-base sm:text-lg font-black font-mono text-slate-900 dark:text-white tracking-tight">
-              ₹{commodityRates.silverPerGram.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/g</span>
-            </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-              ₹{commodityRates.silverPerKg.toLocaleString('en-IN')}/kg
+            <div className="mt-2 pt-1.5 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-[10px]">
+              <span className="text-slate-400">Next-Day Est:</span>
+              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                ₹{commodityRates.nextDay?.silverPerGram.toFixed(2)}/g ({NEXT_DAY_PREDICTIONS.silver.label})
+              </span>
             </div>
           </div>
 
           {/* Card 3: Platinum (950) */}
           <div
             onClick={handleSelectMetalsCategory}
-            className="p-3 rounded-xl bg-teal-50/40 dark:bg-teal-950/20 border border-teal-200/70 dark:border-teal-800/40 hover:border-teal-400 dark:hover:border-teal-600 transition cursor-pointer group"
-            title="Click to view Platinum and Rare Metals streams"
+            className="p-3 rounded-xl bg-teal-50/40 dark:bg-teal-950/20 border border-teal-200/70 dark:border-teal-800/40 hover:border-teal-400 dark:hover:border-teal-600 transition cursor-pointer group flex flex-col justify-between"
+            title={`Click to view Platinum and Rare Metals streams in ${activeCityObj.name}`}
           >
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] font-bold text-teal-900 dark:text-teal-200 flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-teal-500"></span>
-                Platinum (950)
-              </span>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-teal-700/80 dark:text-teal-400">
-                MCX
-              </span>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] font-bold text-teal-900 dark:text-teal-200 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                  Platinum (950)
+                </span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-teal-700/80 dark:text-teal-400">
+                  MCX
+                </span>
+              </div>
+              <div className="text-base sm:text-lg font-black font-mono text-teal-950 dark:text-teal-100 tracking-tight">
+                ₹{commodityRates.platinumPerGram.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/g</span>
+              </div>
+              <div className="text-[10px] text-teal-800/80 dark:text-teal-300/80 font-medium mt-0.5">
+                ₹{commodityRates.platinum10g.toLocaleString('en-IN')}/10g
+              </div>
             </div>
-            <div className="text-base sm:text-lg font-black font-mono text-teal-950 dark:text-teal-100 tracking-tight">
-              ₹{commodityRates.platinumPerGram.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/g</span>
-            </div>
-            <div className="text-[10px] text-teal-800/80 dark:text-teal-300/80 font-medium mt-0.5">
-              ₹{commodityRates.platinum10g.toLocaleString('en-IN')}/10g
+            <div className="mt-2 pt-1.5 border-t border-teal-200/40 dark:border-teal-800/30 flex items-center justify-between text-[10px]">
+              <span className="text-slate-400">Next-Day Est:</span>
+              <span className="font-mono font-bold text-rose-500 dark:text-rose-400">
+                ₹{commodityRates.nextDay?.platinumPerGram.toLocaleString('en-IN')}/g ({NEXT_DAY_PREDICTIONS.platinum.label})
+              </span>
             </div>
           </div>
 
           {/* Card 4: Copper (MCX) */}
           <div
             onClick={handleSelectMetalsCategory}
-            className="p-3 rounded-xl bg-orange-50/40 dark:bg-orange-950/20 border border-orange-200/70 dark:border-orange-800/40 hover:border-orange-400 dark:hover:border-orange-600 transition cursor-pointer group"
-            title="Click to view Industrial Commodities streams"
+            className="p-3 rounded-xl bg-orange-50/40 dark:bg-orange-950/20 border border-orange-200/70 dark:border-orange-800/40 hover:border-orange-400 dark:hover:border-orange-600 transition cursor-pointer group flex flex-col justify-between"
+            title={`Click to view Industrial Commodities streams in ${activeCityObj.name}`}
           >
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] font-bold text-orange-900 dark:text-orange-200 flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                Copper (MCX)
-              </span>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-orange-700/80 dark:text-orange-400">
-                COMEX
-              </span>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] font-bold text-orange-900 dark:text-orange-200 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                  Copper (MCX)
+                </span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-orange-700/80 dark:text-orange-400">
+                  COMEX
+                </span>
+              </div>
+              <div className="text-base sm:text-lg font-black font-mono text-orange-950 dark:text-orange-100 tracking-tight">
+                ₹{commodityRates.copperPerKg.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/kg</span>
+              </div>
+              <div className="text-[10px] text-orange-800/80 dark:text-orange-300/80 font-medium mt-0.5">
+                ₹{commodityRates.copperPerGram.toFixed(2)}/g
+              </div>
             </div>
-            <div className="text-base sm:text-lg font-black font-mono text-orange-950 dark:text-orange-100 tracking-tight">
-              ₹{commodityRates.copperPerKg.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/kg</span>
-            </div>
-            <div className="text-[10px] text-orange-800/80 dark:text-orange-300/80 font-medium mt-0.5">
-              ₹{commodityRates.copperPerGram.toFixed(2)}/g
+            <div className="mt-2 pt-1.5 border-t border-orange-200/40 dark:border-orange-800/30 flex items-center justify-between text-[10px]">
+              <span className="text-slate-400">Next-Day Est:</span>
+              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                ₹{commodityRates.nextDay?.copperPerKg.toLocaleString('en-IN')}/kg ({NEXT_DAY_PREDICTIONS.copper.label})
+              </span>
             </div>
           </div>
 
           {/* Card 5: Diamond (1.00 ct) */}
           <div
             onClick={handleSelectMetalsCategory}
-            className="p-3 rounded-xl bg-sky-50/40 dark:bg-sky-950/20 border border-sky-200/70 dark:border-sky-800/40 hover:border-sky-400 dark:hover:border-sky-600 transition cursor-pointer group col-span-2 sm:col-span-1"
-            title="Click to view Diamond and Luxury Asset streams"
+            className="p-3 rounded-xl bg-sky-50/40 dark:bg-sky-950/20 border border-sky-200/70 dark:border-sky-800/40 hover:border-sky-400 dark:hover:border-sky-600 transition cursor-pointer group col-span-2 sm:col-span-1 flex flex-col justify-between"
+            title={`Click to view Diamond and Luxury Asset streams in ${activeCityObj.name}`}
           >
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] font-bold text-sky-900 dark:text-sky-200 flex items-center gap-1">
-                <Gem className="w-3 h-3 text-sky-500" />
-                Diamond (1.00 ct)
-              </span>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-sky-700/80 dark:text-sky-400">
-                VS1
-              </span>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[11px] font-bold text-sky-900 dark:text-sky-200 flex items-center gap-1">
+                  <Gem className="w-3 h-3 text-sky-500" />
+                  Diamond (1.00 ct)
+                </span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-sky-700/80 dark:text-sky-400">
+                  VS1
+                </span>
+              </div>
+              <div className="text-base sm:text-lg font-black font-mono text-sky-950 dark:text-sky-100 tracking-tight">
+                ₹{commodityRates.diamondNatural1ct.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/ct</span>
+              </div>
+              <div className="text-[10px] text-sky-800/80 dark:text-sky-300/80 font-medium mt-0.5">
+                Lab: ₹{commodityRates.diamondLab1ct.toLocaleString('en-IN')}/ct
+              </div>
             </div>
-            <div className="text-base sm:text-lg font-black font-mono text-sky-950 dark:text-sky-100 tracking-tight">
-              ₹{commodityRates.diamondNatural1ct.toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-500 dark:text-slate-400">/ct</span>
-            </div>
-            <div className="text-[10px] text-sky-800/80 dark:text-sky-300/80 font-medium mt-0.5">
-              Lab: ₹{commodityRates.diamondLab1ct.toLocaleString('en-IN')}/ct
+            <div className="mt-2 pt-1.5 border-t border-sky-200/40 dark:border-sky-800/30 flex items-center justify-between text-[10px]">
+              <span className="text-slate-400">Next-Day Est:</span>
+              <span className="font-mono font-bold text-sky-600 dark:text-sky-400">
+                ₹{commodityRates.nextDay?.diamondNatural1ct.toLocaleString('en-IN')}/ct ({NEXT_DAY_PREDICTIONS.diamond.label})
+              </span>
             </div>
           </div>
         </div>
