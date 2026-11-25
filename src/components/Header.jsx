@@ -47,6 +47,7 @@ export default function Header({
   onOpenSettings,
   onOpenSubscription,
   onSignOut,
+  onOpenUtility,
 }) {
   let t = (key, fallback) => fallback || key;
   try {
@@ -842,7 +843,11 @@ export default function Header({
                   type="button"
                   onClick={() => {
                     setShowMoreMenu(false);
-                    setShowCalculator(true);
+                    if (onOpenUtility) {
+                      onOpenUtility('calc');
+                    } else {
+                      setShowCalculator(true);
+                    }
                   }}
                   className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-700 dark:text-slate-200 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-50 dark:hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer"
                 >
@@ -860,11 +865,15 @@ export default function Header({
                   type="button"
                   onClick={() => {
                     setShowMoreMenu(false);
-                    setShowCalendar(true);
+                    if (onOpenUtility) {
+                      onOpenUtility('calendar');
+                    } else {
+                      setShowCalendar(true);
+                    }
                   }}
                   className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-700 dark:text-slate-200 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-50 dark:hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer mt-0.5"
                 >
-                  <div className="p-1.5 rounded-lg bg-rose-100 dark:bg-slate-800 text-rose-700 dark:text-slate-300 group-hover:bg-rose-500/20 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
+                  <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-slate-800 text-amber-700 dark:text-slate-300 group-hover:bg-amber-500/20 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
                     <CalendarIcon className="w-4 h-4" />
                   </div>
                   <div>
@@ -878,11 +887,15 @@ export default function Header({
                   type="button"
                   onClick={() => {
                     setShowMoreMenu(false);
-                    setShowNotes(true);
+                    if (onOpenUtility) {
+                      onOpenUtility('notes');
+                    } else {
+                      setShowNotes(true);
+                    }
                   }}
                   className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-700 dark:text-slate-200 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-50 dark:hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer mt-0.5"
                 >
-                  <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-slate-800 text-amber-700 dark:text-slate-300 group-hover:bg-amber-500/20 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
+                  <div className="p-1.5 rounded-lg bg-rose-100 dark:bg-slate-800 text-rose-700 dark:text-slate-300 group-hover:bg-rose-500/20 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
                     <StickyNote className="w-4 h-4" />
                   </div>
                   <div>

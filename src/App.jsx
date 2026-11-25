@@ -39,6 +39,8 @@ import FinancialIntelligenceView from './components/FinancialIntelligenceView';
 import AIFinancialChatbot from './components/AIFinancialChatbot';
 import { useLanguage } from './context/LanguageContext';
 import OrganisationMaintainer from './components/OrganisationMaintainer';
+import RightUtilityDock from './components/RightUtilityDock';
+import SlideOverUtilityDrawer from './components/SlideOverUtilityDrawer';
 import apiClient, { API_BASE_URL } from './apiClient';
 
 // Currency Formatter for Indian Rupees (₹)
@@ -454,6 +456,19 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+  // Right-Edge Utility Drawer State ('calc' | 'calendar' | 'notes')
+  const [isUtilityDrawerOpen, setIsUtilityDrawerOpen] = useState(false);
+  const [utilityDrawerTab, setUtilityDrawerTab] = useState('calc');
+
+  const handleOpenUtility = (tab = 'calc') => {
+    setUtilityDrawerTab(tab);
+    setIsUtilityDrawerOpen(true);
+  };
+
+  const handleCloseUtility = () => {
+    setIsUtilityDrawerOpen(false);
+  };
+
   const handleToggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
     setIsMobileMenuOpen((prev) => !prev);
@@ -690,6 +705,7 @@ export default function App() {
           setActiveTab('subscription');
         }}
         onSignOut={handleSignOut}
+        onOpenUtility={handleOpenUtility}
       />
 
       {/* Main Layout: Sidebar + Content */}
@@ -1028,8 +1044,22 @@ export default function App() {
             </>
           )}
         </main>
+
+        {/* Right-Edge Utility Dock (ONLY 3 Icons: Calendar, Calculator, Notes) */}
+        <RightUtilityDock
+          onOpenTab={handleOpenUtility}
+          activeDrawerTab={utilityDrawerTab}
+          isDrawerOpen={isUtilityDrawerOpen}
+        />
       </div>
 
+      {/* Slide-Over Utility Drawer */}
+      <SlideOverUtilityDrawer
+        isOpen={isUtilityDrawerOpen}
+        onClose={handleCloseUtility}
+        activeTab={utilityDrawerTab}
+        setActiveTab={setUtilityDrawerTab}
+      />
     </div>
   );
 }
