@@ -118,7 +118,7 @@ export default function LandingPage({ onNavigateToAuth, onLaunchDashboard, onNav
           </defs>
 
           {/* Reference Ledger Grid Lines */}
-          <g stroke="#334155" strokeWidth="1.5" strokeDasharray="6 8" opacity="0.35">
+          <g stroke="#334155" strokeWidth="1.5" strokeDasharray="6 8" opacity="0.35" className="animate-fintech-grid">
             <line x1="80" y1="180" x2="1360" y2="180" />
             <line x1="80" y1="320" x2="1360" y2="320" />
             <line x1="80" y1="460" x2="1360" y2="460" />
@@ -143,6 +143,7 @@ export default function LandingPage({ onNavigateToAuth, onLaunchDashboard, onNav
             stroke="#059669"
             strokeWidth="4"
             fontFamily="Inter, sans-serif"
+            className="animate-fintech-float-1"
           >
             ₹
           </text>
@@ -159,6 +160,7 @@ export default function LandingPage({ onNavigateToAuth, onLaunchDashboard, onNav
             stroke="#047857"
             strokeWidth="3.5"
             fontFamily="Inter, sans-serif"
+            className="animate-fintech-float-1"
           >
             ₹
           </text>
@@ -174,6 +176,7 @@ export default function LandingPage({ onNavigateToAuth, onLaunchDashboard, onNav
             stroke="#047857"
             strokeWidth="3.5"
             fontFamily="Inter, sans-serif"
+            className="animate-fintech-float-2"
           >
             ₹
           </text>
@@ -189,6 +192,7 @@ export default function LandingPage({ onNavigateToAuth, onLaunchDashboard, onNav
             stroke="#059669"
             strokeWidth="3"
             fontFamily="Inter, sans-serif"
+            className="animate-fintech-float-3"
           >
             ₹
           </text>
@@ -204,6 +208,7 @@ export default function LandingPage({ onNavigateToAuth, onLaunchDashboard, onNav
             stroke="#059669"
             strokeWidth="3"
             fontFamily="Inter, sans-serif"
+            className="animate-fintech-float-1"
           >
             ₹
           </text>
@@ -219,6 +224,7 @@ export default function LandingPage({ onNavigateToAuth, onLaunchDashboard, onNav
             stroke="#047857"
             strokeWidth="3"
             fontFamily="Inter, sans-serif"
+            className="animate-fintech-float-2"
           >
             ₹
           </text>
@@ -234,46 +240,50 @@ export default function LandingPage({ onNavigateToAuth, onLaunchDashboard, onNav
             stroke="#047857"
             strokeWidth="3"
             fontFamily="Inter, sans-serif"
+            className="animate-fintech-float-3"
           >
             ₹
           </text>
 
-          {/* Gradient Growth Area Fill Behind Primary Trend */}
-          <path
-            d="M 80 500 Q 360 450 620 310 T 1060 210 T 1380 90 L 1380 620 L 80 620 Z"
-            fill="url(#wmArea)"
-          />
+          {/* Financial Growth Area, Trendlines & Milestone Nodes Animated */}
+          <g className="animate-fintech-trend">
+            {/* Gradient Growth Area Fill Behind Primary Trend */}
+            <path
+              d="M 80 500 Q 360 450 620 310 T 1060 210 T 1380 90 L 1380 620 L 80 620 Z"
+              fill="url(#wmArea)"
+            />
 
-          {/* Financial Upward Trendlines (Bold Distinct Strokes) */}
-          {/* Main Growth Curve */}
-          <path
-            d="M 80 500 Q 360 450 620 310 T 1060 210 T 1380 90"
-            fill="none"
-            stroke="url(#wmTrend)"
-            strokeWidth="4.5"
-            strokeLinecap="round"
-          />
+            {/* Financial Upward Trendlines (Bold Distinct Strokes) */}
+            {/* Main Growth Curve */}
+            <path
+              d="M 80 500 Q 360 450 620 310 T 1060 210 T 1380 90"
+              fill="none"
+              stroke="url(#wmTrend)"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+            />
 
-          {/* Secondary Interlacing Ledger Flow Line */}
-          <path
-            d="M 60 430 C 320 400 480 260 720 230 S 1120 180 1380 130"
-            fill="none"
-            stroke="#334155"
-            strokeWidth="3"
-            strokeDasharray="10 8"
-            strokeLinecap="round"
-            opacity="0.65"
-          />
+            {/* Secondary Interlacing Ledger Flow Line */}
+            <path
+              d="M 60 430 C 320 400 480 260 720 230 S 1120 180 1380 130"
+              fill="none"
+              stroke="#334155"
+              strokeWidth="3"
+              strokeDasharray="10 8"
+              strokeLinecap="round"
+              opacity="0.65"
+            />
 
-          {/* Trend Milestone Data Nodes */}
-          <circle cx="360" cy="425" r="7" fill="#10b981" stroke="#059669" strokeWidth="3.5" />
-          <circle cx="620" cy="310" r="8" fill="#10b981" stroke="#059669" strokeWidth="4" />
-          <circle cx="860" cy="245" r="7" fill="#10b981" stroke="#059669" strokeWidth="3.5" />
-          <circle cx="1060" cy="210" r="8" fill="#10b981" stroke="#059669" strokeWidth="4" />
-          <circle cx="1280" cy="135" r="7" fill="#10b981" stroke="#059669" strokeWidth="3.5" />
+            {/* Trend Milestone Data Nodes */}
+            <circle cx="360" cy="425" r="7" fill="#10b981" stroke="#059669" strokeWidth="3.5" />
+            <circle cx="620" cy="310" r="8" fill="#10b981" stroke="#059669" strokeWidth="4" />
+            <circle cx="860" cy="245" r="7" fill="#10b981" stroke="#059669" strokeWidth="3.5" />
+            <circle cx="1060" cy="210" r="8" fill="#10b981" stroke="#059669" strokeWidth="4" />
+            <circle cx="1280" cy="135" r="7" fill="#10b981" stroke="#059669" strokeWidth="3.5" />
+          </g>
 
           {/* Candlestick Chart Cluster Left (Flanking Title) */}
-          <g>
+          <g className="animate-fintech-candlesticks-left">
             {/* Bar 1 */}
             <line x1="220" y1="360" x2="220" y2="460" stroke="#059669" strokeWidth="3.5" strokeLinecap="round" />
             <rect x="209" y="380" width="22" height="50" rx="3" fill="#10b981" fillOpacity="0.45" stroke="#059669" strokeWidth="3.5" />
@@ -288,7 +298,7 @@ export default function LandingPage({ onNavigateToAuth, onLaunchDashboard, onNav
           </g>
 
           {/* Candlestick Chart Cluster Right (Flanking Title) */}
-          <g>
+          <g className="animate-fintech-candlesticks-right">
             {/* Bar 4 */}
             <line x1="1140" y1="280" x2="1140" y2="400" stroke="#059669" strokeWidth="3.5" strokeLinecap="round" />
             <rect x="1129" y="300" width="22" height="70" rx="3" fill="#10b981" fillOpacity="0.45" stroke="#059669" strokeWidth="3.5" />
@@ -376,44 +386,62 @@ export default function LandingPage({ onNavigateToAuth, onLaunchDashboard, onNav
         <div className="text-center select-none pt-4 pb-2">
           <h1
             style={{ fontFamily: "'Syne', 'Plus Jakarta Sans', sans-serif" }}
-            className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl xl:text-[9.5rem] font-black tracking-tight uppercase flex items-center justify-center flex-wrap gap-x-4 sm:gap-x-8 md:gap-x-12 leading-none"
+            className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl xl:text-[9.5rem] font-black tracking-tight uppercase flex items-center justify-center flex-wrap gap-x-4 sm:gap-x-8 md:gap-x-12 leading-none py-2"
           >
             {/* Word 1: STS */}
-            <span className="inline-flex">
-              {word1.map((item) => (
-                <span
-                  key={`sts-${item.idx}`}
-                  className="inline-block"
-                  style={{
-                    transform: `translateY(${item.y}px) rotate(${item.rot}deg)`,
-                  }}
-                >
+            <span className="inline-flex items-baseline">
+              {word1.map((item) => {
+                const isT = item.char === 'T';
+                return (
                   <span
-                    className="arch-3d-letter inline-block transform hover:scale-[1.30] hover:-translate-y-3 cursor-default select-none"
+                    key={`sts-${item.idx}`}
+                    className="inline-block"
+                    style={{
+                      transform: `translateY(${item.y}px) rotate(${item.rot}deg)`,
+                    }}
                   >
-                    {item.char}
+                    {isT ? (
+                      <span className="inline-block scale-[1.28] sm:scale-[1.35] origin-bottom mx-0.5">
+                        <span className="arch-3d-letter inline-block transform hover:scale-[1.30] hover:-translate-y-3 cursor-default select-none">
+                          {item.char}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="arch-3d-letter inline-block transform hover:scale-[1.30] hover:-translate-y-3 cursor-default select-none">
+                        {item.char}
+                      </span>
+                    )}
                   </span>
-                </span>
-              ))}
+                );
+              })}
             </span>
 
             {/* Word 2: FINTECH */}
-            <span className="inline-flex">
-              {word2.map((item) => (
-                <span
-                  key={`fintech-${item.idx}`}
-                  className="inline-block"
-                  style={{
-                    transform: `translateY(${item.y}px) rotate(${item.rot}deg)`,
-                  }}
-                >
+            <span className="inline-flex items-baseline">
+              {word2.map((item) => {
+                const isT = item.char === 'T';
+                return (
                   <span
-                    className="arch-3d-letter inline-block transform hover:scale-[1.30] hover:-translate-y-3 cursor-default select-none"
+                    key={`fintech-${item.idx}`}
+                    className="inline-block"
+                    style={{
+                      transform: `translateY(${item.y}px) rotate(${item.rot}deg)`,
+                    }}
                   >
-                    {item.char}
+                    {isT ? (
+                      <span className="inline-block scale-[1.28] sm:scale-[1.35] origin-bottom mx-0.5">
+                        <span className="arch-3d-letter inline-block transform hover:scale-[1.30] hover:-translate-y-3 cursor-default select-none">
+                          {item.char}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="arch-3d-letter inline-block transform hover:scale-[1.30] hover:-translate-y-3 cursor-default select-none">
+                        {item.char}
+                      </span>
+                    )}
                   </span>
-                </span>
-              ))}
+                );
+              })}
             </span>
           </h1>
 

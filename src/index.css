@@ -110,3 +110,107 @@ html.dark body {
   animation: voice-wave 0.8s ease-in-out infinite 0.2s;
 }
 
+/* Background Fintech Graphics Continuous Animations */
+@keyframes fintech-float-slow {
+  0% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-12px) translateX(4px);
+  }
+  100% {
+    transform: translateY(-22px) translateX(-4px);
+  }
+}
+
+@keyframes fintech-float-reverse {
+  0% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(14px) translateX(-5px);
+  }
+  100% {
+    transform: translateY(24px) translateX(5px);
+  }
+}
+
+@keyframes fintech-pulse-trend {
+  0% {
+    transform: scale(1) translateX(0);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.015) translateX(6px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateX(0);
+    opacity: 0.85;
+  }
+}
+
+@keyframes fintech-candlestick-pulse {
+  0% {
+    transform: translateY(0) scaleY(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-5px) scaleY(1.04);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scaleY(1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes fintech-grid-drift {
+  0% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.45;
+    transform: translateY(-3px);
+  }
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+}
+
+.animate-fintech-float-1 {
+  animation: fintech-float-slow 7s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+.animate-fintech-float-2 {
+  animation: fintech-float-reverse 8.5s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+.animate-fintech-float-3 {
+  animation: fintech-float-slow 6.5s ease-in-out infinite alternate 1s;
+  transform-origin: center;
+}
+
+.animate-fintech-trend {
+  animation: fintech-pulse-trend 10s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+.animate-fintech-candlesticks-left {
+  animation: fintech-candlestick-pulse 8s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+
+.animate-fintech-candlesticks-right {
+  animation: fintech-candlestick-pulse 9s ease-in-out infinite alternate 1.5s;
+  transform-origin: bottom center;
+}
+
+.animate-fintech-grid {
+  animation: fintech-grid-drift 12s ease-in-out infinite alternate;
+}
+
