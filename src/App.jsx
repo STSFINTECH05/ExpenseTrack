@@ -377,20 +377,33 @@ export default function App() {
     console.warn('App LanguageContext fallback:', err);
   }
 
-  // Sync theme with document element on mount
+  // Sync theme with document element on mount and external theme changes
   useEffect(() => {
-    try {
-      const savedTheme = localStorage.getItem('theme') || localStorage.getItem('sts_theme') || 'dark';
-      if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-        document.body.classList.add('dark');
-      } else if (savedTheme === 'light') {
-        document.documentElement.classList.remove('dark');
-        document.body.classList.remove('dark');
+    const applySavedTheme = () => {
+      try {
+        const savedTheme =
+          localStorage.getItem('sts_theme_mode') ||
+          localStorage.getItem('theme') ||
+          localStorage.getItem('sts_theme') ||
+          'light';
+        if (savedTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+          document.body.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.body.classList.remove('dark');
+        }
+      } catch (e) {
+        console.warn(e);
       }
-    } catch (e) {
-      console.warn(e);
-    }
+    };
+    applySavedTheme();
+    window.addEventListener('sts_theme_changed', applySavedTheme);
+    window.addEventListener('storage', applySavedTheme);
+    return () => {
+      window.removeEventListener('sts_theme_changed', applySavedTheme);
+      window.removeEventListener('storage', applySavedTheme);
+    };
   }, []);
 
   // Navigation State: 'dashboard' is active by default (or 'settings' if navigating to /settings, 'income-streams' if /income-streams)
@@ -715,7 +728,7 @@ export default function App() {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
               onClick={() => setIsMobileMenuOpen(false)}
             />
-            <div className="relative z-10 w-64 max-w-[80vw] bg-[#18181B] h-full shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-in-out">
+            <div className="relative z-10 w-64 max-w-[80vw] bg-[#F2FBF7] dark:bg-[#18181B] h-full shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-in-out">
               <Sidebar
                 activeTab={activeTab}
                 setActiveTab={(tab) => {

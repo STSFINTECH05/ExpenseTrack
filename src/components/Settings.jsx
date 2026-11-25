@@ -250,22 +250,49 @@ export default function Settings({ currentUser, setCurrentUser }) {
     LANGUAGES.find((l) => l.code === currentLanguage) || LANGUAGES[0];
 
   // ---------------------------------------------------------------------------
-  // 2. Theme State: Clean LocalStorage Reader (Default 'dark')
+  // 2. Theme State: Clean LocalStorage Reader (Default 'light')
   // ---------------------------------------------------------------------------
   const [currentTheme, setCurrentTheme] = useState(() => {
     try {
-      const stored = localStorage.getItem('theme') || localStorage.getItem('sts_theme');
+      const stored =
+        localStorage.getItem('sts_theme_mode') ||
+        localStorage.getItem('theme') ||
+        localStorage.getItem('sts_theme');
       if (stored === 'light' || stored === 'dark') return stored;
       return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
     } catch {
-      return 'dark';
+      return 'light';
     }
   });
   const [themeSuccessMsg, setThemeSuccessMsg] = useState(null);
 
+  // Sync theme with external events if changed elsewhere
+  useEffect(() => {
+    const syncTheme = () => {
+      try {
+        const stored =
+          localStorage.getItem('sts_theme_mode') ||
+          localStorage.getItem('theme') ||
+          localStorage.getItem('sts_theme');
+        if (stored === 'light' || stored === 'dark') {
+          setCurrentTheme(stored);
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    };
+    window.addEventListener('sts_theme_changed', syncTheme);
+    window.addEventListener('storage', syncTheme);
+    return () => {
+      window.removeEventListener('sts_theme_changed', syncTheme);
+      window.removeEventListener('storage', syncTheme);
+    };
+  }, []);
+
   const applyTheme = (newTheme) => {
     setCurrentTheme(newTheme);
     try {
+      localStorage.setItem('sts_theme_mode', newTheme);
       localStorage.setItem('theme', newTheme);
       localStorage.setItem('sts_theme', newTheme);
     } catch (err) {
@@ -279,6 +306,8 @@ export default function Settings({ currentUser, setCurrentUser }) {
       document.documentElement.classList.remove('dark');
       document.body.classList.remove('dark');
     }
+
+    window.dispatchEvent(new Event('sts_theme_changed'));
 
     setThemeSuccessMsg(
       `Theme switched to ${newTheme === 'dark' ? 'Dark Mode (🌙)' : 'Light Mode (☀️)'}`

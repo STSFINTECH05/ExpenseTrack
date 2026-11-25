@@ -123,7 +123,7 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth, curren
 
   return (
     <aside
-      className="w-full h-full md:w-64 flex-shrink-0 bg-[#18181B] border-r border-zinc-800 flex flex-col justify-between overflow-y-auto"
+      className="w-full h-full md:w-64 flex-shrink-0 bg-[#F2FBF7] dark:bg-[#18181B] border-r border-emerald-200/70 dark:border-zinc-800 flex flex-col justify-between overflow-y-auto transition-colors duration-200"
       style={{ minHeight: '100%' }}
     >
       {/* Primary Navigation Links Grouped at Top */}
@@ -146,12 +146,12 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth, curren
               onClick={() => setActiveTab(item.id)}
               className={`w-full text-left px-3.5 py-3 rounded-xl transition flex items-center justify-between group cursor-pointer ${
                 isActive
-                  ? 'bg-[#0a2f1d] text-emerald-300 border border-emerald-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-emerald-300 hover:bg-[#071f14]/70 border border-transparent hover:border-emerald-500/20'
+                  ? 'bg-emerald-100 dark:bg-[#0a2f1d] text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40 font-bold shadow-xs'
+                  : 'text-slate-700 dark:text-slate-400 hover:text-emerald-900 dark:hover:text-emerald-300 hover:bg-emerald-100/70 dark:hover:bg-[#071f14]/70 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-500/20'
               }`}
             >
               <div className="flex items-center min-w-0">
-                <span className={`text-xs font-semibold truncate ${isActive ? 'text-emerald-300 font-bold' : 'text-slate-300 group-hover:text-slate-100'}`}>
+                <span className={`text-xs font-semibold truncate ${isActive ? 'text-emerald-900 dark:text-emerald-300 font-bold' : 'text-slate-700 dark:text-slate-300 group-hover:text-emerald-900 dark:group-hover:text-slate-100'}`}>
                   {item.label}
                 </span>
               </div>
@@ -161,20 +161,20 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth, curren
       </div>
 
       {/* Bottom Pinned Links: Contact Us & Settings */}
-      <div className="p-3.5 mt-auto pb-6 space-y-1.5 border-t border-zinc-800">
+      <div className="p-3.5 mt-auto pb-6 space-y-1.5 border-t border-emerald-200/70 dark:border-zinc-800">
         <button
           type="button"
           onClick={() => setActiveTab('contact_us')}
           className={`w-full text-left px-3.5 py-3 rounded-xl transition flex items-center justify-between group cursor-pointer ${
             activeTab === 'contact_us' || activeTab === 'contact'
-              ? 'bg-[#0a2f1d] text-emerald-300 border border-emerald-500/40 shadow-sm'
-              : 'text-slate-400 hover:text-emerald-300 hover:bg-[#071f14]/70 border border-transparent hover:border-emerald-500/20'
+              ? 'bg-emerald-100 dark:bg-[#0a2f1d] text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40 font-bold shadow-xs'
+              : 'text-slate-700 dark:text-slate-400 hover:text-emerald-900 dark:hover:text-emerald-300 hover:bg-emerald-100/70 dark:hover:bg-[#071f14]/70 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-500/20'
           }`}
         >
           <div className="flex items-center min-w-0">
             <span
               className={`text-xs font-semibold ${
-                activeTab === 'contact_us' || activeTab === 'contact' ? 'text-emerald-300 font-bold' : 'text-slate-300 group-hover:text-slate-100'
+                activeTab === 'contact_us' || activeTab === 'contact' ? 'text-emerald-900 dark:text-emerald-300 font-bold' : 'text-slate-700 dark:text-slate-300 group-hover:text-emerald-900 dark:group-hover:text-slate-100'
               }`}
             >
               {t('contact_us', 'Contact Us')}
@@ -187,14 +187,14 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth, curren
           onClick={() => setActiveTab('settings')}
           className={`w-full text-left px-3.5 py-3 rounded-xl transition flex items-center justify-between group cursor-pointer ${
             activeTab === 'settings'
-              ? 'bg-[#0a2f1d] text-emerald-300 border border-emerald-500/40 shadow-sm'
-              : 'text-slate-400 hover:text-emerald-300 hover:bg-[#071f14]/70 border border-transparent hover:border-emerald-500/20'
+              ? 'bg-emerald-100 dark:bg-[#0a2f1d] text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40 font-bold shadow-xs'
+              : 'text-slate-700 dark:text-slate-400 hover:text-emerald-900 dark:hover:text-emerald-300 hover:bg-emerald-100/70 dark:hover:bg-[#071f14]/70 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-500/20'
           }`}
         >
           <div className="flex items-center min-w-0">
             <span
               className={`text-xs font-semibold ${
-                activeTab === 'settings' ? 'text-emerald-300 font-bold' : 'text-slate-300 group-hover:text-slate-100'
+                activeTab === 'settings' ? 'text-emerald-900 dark:text-emerald-300 font-bold' : 'text-slate-700 dark:text-slate-300 group-hover:text-emerald-900 dark:group-hover:text-slate-100'
               }`}
             >
               {t('settings', 'Settings')}

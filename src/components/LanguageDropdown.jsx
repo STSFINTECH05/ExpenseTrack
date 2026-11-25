@@ -102,6 +102,7 @@ export default function LanguageDropdown({ variant = 'dark', className = '' }) {
   };
 
   const isDark = variant === 'dark';
+  const isHeader = variant === 'header' || variant === 'dark';
 
   return (
     <div className={`relative inline-block ${className}`} ref={dropdownRef}>
@@ -110,7 +111,9 @@ export default function LanguageDropdown({ variant = 'dark', className = '' }) {
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className={`flex items-center space-x-1.5 rounded-xl transition-all font-semibold select-none cursor-pointer ${
-          isDark
+          isHeader
+            ? 'px-2.5 sm:px-3 py-1.5 bg-emerald-100/60 hover:bg-emerald-100 dark:bg-[#090d16] border border-emerald-200/80 hover:border-emerald-300 dark:border-slate-800/90 text-slate-700 hover:text-emerald-900 dark:text-slate-200 dark:hover:text-white dark:hover:border-slate-700 shadow-xs text-xs'
+            : isDark
             ? 'px-2.5 sm:px-3 py-1.5 bg-[#090d16] border border-slate-800/90 text-slate-200 hover:text-white hover:border-slate-700 shadow-inner text-xs'
             : 'px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 shadow-sm text-xs sm:text-sm'
         }`}
@@ -119,7 +122,11 @@ export default function LanguageDropdown({ variant = 'dark', className = '' }) {
       >
         <Globe
           className={`flex-shrink-0 ${
-            isDark ? 'w-3.5 h-3.5 text-emerald-400' : 'w-4 h-4 text-emerald-600'
+            isHeader
+              ? 'w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400'
+              : isDark
+              ? 'w-3.5 h-3.5 text-emerald-400'
+              : 'w-4 h-4 text-emerald-600'
           }`}
         />
         <span className="whitespace-nowrap font-bold tracking-tight">
@@ -127,26 +134,30 @@ export default function LanguageDropdown({ variant = 'dark', className = '' }) {
         </span>
         <ChevronDown
           className={`transition-transform duration-200 ${
-            isDark ? 'w-3 h-3 text-slate-400' : 'w-3.5 h-3.5 text-slate-500'
-          } ${isOpen ? 'rotate-180 text-emerald-400' : ''}`}
+            isHeader
+              ? 'w-3 h-3 text-slate-500 dark:text-slate-400'
+              : isDark
+              ? 'w-3 h-3 text-slate-400'
+              : 'w-3.5 h-3.5 text-slate-500'
+          } ${isOpen ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : ''}`}
         />
       </button>
 
       {/* Floating Dropdown Card with Upward Arrow */}
       {isOpen && (
-        <div className="absolute right-0 mt-2.5 w-80 sm:w-96 rounded-2xl bg-[#0d1322] border border-slate-700 shadow-2xl z-50 animate-fadeIn">
+        <div className="absolute right-0 mt-2.5 w-80 sm:w-96 rounded-2xl bg-white dark:bg-[#0d1322] border border-emerald-200 dark:border-slate-700 shadow-2xl z-50 animate-fadeIn">
           {/* Arrow pointing up */}
-          <div className="absolute -top-1.5 right-6 w-3 h-3 bg-[#0d1322] border-t border-l border-slate-700 rotate-45" />
+          <div className="absolute -top-1.5 right-6 w-3 h-3 bg-white dark:bg-[#0d1322] border-t border-l border-emerald-200 dark:border-slate-700 rotate-45" />
 
           {/* Card Header */}
-          <div className="relative z-10 px-4 pt-3.5 pb-2.5 border-b border-slate-800 flex items-center justify-between">
+          <div className="relative z-10 px-4 pt-3.5 pb-2.5 border-b border-emerald-100 dark:border-slate-800 flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Globe className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <Globe className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Select Language
               </span>
             </div>
-            <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/30">
+            <span className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-500/30">
               Active: {currentLangObj.short || currentLangObj.label}
             </span>
           </div>
@@ -162,13 +173,13 @@ export default function LanguageDropdown({ variant = 'dark', className = '' }) {
                   onClick={() => handleSelectLanguage(lang.code)}
                   className={`flex items-center justify-between text-left py-2 px-2.5 rounded-xl transition text-xs font-medium cursor-pointer ${
                     isSelected
-                      ? 'bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30 shadow-sm'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/70 border border-transparent'
+                      ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-900 dark:text-emerald-400 font-bold border border-emerald-300 dark:border-emerald-500/30 shadow-xs'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-50 dark:hover:bg-slate-800/70 border border-transparent'
                   }`}
                 >
                   <span className="truncate pr-1">{lang.display}</span>
                   {isSelected && (
-                    <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[2.5] flex-shrink-0" />
+                    <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 stroke-[2.5] flex-shrink-0" />
                   )}
                 </button>
               );

@@ -402,10 +402,8 @@ export default function Header({
 
   return (
     <header
-      className="sticky top-0 z-40 bg-[#18181B] backdrop-blur-xl border-b border-zinc-800 shadow-xs w-full max-w-full"
+      className="sticky top-0 z-40 bg-[#F2FBF7] dark:bg-[#18181B] backdrop-blur-xl border-b border-emerald-200/70 dark:border-zinc-800 shadow-xs w-full max-w-full transition-colors duration-200"
       style={{
-        backgroundColor: '#18181B',
-        borderColor: '#27272A',
         width: '100%',
         maxWidth: '100%',
       }}
@@ -429,11 +427,11 @@ export default function Header({
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-1.5 sm:p-2 rounded-xl text-zinc-300 hover:text-white hover:bg-zinc-800 border border-zinc-700/80 hover:border-zinc-600 transition cursor-pointer flex-shrink-0"
+            className="md:hidden p-1.5 sm:p-2 rounded-xl text-slate-700 dark:text-zinc-300 hover:text-emerald-900 dark:hover:text-white bg-emerald-100/60 dark:bg-zinc-800 hover:bg-emerald-100 border border-emerald-200/80 dark:border-zinc-700/80 hover:border-emerald-300 dark:hover:border-zinc-600 transition cursor-pointer flex-shrink-0"
             aria-label="Toggle Navigation Menu"
             title="Open Menu"
           >
-            {isMobileMenuOpen ? <X className="w-5 h-5 text-emerald-400" /> : <Menu className="w-5 h-5" />}
+            {isMobileMenuOpen ? <X className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> : <Menu className="w-5 h-5" />}
           </button>
 
           {/* Clickable Logo & Branding that toggles the sidebar */}
@@ -456,7 +454,7 @@ export default function Header({
         {/* ========================================================= */}
         <div className="flex items-center justify-center mx-1 sm:mx-2 md:mx-4">
           <nav
-            className="flex items-center space-x-0.5 sm:space-x-1 bg-zinc-800/80 p-0.5 sm:p-1 rounded-xl border border-zinc-700/80 shadow-inner"
+            className="flex items-center space-x-0.5 sm:space-x-1 bg-emerald-100/70 dark:bg-zinc-800/80 p-0.5 sm:p-1 rounded-xl border border-emerald-200/80 dark:border-zinc-700/80 shadow-inner"
             aria-label="Primary Navigation"
           >
             {/* Expense Tab */}
@@ -466,7 +464,7 @@ export default function Header({
               className={`px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Expense'
                   ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500/50'
-                  : 'text-zinc-300 hover:text-white hover:bg-zinc-700/60'
+                  : 'text-slate-700 dark:text-zinc-300 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-200/60 dark:hover:bg-zinc-700/60'
               }`}
             >
               Expense
@@ -479,7 +477,7 @@ export default function Header({
               className={`px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Wallet'
                   ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500/50'
-                  : 'text-zinc-300 hover:text-white hover:bg-zinc-700/60'
+                  : 'text-slate-700 dark:text-zinc-300 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-200/60 dark:hover:bg-zinc-700/60'
               }`}
             >
               Wallet
@@ -492,7 +490,7 @@ export default function Header({
               className={`px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${
                 activeMainTab === 'Social'
                   ? 'bg-emerald-600 text-white shadow-xs font-bold ring-1 ring-emerald-500/50'
-                  : 'text-zinc-300 hover:text-white hover:bg-zinc-700/60'
+                  : 'text-slate-700 dark:text-zinc-300 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-200/60 dark:hover:bg-zinc-700/60'
               }`}
             >
               Social
@@ -513,16 +511,16 @@ export default function Header({
                   setIsSearchOpen(true);
                   setIsDropdownDismissed(false);
                 }}
-                className="w-8 h-8 rounded-full bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/70 hover:border-zinc-600 flex items-center justify-center text-zinc-300 hover:text-white transition shadow-xs cursor-pointer group"
+                className="w-8 h-8 rounded-full bg-emerald-100/60 dark:bg-zinc-800/80 hover:bg-emerald-100 dark:hover:bg-zinc-700/80 border border-emerald-200/80 dark:border-zinc-700/70 hover:border-emerald-300 dark:hover:border-zinc-600 flex items-center justify-center text-slate-700 dark:text-zinc-300 hover:text-emerald-900 dark:hover:text-white transition shadow-xs cursor-pointer group"
                 title="Search transactions"
                 aria-label="Open search"
               >
-                <Search className="w-4 h-4 text-zinc-300 group-hover:text-white transition-colors" />
+                <Search className="w-4 h-4 text-slate-700 dark:text-zinc-300 group-hover:text-emerald-900 dark:group-hover:text-white transition-colors" />
               </button>
             ) : (
               /* Desktop inline search or Mobile full-width overlay bar */
-              <div className="fixed md:relative inset-x-2 top-2 md:inset-auto md:top-auto z-50 md:z-auto flex items-center animate-fadeIn bg-zinc-900 md:bg-transparent p-1.5 md:p-0 rounded-2xl md:rounded-none border border-zinc-700 md:border-transparent shadow-2xl md:shadow-none">
-                <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-4 md:left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <div className="fixed md:relative inset-x-2 top-2 md:inset-auto md:top-auto z-50 md:z-auto flex items-center animate-fadeIn bg-white dark:bg-zinc-900 md:bg-transparent p-1.5 md:p-0 rounded-2xl md:rounded-none border border-emerald-200 dark:border-zinc-700 md:border-transparent shadow-2xl md:shadow-none">
+                <Search className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-400 absolute left-4 md:left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -536,7 +534,7 @@ export default function Header({
                   }}
                   onKeyDown={handleSearchKeyDown}
                   placeholder="Search transactions..."
-                  className="w-full md:w-44 md:sm:w-56 md:lg:w-64 bg-zinc-800/95 border border-zinc-700 rounded-xl pl-9 md:pl-8 pr-8 py-2 md:py-1.5 text-xs text-zinc-200 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-inner"
+                  className="w-full md:w-44 md:sm:w-56 md:lg:w-64 bg-white dark:bg-zinc-800/95 border border-emerald-200 dark:border-zinc-700 rounded-xl pl-9 md:pl-8 pr-8 py-2 md:py-1.5 text-xs text-slate-800 dark:text-zinc-200 placeholder-slate-400 dark:placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all shadow-inner"
                 />
                 <button
                   type="button"
@@ -546,7 +544,7 @@ export default function Header({
                     setIsSearchOpen(false);
                     setIsDropdownDismissed(false);
                   }}
-                  className="absolute right-3.5 md:right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-1 md:p-0.5 rounded-md hover:bg-zinc-700/60 transition cursor-pointer flex items-center justify-center"
+                  className="absolute right-3.5 md:right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-zinc-200 p-1 md:p-0.5 rounded-md hover:bg-emerald-100 dark:hover:bg-zinc-700/60 transition cursor-pointer flex items-center justify-center"
                   title="Close search"
                   aria-label="Close search"
                 >
@@ -557,12 +555,12 @@ export default function Header({
 
             {/* Search Results Dropdown Popover */}
             {isSearchOpen && !isDropdownDismissed && searchQuery && searchQuery.trim() && (
-              <div className="fixed md:absolute inset-x-2 md:inset-x-auto right-0 sm:left-0 sm:right-auto top-16 md:top-auto md:mt-2 w-auto md:w-80 max-w-[95vw] md:max-w-[90vw] rounded-2xl bg-[#18181B] border border-zinc-700 shadow-2xl py-3 px-3 z-50 animate-fadeIn divide-y divide-zinc-800">
+              <div className="fixed md:absolute inset-x-2 md:inset-x-auto right-0 sm:left-0 sm:right-auto top-16 md:top-auto md:mt-2 w-auto md:w-80 max-w-[95vw] md:max-w-[90vw] rounded-2xl bg-white dark:bg-[#18181B] border border-emerald-200 dark:border-zinc-700 shadow-2xl py-3 px-3 z-50 animate-fadeIn divide-y divide-emerald-100 dark:divide-zinc-800">
                 {/* Navigation Modules Section */}
                 {searchResults.modules.length > 0 && (
                   <div className="pb-2.5">
-                    <div className="flex items-center space-x-1.5 px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                      <Compass className="w-3 h-3 text-emerald-400" />
+                    <div className="flex items-center space-x-1.5 px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                      <Compass className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                       <span>Navigation Modules</span>
                     </div>
                     <div className="space-y-1">
@@ -571,12 +569,12 @@ export default function Header({
                           key={m.id}
                           type="button"
                           onClick={() => handleNavigateToModule(m.id)}
-                          className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-zinc-800/90 text-zinc-200 hover:text-white transition flex items-center justify-between group cursor-pointer"
+                          className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-zinc-800/90 text-slate-700 dark:text-zinc-200 hover:text-emerald-900 dark:hover:text-white transition flex items-center justify-between group cursor-pointer"
                         >
-                          <span className="text-xs font-semibold group-hover:text-emerald-400 transition-colors">
+                          <span className="text-xs font-semibold group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                             {m.label}
                           </span>
-                          <ArrowRight className="w-3 h-3 text-zinc-500 group-hover:text-emerald-400 transition-colors" />
+                          <ArrowRight className="w-3 h-3 text-slate-400 dark:text-zinc-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
                         </button>
                       ))}
                     </div>
@@ -586,9 +584,9 @@ export default function Header({
                 {/* Transactions Section */}
                 {searchResults.transactions.length > 0 && (
                   <div className={searchResults.modules.length > 0 ? 'pt-2.5 pb-1' : 'pb-1'}>
-                    <div className="flex items-center justify-between px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                    <div className="flex items-center justify-between px-2 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
                       <span>Matching Transactions</span>
-                      <span className="text-[9px] text-zinc-500 font-normal">
+                      <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-normal">
                         {searchResults.transactions.length} found
                       </span>
                     </div>
@@ -598,13 +596,13 @@ export default function Header({
                           key={item.id}
                           type="button"
                           onClick={() => handleSelectTransaction(item)}
-                          className="w-full text-left p-2 rounded-lg hover:bg-zinc-800/90 transition flex items-center justify-between group cursor-pointer border border-transparent hover:border-zinc-700/60"
+                          className="w-full text-left p-2 rounded-lg hover:bg-emerald-50 dark:hover:bg-zinc-800/90 transition flex items-center justify-between group cursor-pointer border border-transparent hover:border-emerald-200 dark:hover:border-zinc-700/60"
                         >
                           <div className="min-w-0 pr-2">
-                            <p className="text-xs font-bold text-zinc-100 group-hover:text-emerald-400 transition-colors truncate">
+                            <p className="text-xs font-bold text-slate-800 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
                               {item.title}
                             </p>
-                            <div className="flex items-center space-x-2 text-[10px] text-zinc-400 mt-0.5">
+                            <div className="flex items-center space-x-2 text-[10px] text-slate-500 dark:text-zinc-400 mt-0.5">
                               <span className="capitalize">{item.category}</span>
                               {item.date && <span>• {item.date}</span>}
                             </div>
@@ -612,7 +610,7 @@ export default function Header({
                           <div className="text-right flex-shrink-0">
                             <span
                               className={`text-xs font-mono font-bold ${
-                                item.type === 'income' ? 'text-emerald-400' : 'text-zinc-200'
+                                item.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-zinc-200'
                               }`}
                             >
                               ₹{Number(item.amount).toLocaleString('en-IN', {
@@ -629,9 +627,9 @@ export default function Header({
 
                 {/* Empty State */}
                 {searchResults.modules.length === 0 && searchResults.transactions.length === 0 && (
-                  <div className="py-4 text-center text-xs text-zinc-400">
-                    <p className="font-semibold text-zinc-300">No matching transactions found</p>
-                    <p className="text-[11px] text-zinc-500 mt-1">
+                  <div className="py-4 text-center text-xs text-slate-500 dark:text-zinc-400">
+                    <p className="font-semibold text-slate-700 dark:text-zinc-300">No matching transactions found</p>
+                    <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-1">
                       Try searching with a title, category, or module name
                     </p>
                   </div>
@@ -642,7 +640,7 @@ export default function Header({
 
           {/* Global Language Selector Dropdown [ 🌐 English ▾ ] (hidden on mobile < sm to guarantee space for core actions) */}
           <div className="hidden sm:block">
-            <LanguageDropdown variant="dark" />
+            <LanguageDropdown variant="header" />
           </div>
 
           {/* 2. Notification Icon Button (compact on mobile) */}
@@ -650,33 +648,33 @@ export default function Header({
             <button
               type="button"
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-1.5 sm:p-2 rounded-xl text-zinc-200 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700 hover:border-zinc-600 transition shadow-xs"
+              className="relative p-1.5 sm:p-2 rounded-xl text-slate-700 dark:text-zinc-200 hover:text-emerald-900 dark:hover:text-white bg-emerald-100/60 dark:bg-zinc-800/80 hover:bg-emerald-100 dark:hover:bg-zinc-700/80 border border-emerald-200/80 dark:border-zinc-700 hover:border-emerald-300 dark:hover:border-zinc-600 transition shadow-xs cursor-pointer"
               title="Notifications"
               aria-label="View notifications"
             >
-              <Bell className="w-4 h-4 text-zinc-200" />
+              <Bell className="w-4 h-4 text-slate-700 dark:text-zinc-200" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 shadow-xs shadow-red-500 animate-pulse" />
             </button>
 
             {/* Notification Popover */}
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-[#0d1322] border border-slate-800 shadow-2xl py-3 px-4 z-50 animate-fadeIn">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <span className="text-xs font-bold text-white">Notifications</span>
-                  <span className="text-[10px] text-red-400 font-semibold bg-red-950/80 border border-red-500/30 px-1.5 py-0.5 rounded">
+              <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-white dark:bg-[#0d1322] border border-emerald-200 dark:border-slate-800 shadow-2xl py-3 px-4 z-50 animate-fadeIn">
+                <div className="flex items-center justify-between pb-2 border-b border-emerald-100 dark:border-slate-800">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">Notifications</span>
+                  <span className="text-[10px] text-red-600 dark:text-red-400 font-semibold bg-red-50 dark:bg-red-950/80 border border-red-200 dark:border-red-500/30 px-1.5 py-0.5 rounded">
                     Alert
                   </span>
                 </div>
                 <div className="mt-2.5 space-y-2">
-                  <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-[11px]">
-                    <p className="font-semibold text-slate-200">System Ledger Online</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
+                  <div className="p-2 rounded-lg bg-emerald-50/50 dark:bg-slate-900/80 border border-emerald-100 dark:border-slate-800 text-[11px]">
+                    <p className="font-semibold text-slate-800 dark:text-slate-200">System Ledger Online</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                       STS FINTECH database sync connected successfully.
                     </p>
                   </div>
-                  <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-[11px]">
-                    <p className="font-semibold text-slate-200">Payment Audit</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
+                  <div className="p-2 rounded-lg bg-emerald-50/50 dark:bg-slate-900/80 border border-emerald-100 dark:border-slate-800 text-[11px]">
+                    <p className="font-semibold text-slate-800 dark:text-slate-200">Payment Audit</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                       Segregation ledger auto-balanced for current cycle.
                     </p>
                   </div>
@@ -697,11 +695,11 @@ export default function Header({
             }}
             className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold tabular-nums transition-all duration-200 cursor-pointer group shadow-xs hover:scale-105 active:scale-95 ${
               daysLeft > 0
-                ? 'border-2 border-amber-400 text-amber-400 bg-amber-400/10'
-                : 'border-2 border-zinc-600 text-zinc-400 bg-transparent'
+                ? 'border-2 border-amber-500 text-amber-700 dark:text-amber-400 bg-amber-100/60 dark:bg-amber-400/10'
+                : 'border-2 border-slate-300 dark:border-zinc-600 text-slate-500 dark:text-zinc-400 bg-transparent'
             } ${
               activeTab === 'subscription'
-                ? 'ring-2 ring-amber-400/60 ring-offset-1 ring-offset-zinc-900 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
+                ? 'ring-2 ring-amber-500/60 ring-offset-1 ring-offset-emerald-50 dark:ring-offset-zinc-900 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
                 : ''
             }`}
             title={`${daysLeft} days left`}
@@ -711,11 +709,11 @@ export default function Header({
           </button>
 
           {/* 3. Login Details / User Profile with Floating Dropdown Menu */}
-          <div className="relative pl-1 sm:pl-2 border-l border-zinc-700" ref={profileMenuRef}>
+          <div className="relative pl-1 sm:pl-2 border-l border-emerald-200/80 dark:border-zinc-700" ref={profileMenuRef}>
             <button
               type="button"
               onClick={() => setShowProfileMenu((prev) => !prev)}
-              className="flex items-center space-x-2.5 p-1 rounded-xl hover:bg-zinc-800 transition group cursor-pointer text-left"
+              className="flex items-center space-x-2.5 p-1 rounded-xl hover:bg-emerald-100/60 dark:hover:bg-zinc-800 transition group cursor-pointer text-left"
               aria-label="User account menu"
             >
               {userAvatar ? (
@@ -726,26 +724,26 @@ export default function Header({
                 />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 via-emerald-500 to-red-500 p-[1.5px] shadow-sm flex-shrink-0">
-                  <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center font-bold text-[11px] text-emerald-400">
+                  <div className="w-full h-full rounded-full bg-slate-100 dark:bg-zinc-900 flex items-center justify-center font-bold text-[11px] text-emerald-600 dark:text-emerald-400">
                     {userInitials}
                   </div>
                 </div>
               )}
               <div className="hidden xl:block text-left">
-                <p className="text-xs font-semibold text-zinc-200 leading-tight" title={userEmail}>
+                <p className="text-xs font-semibold text-slate-700 dark:text-zinc-200 leading-tight" title={userEmail}>
                   {displayEmail}
                 </p>
               </div>
               <ChevronDown
-                className={`w-3.5 h-3.5 text-zinc-400 transition-transform hidden sm:block ${
-                  showProfileMenu ? 'rotate-180 text-emerald-400' : 'group-hover:text-white'
+                className={`w-3.5 h-3.5 text-slate-500 dark:text-zinc-400 transition-transform hidden sm:block ${
+                  showProfileMenu ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : 'group-hover:text-slate-800 dark:group-hover:text-white'
                 }`}
               />
             </button>
 
             {/* Floating Profile Dropdown Menu Popup */}
             {showProfileMenu && (
-              <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-[#0d1322] border border-slate-800 shadow-2xl p-2 z-50 animate-fadeIn divide-y divide-slate-800/80">
+              <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-[#0d1322] border border-emerald-200 dark:border-slate-800 shadow-2xl p-2 z-50 animate-fadeIn divide-y divide-emerald-100 dark:divide-slate-800/80">
                 {/* Account Details Header */}
                 <div className="p-3">
                   <div className="flex items-center space-x-3">
@@ -757,19 +755,19 @@ export default function Header({
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-emerald-500 via-emerald-400 to-red-500 p-[1.5px] shadow-md flex-shrink-0">
-                        <div className="w-full h-full rounded-full bg-[#090d16] flex items-center justify-center font-bold text-sm text-emerald-400">
+                        <div className="w-full h-full rounded-full bg-slate-100 dark:bg-[#090d16] flex items-center justify-center font-bold text-sm text-emerald-600 dark:text-emerald-400">
                           {userInitials}
                         </div>
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-white truncate">{userName}</p>
-                      <p className="text-[11px] text-slate-400 truncate" title={userEmail}>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{userName}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate" title={userEmail}>
                         {userEmail}
                       </p>
                       <div className="mt-1 flex items-center space-x-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-[9px] font-semibold uppercase tracking-wider text-emerald-400">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+                        <span className="text-[9px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                           Active Session
                         </span>
                       </div>
@@ -785,16 +783,16 @@ export default function Header({
                       setShowProfileMenu(false);
                       if (onOpenSettings) onOpenSettings();
                     }}
-                    className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer"
+                    className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-700 dark:text-slate-200 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-50 dark:hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer"
                   >
-                    <div className="p-1.5 rounded-lg bg-slate-800 text-slate-300 group-hover:bg-emerald-500/20 group-hover:text-emerald-400 transition">
+                    <div className="p-1.5 rounded-lg bg-emerald-100/70 dark:bg-slate-800 text-emerald-800 dark:text-slate-300 group-hover:bg-emerald-500/20 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition">
                       <SettingsIcon className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-200 group-hover:text-white">
+                      <p className="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-emerald-900 dark:group-hover:text-white">
                         {t('manage_account', 'Manage Account')}
                       </p>
-                      <p className="text-[10px] text-slate-400">Profile, password & theme</p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">Profile, password & theme</p>
                     </div>
                   </button>
                 </div>
@@ -807,16 +805,16 @@ export default function Header({
                       setShowProfileMenu(false);
                       if (onSignOut) onSignOut();
                     }}
-                    className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 flex items-center space-x-2.5 transition group cursor-pointer"
+                    className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center space-x-2.5 transition group cursor-pointer"
                   >
-                    <div className="p-1.5 rounded-lg bg-rose-500/15 text-rose-400 group-hover:bg-rose-500/25 transition">
+                    <div className="p-1.5 rounded-lg bg-rose-100 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 group-hover:bg-rose-200 dark:group-hover:bg-rose-500/25 transition">
                       <LogOut className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-semibold text-rose-400 group-hover:text-rose-300">
+                      <p className="font-semibold text-rose-600 dark:text-rose-400 group-hover:text-rose-700 dark:group-hover:text-rose-300">
                         {t('sign_out', 'Sign Out')}
                       </p>
-                      <p className="text-[10px] text-rose-400/70">Clear session & log out</p>
+                      <p className="text-[10px] text-rose-500/70 dark:text-rose-400/70">Clear session & log out</p>
                     </div>
                   </button>
                 </div>
@@ -829,16 +827,16 @@ export default function Header({
             <button
               type="button"
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className="p-2 rounded-xl text-slate-700 hover:text-slate-900 bg-white/80 hover:bg-yellow-100/80 border border-yellow-200/80 hover:border-yellow-300 transition shadow-xs"
+              className="p-2 rounded-xl text-slate-700 hover:text-emerald-900 dark:text-zinc-200 dark:hover:text-white bg-emerald-100/60 hover:bg-emerald-100 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 border border-emerald-200/80 hover:border-emerald-300 dark:border-zinc-700 dark:hover:border-zinc-600 transition shadow-xs cursor-pointer"
               title="More options"
               aria-label="More options"
             >
-              <MoreVertical className="w-4 h-4 text-slate-700" />
+              <MoreVertical className="w-4 h-4 text-slate-700 dark:text-zinc-200" />
             </button>
 
             {/* Dropdown Menu */}
             {showMoreMenu && (
-              <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-[#0d1322] border border-slate-800 shadow-2xl p-1.5 z-50 animate-fadeIn">
+              <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white dark:bg-[#0d1322] border border-emerald-200 dark:border-slate-800 shadow-2xl p-1.5 z-50 animate-fadeIn">
                 {/* 1. Calculator Option */}
                 <button
                   type="button"
@@ -846,14 +844,14 @@ export default function Header({
                     setShowMoreMenu(false);
                     setShowCalculator(true);
                   }}
-                  className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer"
+                  className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-700 dark:text-slate-200 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-50 dark:hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer"
                 >
-                  <div className="p-1.5 rounded-lg bg-slate-800 text-slate-300 group-hover:bg-emerald-500/20 group-hover:text-emerald-400 transition">
+                  <div className="p-1.5 rounded-lg bg-emerald-100/70 dark:bg-slate-800 text-emerald-800 dark:text-slate-300 group-hover:bg-emerald-500/20 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition">
                     <CalculatorIcon className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-200 group-hover:text-white">Calculator</p>
-                    <p className="text-[10px] text-slate-400">Quick ledger math</p>
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-emerald-900 dark:group-hover:text-white">Calculator</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">Quick ledger math</p>
                   </div>
                 </button>
 
@@ -864,14 +862,14 @@ export default function Header({
                     setShowMoreMenu(false);
                     setShowCalendar(true);
                   }}
-                  className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer mt-0.5"
+                  className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-700 dark:text-slate-200 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-50 dark:hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer mt-0.5"
                 >
-                  <div className="p-1.5 rounded-lg bg-slate-800 text-slate-300 group-hover:bg-rose-500/20 group-hover:text-rose-400 transition">
+                  <div className="p-1.5 rounded-lg bg-rose-100 dark:bg-slate-800 text-rose-700 dark:text-slate-300 group-hover:bg-rose-500/20 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
                     <CalendarIcon className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-200 group-hover:text-white">Calendar</p>
-                    <p className="text-[10px] text-slate-400">Bill & reminder dates</p>
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-emerald-900 dark:group-hover:text-white">Calendar</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">Bill & reminder dates</p>
                   </div>
                 </button>
 
@@ -882,14 +880,14 @@ export default function Header({
                     setShowMoreMenu(false);
                     setShowNotes(true);
                   }}
-                  className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-200 hover:text-white hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer mt-0.5"
+                  className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-700 dark:text-slate-200 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-50 dark:hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer mt-0.5"
                 >
-                  <div className="p-1.5 rounded-lg bg-slate-800 text-slate-300 group-hover:bg-amber-500/20 group-hover:text-amber-400 transition">
+                  <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-slate-800 text-amber-700 dark:text-slate-300 group-hover:bg-amber-500/20 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
                     <StickyNote className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-200 group-hover:text-white">Notes</p>
-                    <p className="text-[10px] text-slate-400">Quick thoughts & records</p>
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-emerald-900 dark:group-hover:text-white">Notes</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">Quick thoughts & records</p>
                   </div>
                 </button>
               </div>
