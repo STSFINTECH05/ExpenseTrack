@@ -79,9 +79,9 @@ export default function SlideOverUtilityDrawer({
         aria-label="Close utility drawer"
       />
 
-      {/* Full-Height Slide-over panel covering the right edge from top-0 to bottom-0 */}
+      {/* Slide-over panel positioned strictly below the fixed top header */}
       <aside
-        className="fixed top-0 bottom-0 right-0 w-full sm:w-[360px] md:w-[380px] h-screen bg-white dark:bg-zinc-900 border-l border-slate-200 dark:border-zinc-800 shadow-2xl z-50 flex flex-col justify-between overflow-hidden animate-slideLeft transition-colors duration-200 select-none"
+        className="fixed top-16 bottom-0 right-0 w-full sm:w-[360px] md:w-[380px] h-[calc(100vh-64px)] bg-white dark:bg-zinc-900 border-l border-slate-200 dark:border-zinc-800 shadow-2xl z-40 flex flex-col justify-between overflow-hidden animate-slideLeft transition-colors duration-200 select-none"
         onClick={(e) => e.stopPropagation()}
       >
         {activeTab === 'calc' && <CalculatorDrawerContent onClose={onClose} />}
