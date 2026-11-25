@@ -74,17 +74,17 @@ export default function SlideOverUtilityDrawer({
     <>
       {/* Backdrop visible only on mobile screens (< sm) so desktop reflows smoothly without blocking clicks */}
       <div
-        className="sm:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-xs transition-opacity cursor-pointer select-none"
+        className="sm:hidden fixed inset-0 z-20 bg-black/40 backdrop-blur-xs transition-opacity cursor-pointer select-none"
         onClick={onClose}
         aria-label="Close utility drawer"
       />
 
-      {/* Slide-over panel positioned strictly below the fixed top header */}
+      {/* Slide-over panel positioned strictly below the fixed top header and docked alongside the 3-icon bar */}
       <aside
-        className="fixed top-16 bottom-0 right-0 w-full sm:w-[360px] md:w-[380px] h-[calc(100vh-64px)] bg-white dark:bg-zinc-900 border-l border-slate-200 dark:border-zinc-800 shadow-2xl z-40 flex flex-col justify-between overflow-hidden animate-slideLeft transition-colors duration-200 select-none"
+        className="fixed top-16 bottom-0 right-14 w-[calc(100vw-3.5rem)] sm:w-[360px] h-[calc(100vh-4rem)] bg-white dark:bg-zinc-900 border-l border-slate-200 dark:border-zinc-800 shadow-2xl z-30 flex flex-col justify-between overflow-hidden animate-slideLeft transition-colors duration-200 select-none"
         onClick={(e) => e.stopPropagation()}
       >
-        {activeTab === 'calc' && <CalculatorDrawerContent onClose={onClose} />}
+        {(activeTab === 'calc' || activeTab === 'calculator') && <CalculatorDrawerContent onClose={onClose} />}
         {activeTab === 'calendar' && <CalendarDrawerContent onClose={onClose} />}
         {activeTab === 'notes' && <NotesDrawerContent onClose={onClose} />}
       </aside>

@@ -14,7 +14,7 @@ export default function RightUtilityDock({
 }) {
   return (
     <aside
-      className="hidden md:flex flex-col items-center fixed top-16 bottom-0 right-0 w-14 h-[calc(100vh-64px)] border-l border-emerald-200/70 bg-[#F2FBF7] dark:bg-zinc-900 dark:border-zinc-800 flex-shrink-0 z-40 transition-colors duration-200 select-none shadow-lg py-4 space-y-3"
+      className="flex flex-col items-center fixed top-16 bottom-0 right-0 w-14 h-[calc(100vh-4rem)] border-l border-emerald-200/70 bg-[#F2FBF7] dark:bg-zinc-900 dark:border-zinc-800 flex-shrink-0 z-40 transition-colors duration-200 select-none shadow-lg py-4 space-y-3"
       aria-label="Right Utility Dock"
     >
       {/* 1. Calendar: Soft warm amber/yellow square */}
@@ -37,7 +37,7 @@ export default function RightUtilityDock({
         type="button"
         onClick={() => onOpenTab('calc')}
         className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95 group ${
-          isDrawerOpen && activeDrawerTab === 'calc'
+          isDrawerOpen && (activeDrawerTab === 'calc' || activeDrawerTab === 'calculator')
             ? 'bg-emerald-100 text-emerald-700 border-2 border-emerald-500 ring-2 ring-emerald-500/30'
             : 'bg-emerald-50 text-emerald-600 border border-emerald-200/60 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-900/60 dark:hover:bg-emerald-950/70'
         }`}
