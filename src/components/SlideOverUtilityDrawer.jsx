@@ -67,39 +67,28 @@ export default function SlideOverUtilityDrawer({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Prevent body scroll when drawer is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
+  // Allow body scroll so user can scroll dashboard alongside panel, or keep overflow intact
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end animate-fadeIn select-none">
-      {/* Backdrop */}
+    <>
+      {/* Backdrop visible only on mobile screens (< sm) so desktop reflows smoothly without blocking clicks */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity cursor-pointer"
+        className="sm:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-xs transition-opacity cursor-pointer select-none"
         onClick={onClose}
         aria-label="Close utility drawer"
       />
 
-      {/* Slide-over panel */}
+      {/* Full-Height Slide-over panel covering the right edge from top-0 to bottom-0 */}
       <aside
-        className="relative w-full sm:w-[380px] h-full bg-white dark:bg-zinc-900 border-l border-slate-200 dark:border-zinc-800 shadow-2xl z-10 flex flex-col justify-between overflow-hidden animate-slideLeft transition-colors duration-200"
+        className="fixed top-0 bottom-0 right-0 w-full sm:w-[360px] md:w-[380px] h-screen bg-white dark:bg-zinc-900 border-l border-slate-200 dark:border-zinc-800 shadow-2xl z-50 flex flex-col justify-between overflow-hidden animate-slideLeft transition-colors duration-200 select-none"
         onClick={(e) => e.stopPropagation()}
       >
         {activeTab === 'calc' && <CalculatorDrawerContent onClose={onClose} />}
         {activeTab === 'calendar' && <CalendarDrawerContent onClose={onClose} />}
         {activeTab === 'notes' && <NotesDrawerContent onClose={onClose} />}
       </aside>
-    </div>
+    </>
   );
 }
 

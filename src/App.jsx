@@ -456,17 +456,40 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Right-Edge Utility Drawer State ('calc' | 'calendar' | 'notes')
+  // Right-Edge Utility Dock & Drawer State ('calc' | 'calendar' | 'notes')
+  // By default on page load, keep the slim right-edge utility sidebar hidden/closed
+  const [isUtilityDockOpen, setIsUtilityDockOpen] = useState(false);
   const [isUtilityDrawerOpen, setIsUtilityDrawerOpen] = useState(false);
-  const [utilityDrawerTab, setUtilityDrawerTab] = useState('calc');
+  const [utilityDrawerTab, setUtilityDrawerTab] = useState(null);
+
+  // Toggle utility dock via three-dot button
+  const handleToggleUtilityDock = () => {
+    if (isUtilityDockOpen || isUtilityDrawerOpen) {
+      // Clicking a second time closes both the slim dock and any open utility drawer
+      setIsUtilityDockOpen(false);
+      setIsUtilityDrawerOpen(false);
+      setUtilityDrawerTab(null);
+    } else {
+      // First click opens the slim right-edge utility bar
+      setIsUtilityDockOpen(true);
+    }
+  };
 
   const handleOpenUtility = (tab = 'calc') => {
+    setIsUtilityDockOpen(true);
     setUtilityDrawerTab(tab);
     setIsUtilityDrawerOpen(true);
   };
 
-  const handleCloseUtility = () => {
+  const handleCloseUtilityDrawer = () => {
     setIsUtilityDrawerOpen(false);
+    setUtilityDrawerTab(null);
+  };
+
+  const handleCloseAllUtility = () => {
+    setIsUtilityDockOpen(false);
+    setIsUtilityDrawerOpen(false);
+    setUtilityDrawerTab(null);
   };
 
   const handleToggleSidebar = () => {
@@ -706,6 +729,8 @@ export default function App() {
         }}
         onSignOut={handleSignOut}
         onOpenUtility={handleOpenUtility}
+        onToggleUtilityDock={handleToggleUtilityDock}
+        isUtilityDockOpen={isUtilityDockOpen || isUtilityDrawerOpen}
       />
 
       {/* Main Layout: Sidebar + Content */}
@@ -765,9 +790,17 @@ export default function App() {
           </div>
         )}
 
-        {/* Primary Main View Container */}
+        {/* Primary Main View Container with dynamic right margin / reflow when dock/drawer opens */}
         <main
-          className={`flex-1 overflow-y-auto h-full w-full min-w-0 overflow-x-hidden max-w-full px-3 sm:px-4 md:px-6 py-4 md:py-6 ${isSidebarOpen ? 'max-w-7xl' : 'w-full max-w-full'} mx-auto bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-colors duration-200`}
+          className={`flex-1 overflow-y-auto h-full w-full min-w-0 overflow-x-hidden max-w-full px-3 sm:px-4 md:px-6 py-4 md:py-6 ${
+            isSidebarOpen ? 'max-w-7xl' : 'w-full max-w-full'
+          } mx-auto bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 transition-all duration-300 ${
+            isUtilityDrawerOpen
+              ? 'md:mr-[380px]'
+              : isUtilityDockOpen
+              ? 'md:mr-14'
+              : 'mr-0'
+          }`}
           style={{
             flex: 1,
             overflowY: 'auto',
@@ -1046,17 +1079,20 @@ export default function App() {
         </main>
 
         {/* Right-Edge Utility Dock (ONLY 3 Icons: Calendar, Calculator, Notes) */}
-        <RightUtilityDock
-          onOpenTab={handleOpenUtility}
-          activeDrawerTab={utilityDrawerTab}
-          isDrawerOpen={isUtilityDrawerOpen}
-        />
+        {isUtilityDockOpen && !isUtilityDrawerOpen && (
+          <RightUtilityDock
+            onOpenTab={handleOpenUtility}
+            activeDrawerTab={utilityDrawerTab}
+            isDrawerOpen={isUtilityDrawerOpen}
+            onCloseAll={handleCloseAllUtility}
+          />
+        )}
       </div>
 
       {/* Slide-Over Utility Drawer */}
       <SlideOverUtilityDrawer
         isOpen={isUtilityDrawerOpen}
-        onClose={handleCloseUtility}
+        onClose={handleCloseUtilityDrawer}
         activeTab={utilityDrawerTab}
         setActiveTab={setUtilityDrawerTab}
       />

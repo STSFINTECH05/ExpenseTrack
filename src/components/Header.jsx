@@ -48,6 +48,8 @@ export default function Header({
   onOpenSubscription,
   onSignOut,
   onOpenUtility,
+  onToggleUtilityDock,
+  isUtilityDockOpen = false,
 }) {
   let t = (key, fallback) => fallback || key;
   try {
@@ -823,88 +825,27 @@ export default function Header({
             )}
           </div>
 
-          {/* 4. More Options Menu Button */}
-          <div className="relative" ref={moreMenuRef}>
+          {/* 4. More Options / Right Utility Dock Toggle Button (⋮) */}
+          <div className="relative">
             <button
               type="button"
-              onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className="p-2 rounded-xl text-slate-700 hover:text-emerald-900 dark:text-zinc-200 dark:hover:text-white bg-emerald-100/60 hover:bg-emerald-100 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 border border-emerald-200/80 hover:border-emerald-300 dark:border-zinc-700 dark:hover:border-zinc-600 transition shadow-xs cursor-pointer"
-              title="More options"
-              aria-label="More options"
+              onClick={() => {
+                if (onToggleUtilityDock) {
+                  onToggleUtilityDock();
+                } else {
+                  setShowMoreMenu(!showMoreMenu);
+                }
+              }}
+              className={`p-2 rounded-xl transition shadow-xs cursor-pointer ${
+                isUtilityDockOpen
+                  ? 'bg-emerald-200 text-emerald-900 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-600'
+                  : 'text-slate-700 hover:text-emerald-900 dark:text-zinc-200 dark:hover:text-white bg-emerald-100/60 hover:bg-emerald-100 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 border border-emerald-200/80 hover:border-emerald-300 dark:border-zinc-700 dark:hover:border-zinc-600'
+              }`}
+              title="Toggle Utility Sidebar (⋮)"
+              aria-label="Toggle Utility Sidebar"
             >
-              <MoreVertical className="w-4 h-4 text-slate-700 dark:text-zinc-200" />
+              <MoreVertical className="w-4 h-4" />
             </button>
-
-            {/* Dropdown Menu */}
-            {showMoreMenu && (
-              <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white dark:bg-[#0d1322] border border-emerald-200 dark:border-slate-800 shadow-2xl p-1.5 z-50 animate-fadeIn">
-                {/* 1. Calculator Option */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowMoreMenu(false);
-                    if (onOpenUtility) {
-                      onOpenUtility('calc');
-                    } else {
-                      setShowCalculator(true);
-                    }
-                  }}
-                  className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-700 dark:text-slate-200 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-50 dark:hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer"
-                >
-                  <div className="p-1.5 rounded-lg bg-emerald-100/70 dark:bg-slate-800 text-emerald-800 dark:text-slate-300 group-hover:bg-emerald-500/20 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition">
-                    <CalculatorIcon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-emerald-900 dark:group-hover:text-white">Calculator</p>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400">Quick ledger math</p>
-                  </div>
-                </button>
-
-                {/* 2. Calendar Option */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowMoreMenu(false);
-                    if (onOpenUtility) {
-                      onOpenUtility('calendar');
-                    } else {
-                      setShowCalendar(true);
-                    }
-                  }}
-                  className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-700 dark:text-slate-200 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-50 dark:hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer mt-0.5"
-                >
-                  <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-slate-800 text-amber-700 dark:text-slate-300 group-hover:bg-amber-500/20 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition">
-                    <CalendarIcon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-emerald-900 dark:group-hover:text-white">Calendar</p>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400">Bill & reminder dates</p>
-                  </div>
-                </button>
-
-                {/* 3. Notes Option */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowMoreMenu(false);
-                    if (onOpenUtility) {
-                      onOpenUtility('notes');
-                    } else {
-                      setShowNotes(true);
-                    }
-                  }}
-                  className="w-full px-3 py-2.5 rounded-xl text-left text-xs text-slate-700 dark:text-slate-200 hover:text-emerald-900 dark:hover:text-white hover:bg-emerald-50 dark:hover:bg-slate-800/80 flex items-center space-x-2.5 transition group cursor-pointer mt-0.5"
-                >
-                  <div className="p-1.5 rounded-lg bg-rose-100 dark:bg-slate-800 text-rose-700 dark:text-slate-300 group-hover:bg-rose-500/20 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
-                    <StickyNote className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-emerald-900 dark:group-hover:text-white">Notes</p>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400">Quick thoughts & records</p>
-                  </div>
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>
