@@ -381,7 +381,7 @@ export default function AIFinancialChatbot() {
               ) : backendStatus?.available ? (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                   <Sparkles className="w-3 h-3" />
-                  GroqCloud AI – Online
+                  Online
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
@@ -570,11 +570,7 @@ export default function AIFinancialChatbot() {
               )}
             </div>
 
-            {/* Sidebar Footer with Privacy Tag */}
-            <div className="p-3 bg-slate-50 dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-              <span className="truncate">GroqCloud Hosted AI · Financial Data Minimisation</span>
-            </div>
+
           </div>
         </div>
 
@@ -1030,7 +1026,7 @@ export default function AIFinancialChatbot() {
             <div className="flex items-center justify-between text-[10px] text-slate-400 px-1 pt-0.5">
               <span className="flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                GroqCloud Hosted AI · Financial Data Minimisation · Web Speech API
+                Financial Data Minimisation · Web Speech API
               </span>
               <span className="hidden sm:inline">Press Enter to send</span>
             </div>
