@@ -129,176 +129,217 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
   const balanceAfterDues = Math.max(0, totalSavings - reminderBalance);
 
   return (
-    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-      {/* CARD 1: TOTAL INCOME */}
-      <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-xs relative overflow-hidden transition-all duration-200 hover:border-emerald-500/40">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Total Inflow / Income
+    <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 items-stretch">
+      {/* CARD 1: TOTAL INFLOW / INCOME */}
+      <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-4 shadow-xs relative overflow-hidden transition-all duration-200 hover:border-emerald-500/40 h-full flex flex-col justify-between">
+        <div className="min-h-[28px] flex items-start justify-between gap-1.5">
+          <span className="text-[10px] font-semibold tracking-wider uppercase leading-tight text-slate-500 dark:text-slate-400">
+            TOTAL INFLOW / INCOME
           </span>
-          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-            <TrendingUp className="w-4 h-4" />
+          <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex-shrink-0">
+            <TrendingUp className="w-3.5 h-3.5" />
           </div>
         </div>
 
-        <div className="mt-3">
-          <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+        <div className="my-2 flex-1 flex flex-col justify-start">
+          <h3 className="text-lg xl:text-[19px] font-bold text-slate-900 dark:text-slate-100 tracking-tight tabular-nums whitespace-nowrap">
             {formatINR(totalIncome)}
           </h3>
-
-          <div className="flex items-center justify-between text-xs mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
-            <span className="text-slate-500 dark:text-slate-400">
-              {incomeCount} {incomeCount === 1 ? 'credit entry' : 'credit entries'}
-            </span>
-            {incomeChangePct !== undefined && incomeChangePct !== null ? (
-              <span
-                className={`flex items-center font-bold ${
-                  incomeChangePct >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'
-                }`}
-              >
-                {incomeChangePct >= 0 ? (
-                  <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
-                ) : (
-                  <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />
-                )}
-                {incomeChangePct >= 0 ? `+${incomeChangePct}%` : `${incomeChangePct}%`}
-              </span>
-            ) : null}
+          <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+            Gross Inflows Recorded
+          </p>
+          <p className="text-[11px] leading-snug font-semibold text-slate-700 dark:text-slate-300 mt-0.5 tabular-nums truncate">
+            Active Ledger Window
+          </p>
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-2.5 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+              style={{ width: totalIncome > 0 ? '100%' : '0%' }}
+            />
           </div>
+        </div>
+
+        <div className="mt-auto pt-2.5 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between gap-1 text-[11px]">
+          <span className="text-slate-500 dark:text-slate-400 truncate">
+            {incomeCount} {incomeCount === 1 ? 'credit entry' : 'credit entries'}
+          </span>
+          {incomeChangePct !== undefined && incomeChangePct !== null ? (
+            <span
+              className={`flex items-center font-bold flex-shrink-0 ${
+                incomeChangePct >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'
+              }`}
+            >
+              {incomeChangePct >= 0 ? (
+                <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
+              ) : (
+                <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />
+              )}
+              {incomeChangePct >= 0 ? `+${incomeChangePct}%` : `${incomeChangePct}%`}
+            </span>
+          ) : null}
         </div>
       </div>
 
-      {/* CARD 2: TOTAL EXPENSES */}
-      <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-xs relative overflow-hidden transition-all duration-200 hover:border-rose-500/40">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Total Outflow / Expenses
+      {/* CARD 2: TOTAL OUTFLOW / EXPENSES */}
+      <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-4 shadow-xs relative overflow-hidden transition-all duration-200 hover:border-rose-500/40 h-full flex flex-col justify-between">
+        <div className="min-h-[28px] flex items-start justify-between gap-1.5">
+          <span className="text-[10px] font-semibold tracking-wider uppercase leading-tight text-slate-500 dark:text-slate-400">
+            TOTAL OUTFLOW / EXPENSES
           </span>
-          <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-            <TrendingDown className="w-4 h-4" />
+          <div className="p-1.5 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex-shrink-0">
+            <TrendingDown className="w-3.5 h-3.5" />
           </div>
         </div>
 
-        <div className="mt-3">
-          <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+        <div className="my-2 flex-1 flex flex-col justify-start">
+          <h3 className="text-lg xl:text-[19px] font-bold text-slate-900 dark:text-slate-100 tracking-tight tabular-nums whitespace-nowrap">
             {formatINR(totalExpenses)}
           </h3>
-
-          <div className="flex items-center justify-between text-xs mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
-            <span className="text-slate-500 dark:text-slate-400">
-              Avg: {formatINR(averageDailyExpense)}/day
-            </span>
-            {expenseChangePct !== undefined && expenseChangePct !== null ? (
-              <span
-                className={`flex items-center font-bold ${
-                  expenseChangePct <= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'
-                }`}
-              >
-                {expenseChangePct <= 0 ? (
-                  <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />
-                ) : (
-                  <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
-                )}
-                {expenseChangePct > 0 ? `+${expenseChangePct}%` : `${expenseChangePct}%`}
-              </span>
-            ) : null}
+          <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+            {expenseCount} {expenseCount === 1 ? 'debit entry' : 'debit entries'}
+          </p>
+          <p className="text-[11px] leading-snug font-semibold text-slate-700 dark:text-slate-300 mt-0.5 tabular-nums truncate">
+            Burn Rate: {totalIncome > 0 ? ((totalExpenses / totalIncome) * 100).toFixed(1) : 0}% of inflow
+          </p>
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-2.5 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                totalExpenses > totalIncome ? 'bg-rose-500' : 'bg-amber-500'
+              }`}
+              style={{
+                width: `${Math.min(100, Math.max(0, totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0))}%`,
+              }}
+            />
           </div>
+        </div>
+
+        <div className="mt-auto pt-2.5 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between gap-1 text-[11px]">
+          <span className="text-slate-500 dark:text-slate-400 truncate">
+            Avg: {formatINR(averageDailyExpense)}/day
+          </span>
+          {expenseChangePct !== undefined && expenseChangePct !== null ? (
+            <span
+              className={`flex items-center font-bold flex-shrink-0 ${
+                expenseChangePct <= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'
+              }`}
+            >
+              {expenseChangePct <= 0 ? (
+                <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />
+              ) : (
+                <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
+              )}
+              {expenseChangePct > 0 ? `+${expenseChangePct}%` : `${expenseChangePct}%`}
+            </span>
+          ) : null}
         </div>
       </div>
 
       {/* CARD 3: NET SAVINGS */}
       <div
-        className={`rounded-2xl bg-white dark:bg-[#0c1322] border p-5 shadow-xs relative overflow-hidden transition-all duration-200 ${
+        className={`rounded-2xl bg-white dark:bg-[#0c1322] border p-4 shadow-xs relative overflow-hidden transition-all duration-200 h-full flex flex-col justify-between ${
           isDeficit
             ? 'border-rose-300 dark:border-rose-900/60'
             : 'border-slate-200 dark:border-slate-800 hover:border-emerald-500/40'
         }`}
       >
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Net Savings
+        <div className="min-h-[28px] flex items-start justify-between gap-1.5">
+          <span className="text-[10px] font-semibold tracking-wider uppercase leading-tight text-slate-500 dark:text-slate-400">
+            NET SAVINGS
           </span>
           <div
-            className={`p-2 rounded-xl border ${
+            className={`p-1.5 rounded-lg border flex-shrink-0 ${
               isDeficit
                 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
                 : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
             }`}
           >
-            {isDeficit ? <AlertTriangle className="w-4 h-4" /> : <PiggyBank className="w-4 h-4" />}
+            {isDeficit ? <AlertTriangle className="w-3.5 h-3.5" /> : <PiggyBank className="w-3.5 h-3.5" />}
           </div>
         </div>
 
-        <div className="mt-3">
+        <div className="my-2 flex-1 flex flex-col justify-start">
           <h3
-            className={`text-2xl sm:text-3xl font-black tracking-tight ${
+            className={`text-lg xl:text-[19px] font-bold tracking-tight tabular-nums whitespace-nowrap ${
               isDeficit ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
             }`}
           >
             {isDeficit ? `-${formatINR(Math.abs(totalSavings))}` : formatINR(totalSavings)}
           </h3>
+          <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+            {isDeficit ? 'Over-budget deficit' : 'Net retained surplus'}
+          </p>
+          <p className="text-[11px] leading-snug font-semibold text-slate-700 dark:text-slate-300 mt-0.5 tabular-nums truncate">
+            Margin: {totalIncome > 0 ? ((totalSavings / totalIncome) * 100).toFixed(1) : 0}% of inflow
+          </p>
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-2.5 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                isDeficit ? 'bg-rose-500' : 'bg-emerald-500'
+              }`}
+              style={{
+                width: `${Math.min(100, Math.max(0, totalIncome > 0 ? Math.abs(totalSavings / totalIncome) * 100 : 0))}%`,
+              }}
+            />
+          </div>
+        </div>
 
-          <div className="flex items-center justify-between text-xs mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+        <div className="mt-auto pt-2.5 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between gap-1 text-[11px]">
+          <span
+            className={`font-semibold truncate ${
+              isDeficit ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
+            }`}
+          >
+            {isDeficit ? 'Operating Deficit' : 'Positive Surplus'}
+          </span>
+          {savingsChangePct !== undefined && savingsChangePct !== null ? (
             <span
-              className={`font-semibold ${
-                isDeficit ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
+              className={`font-bold flex-shrink-0 ${
+                savingsChangePct >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'
               }`}
             >
-              {isDeficit ? 'Operating Deficit' : 'Positive Surplus'}
+              {savingsChangePct >= 0 ? `+${savingsChangePct}%` : `${savingsChangePct}%`}
             </span>
-            {savingsChangePct !== undefined && savingsChangePct !== null ? (
-              <span
-                className={`font-bold ${
-                  savingsChangePct >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500 dark:text-rose-400'
-                }`}
-              >
-                {savingsChangePct >= 0 ? `+${savingsChangePct}%` : `${savingsChangePct}%`}
-              </span>
-            ) : null}
-          </div>
+          ) : null}
         </div>
       </div>
 
       {/* CARD 4: SAVINGS RATE */}
-      <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-xs relative overflow-hidden transition-all duration-200 hover:border-emerald-500/40">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Savings Rate
+      <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-4 shadow-xs relative overflow-hidden transition-all duration-200 hover:border-emerald-500/40 h-full flex flex-col justify-between">
+        <div className="min-h-[28px] flex items-start justify-between gap-1.5">
+          <span className="text-[10px] font-semibold tracking-wider uppercase leading-tight text-slate-500 dark:text-slate-400">
+            SAVINGS RATE
           </span>
-          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-            <Percent className="w-4 h-4" />
+          <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex-shrink-0">
+            <Percent className="w-3.5 h-3.5" />
           </div>
         </div>
 
-        <div className="mt-3">
-          {fixedIncomeTotal > 0 ? (
-            <div>
-              <div className="flex items-baseline space-x-1.5 flex-wrap">
-                <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                  15%
-                </h3>
-                <span className="text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400">
-                  ({formatINR(fixedIncomeTotal * 0.15)})
-                </span>
-              </div>
-              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-                of Fixed Income ({formatINR(fixedIncomeTotal)})
-              </p>
-              <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 mt-0.5 tabular-nums">
-                Balance: {formatINR(fixedIncomeTotal * 0.85)}
-              </p>
-            </div>
-          ) : (
-            <div className="flex items-baseline space-x-1.5">
-              <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                {savingsRate}%
-              </h3>
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">of income</span>
-            </div>
-          )}
+        <div className="my-2 flex-1 flex flex-col justify-start">
+          <div className="flex items-baseline space-x-1 flex-nowrap">
+            <h3 className="text-lg xl:text-[19px] font-bold text-slate-900 dark:text-slate-100 tracking-tight tabular-nums whitespace-nowrap">
+              {fixedIncomeTotal > 0 ? '15%' : `${savingsRate}%`}
+            </h3>
+            {fixedIncomeTotal > 0 ? (
+              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums whitespace-nowrap">
+                ({formatINR(fixedIncomeTotal * 0.15)})
+              </span>
+            ) : (
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                of income
+              </span>
+            )}
+          </div>
 
-          {/* Mini Progress Bar */}
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
+          <p className="text-[11px] leading-snug font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+            {fixedIncomeTotal > 0 ? `of Fixed Income (${formatINR(fixedIncomeTotal)})` : 'Benchmark rate target: 20%'}
+          </p>
+          <p className="text-[11px] leading-snug font-semibold text-slate-700 dark:text-slate-300 mt-0.5 tabular-nums truncate">
+            {fixedIncomeTotal > 0
+              ? `Balance: ${formatINR(fixedIncomeTotal * 0.85)}`
+              : `Status: ${savingsRate >= 20 ? 'Optimal' : savingsRate > 0 ? 'Sub-optimal' : 'No Savings'}`}
+          </p>
+
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-2.5 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 fixedIncomeTotal > 0
@@ -314,50 +355,52 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
               }}
             />
           </div>
+        </div>
 
-          <div className="flex items-center justify-between text-xs mt-2 text-slate-500 dark:text-slate-400">
-            <span>{fixedIncomeTotal > 0 ? 'Target: 15% Allocation' : 'Benchmark: 20%'}</span>
-            <span
-              className={`font-bold ${
-                fixedIncomeTotal > 0
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : savingsRate >= 20
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : savingsRate > 0
-                  ? 'text-amber-500'
-                  : 'text-rose-500'
-              }`}
-            >
-              {fixedIncomeTotal > 0
-                ? '15% Fixed Allocation'
+        <div className="mt-auto pt-2.5 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between gap-1 text-[11px]">
+          <span className="text-slate-500 dark:text-slate-400 truncate">
+            {fixedIncomeTotal > 0 ? 'Target: 15%' : 'Benchmark: 20%'}
+          </span>
+          <span
+            className={`font-bold flex-shrink-0 ${
+              fixedIncomeTotal > 0
+                ? 'text-emerald-600 dark:text-emerald-400'
                 : savingsRate >= 20
-                ? 'Optimal'
+                ? 'text-emerald-600 dark:text-emerald-400'
                 : savingsRate > 0
-                ? 'Sub-optimal'
-                : 'No Savings'}
-            </span>
-          </div>
+                ? 'text-amber-500'
+                : 'text-rose-500'
+            }`}
+          >
+            {fixedIncomeTotal > 0
+              ? '15% Fixed Allocation'
+              : savingsRate >= 20
+              ? 'Optimal'
+              : savingsRate > 0
+              ? 'Sub-optimal'
+              : 'No Savings'}
+          </span>
         </div>
       </div>
 
       {/* CARD 5: TOTAL SAVING RATE */}
-      <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-xs relative overflow-hidden transition-all duration-200 hover:border-emerald-500/40">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Total Saving Rate
+      <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-4 shadow-xs relative overflow-hidden transition-all duration-200 hover:border-emerald-500/40 h-full flex flex-col justify-between">
+        <div className="min-h-[28px] flex items-start justify-between gap-1.5">
+          <span className="text-[10px] font-semibold tracking-wider uppercase leading-tight text-slate-500 dark:text-slate-400">
+            TOTAL SAVING RATE
           </span>
-          <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-            <PiggyBank className="w-4 h-4" />
+          <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex-shrink-0">
+            <PiggyBank className="w-3.5 h-3.5" />
           </div>
         </div>
 
-        <div className="mt-3">
-          <div className="flex items-baseline space-x-1.5 flex-wrap">
-            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+        <div className="my-2 flex-1 flex flex-col justify-start">
+          <div className="flex items-baseline space-x-1 flex-nowrap">
+            <h3 className="text-lg xl:text-[19px] font-bold text-slate-900 dark:text-slate-100 tracking-tight tabular-nums whitespace-nowrap">
               {netSavingRatePct}%
             </h3>
             <span
-              className={`text-sm sm:text-base font-bold ${
+              className={`text-[11px] font-semibold tabular-nums whitespace-nowrap ${
                 adjustedNetSavings === 0 && isDeficit ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
               }`}
             >
@@ -365,12 +408,14 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
             </span>
           </div>
 
-          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-[11px] leading-snug font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">
             of Total Inflow ({formatINR(totalIncome)})
           </p>
+          <p className="text-[11px] leading-snug font-semibold text-slate-700 dark:text-slate-300 mt-0.5 tabular-nums truncate">
+            Allocated: {formatINR(fifteenPercentAllocation)}
+          </p>
 
-          {/* Mini Progress Bar */}
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-2.5 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 Number(netSavingRatePct) >= 20
@@ -384,49 +429,44 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
               }}
             />
           </div>
+        </div>
 
-          <div className="flex items-center justify-between text-xs mt-2 text-slate-500 dark:text-slate-400">
-            <span>Net Retention</span>
-            <span
-              className={`font-bold ${
-                Number(netSavingRatePct) > 0
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-rose-500'
-              }`}
-            >
-              {Number(netSavingRatePct) > 0 ? 'Active' : 'No Retention'}
-            </span>
-          </div>
+        <div className="mt-auto pt-2.5 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between gap-1 text-[11px]">
+          <span className="text-slate-500 dark:text-slate-400 truncate">Net Retention</span>
+          <span
+            className={`font-bold flex-shrink-0 ${
+              Number(netSavingRatePct) > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'
+            }`}
+          >
+            {Number(netSavingRatePct) > 0 ? 'Active' : 'No Retention'}
+          </span>
         </div>
       </div>
 
       {/* CARD 6: REMINDER BALANCE */}
-      <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-5 shadow-xs relative overflow-hidden transition-all duration-200 hover:border-emerald-500/40">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Reminder Balance
+      <div className="rounded-2xl bg-white dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800 p-4 shadow-xs relative overflow-hidden transition-all duration-200 hover:border-emerald-500/40 h-full flex flex-col justify-between">
+        <div className="min-h-[28px] flex items-start justify-between gap-1.5">
+          <span className="text-[10px] font-semibold tracking-wider uppercase leading-tight text-slate-500 dark:text-slate-400">
+            REMINDER BALANCE
           </span>
-          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-            <Bell className="w-4 h-4" />
+          <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex-shrink-0">
+            <Bell className="w-3.5 h-3.5" />
           </div>
         </div>
 
-        <div className="mt-3">
-          <div className="flex items-baseline space-x-1.5 flex-wrap">
-            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-              {formatINR(reminderBalance)}
-            </h3>
-          </div>
+        <div className="my-2 flex-1 flex flex-col justify-start">
+          <h3 className="text-lg xl:text-[19px] font-bold text-slate-900 dark:text-slate-100 tracking-tight tabular-nums whitespace-nowrap">
+            {formatINR(reminderBalance)}
+          </h3>
 
-          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-[11px] leading-snug font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">
             {upcomingCount > 0 ? `${upcomingCount} pending reminders` : 'No upcoming dues'}
           </p>
-          <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 mt-0.5 tabular-nums">
+          <p className="text-[11px] leading-snug font-semibold text-slate-700 dark:text-slate-300 mt-0.5 tabular-nums truncate">
             After Dues: {formatINR(balanceAfterDues)}
           </p>
 
-          {/* Mini Progress Bar */}
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-2.5 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 reminderBalance === 0
@@ -440,19 +480,17 @@ export default function FinancialSummaryCards({ summary, dateRange, comparisons,
               }}
             />
           </div>
+        </div>
 
-          <div className="flex items-center justify-between text-xs mt-2 text-slate-500 dark:text-slate-400">
-            <span>Commitment</span>
-            <span
-              className={`font-bold ${
-                reminderBalance === 0
-                  ? 'text-emerald-600 dark:text-emerald-400'
-                  : 'text-amber-500'
-              }`}
-            >
-              {reminderBalance === 0 ? 'All Settled' : 'Due Scheduled'}
-            </span>
-          </div>
+        <div className="mt-auto pt-2.5 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between gap-1 text-[11px]">
+          <span className="text-slate-500 dark:text-slate-400 truncate">Commitment</span>
+          <span
+            className={`font-bold flex-shrink-0 ${
+              reminderBalance === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500'
+            }`}
+          >
+            {reminderBalance === 0 ? 'All Settled' : 'Due Scheduled'}
+          </span>
         </div>
       </div>
     </section>
