@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function Sidebar({ activeTab, setActiveTab, backendHealth, currentUser }) {
@@ -35,15 +36,67 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth, curren
     return 'gold';
   };
 
+  const getPlanDisplayName = () => {
+    try {
+      const userPlan = currentUser?.subscription?.name || currentUser?.subscription?.id || currentUser?.subscription || currentUser?.plan;
+      if (typeof userPlan === 'string') {
+        const lower = userPlan.toLowerCase();
+        if (lower.includes('silver')) return 'SILVER';
+        if (lower.includes('elite')) return 'ELITE';
+        if (lower.includes('gold')) return 'GOLD';
+      }
+      const stored = localStorage.getItem('sts_active_subscription');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const str = (parsed?.id || parsed?.name || '').toLowerCase();
+        if (str.includes('silver')) return 'SILVER';
+        if (str.includes('elite')) return 'ELITE';
+        if (str.includes('gold')) return 'GOLD';
+      }
+    } catch (e) {
+      console.warn('Sidebar plan display check:', e);
+    }
+    return 'GOLD';
+  };
+
+  const calculateDaysLeft = () => {
+    try {
+      const stored = localStorage.getItem('sts_active_subscription');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (typeof parsed?.daysLeft === 'number') {
+          return Math.max(0, parsed.daysLeft);
+        }
+        if (parsed?.activatedAt) {
+          const activatedTime = new Date(parsed.activatedAt).getTime();
+          if (!isNaN(activatedTime)) {
+            const diffMs = Date.now() - activatedTime;
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            return Math.max(0, 30 - diffDays);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error calculating days left in Sidebar:', e);
+    }
+    return 30;
+  };
+
   const [activePlan, setActivePlan] = useState(getNormalizedPlan);
+  const [planDisplayName, setPlanDisplayName] = useState(getPlanDisplayName);
+  const [daysLeft, setDaysLeft] = useState(calculateDaysLeft);
 
   useEffect(() => {
     setActivePlan(getNormalizedPlan());
+    setPlanDisplayName(getPlanDisplayName());
+    setDaysLeft(calculateDaysLeft());
   }, [currentUser]);
 
   useEffect(() => {
     const handleSubChange = () => {
       setActivePlan(getNormalizedPlan());
+      setPlanDisplayName(getPlanDisplayName());
+      setDaysLeft(calculateDaysLeft());
     };
     window.addEventListener('sts_subscription_changed', handleSubChange);
     window.addEventListener('storage', handleSubChange);
@@ -160,8 +213,49 @@ export default function Sidebar({ activeTab, setActiveTab, backendHealth, curren
         })}
       </div>
 
+      {/* Dynamic Subscription Plan + Days Pill Badge in Left Sidebar (Above Contact Us Divider) */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setActiveTab('subscription')}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setActiveTab('subscription');
+          }
+        }}
+        className="mt-auto mx-3 mb-3 px-3 py-2.5 rounded-2xl bg-[#0F172A] hover:bg-[#1E293B] shadow-md flex items-center justify-between gap-2 cursor-pointer transition-all select-none group"
+        title={`Active Subscription: ${planDisplayName} PLAN (${daysLeft} days left)`}
+        aria-label={`Open Subscription Plans (${planDisplayName} PLAN, ${daysLeft} days left)`}
+      >
+        {/* Left Icon Box: Rounded square with emerald shield-checkmark icon */}
+        <div className="w-9 h-9 rounded-xl bg-emerald-100/95 border border-emerald-500 flex items-center justify-center shrink-0 shadow-xs">
+          <ShieldCheck className="w-5 h-5 text-emerald-700 stroke-[2.5]" />
+        </div>
+
+        {/* Center Stacked Label: Active plan name in bold uppercase white stacked directly above bold amber/gold PLAN */}
+        <div className="flex-1 flex flex-col items-center justify-center text-center min-w-0">
+          <span className="text-[13px] font-extrabold tracking-wide text-white leading-none truncate">
+            {planDisplayName}
+          </span>
+          <span className="text-[10px] font-bold tracking-wider text-amber-400 leading-tight mt-0.5">
+            PLAN
+          </span>
+        </div>
+
+        {/* Right Circular Countdown Badge: White circle displaying bold dark daysLeft above DAYS */}
+        <div className="w-9 h-9 rounded-full bg-white border-2 border-amber-500 flex flex-col items-center justify-center shrink-0 shadow-xs">
+          <span className="text-[11px] font-extrabold text-slate-900 leading-none tabular-nums">
+            {daysLeft}
+          </span>
+          <span className="text-[7px] font-bold text-slate-700 tracking-tight leading-none mt-0.5">
+            DAYS
+          </span>
+        </div>
+      </div>
+
       {/* Bottom Pinned Links: Contact Us & Settings */}
-      <div className="p-3.5 mt-auto pb-6 space-y-1.5 border-t border-emerald-200/70 dark:border-zinc-800">
+      <div className="p-3.5 pb-6 space-y-1.5 border-t border-emerald-200/70 dark:border-zinc-800">
         <button
           type="button"
           onClick={() => setActiveTab('contact_us')}

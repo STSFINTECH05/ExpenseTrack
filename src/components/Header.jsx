@@ -686,30 +686,6 @@ export default function Header({
             )}
           </div>
 
-          {/* Subscription Plans Circular Remaining Days Badge / Button */}
-          <button
-            type="button"
-            onClick={() => {
-              if (onOpenSubscription) {
-                onOpenSubscription();
-              } else if (setActiveTab) {
-                setActiveTab('subscription');
-              }
-            }}
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold tabular-nums transition-all duration-200 cursor-pointer group shadow-xs hover:scale-105 active:scale-95 ${
-              daysLeft > 0
-                ? 'border-2 border-amber-500 text-amber-700 dark:text-amber-400 bg-amber-100/60 dark:bg-amber-400/10'
-                : 'border-2 border-slate-300 dark:border-zinc-600 text-slate-500 dark:text-zinc-400 bg-transparent'
-            } ${
-              activeTab === 'subscription'
-                ? 'ring-2 ring-amber-500/60 ring-offset-1 ring-offset-emerald-50 dark:ring-offset-zinc-900 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
-                : ''
-            }`}
-            title={`${daysLeft} days left`}
-            aria-label={`Subscription Plans (${daysLeft} days left)`}
-          >
-            {daysLeft}
-          </button>
 
           {/* 3. Login Details / User Profile with Floating Dropdown Menu */}
           <div className="relative pl-1 sm:pl-2 border-l border-emerald-200/80 dark:border-zinc-700" ref={profileMenuRef}>
